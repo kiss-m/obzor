@@ -1,0 +1,1900 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Obzor</title>
+<meta name="description" content="Počasie pre tvoje miesta, meniny, sviatky a narodeniny.">
+<meta name="theme-color" content="#1d4f82">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Obzor">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Onest:wght@200..700&display=swap">
+<style>
+/* Layout: jeden stĺpec (max 720 px) nad spodnou lištou; Počasie kreslí vlastnú oblohu cez celú plochu,
+   úvodná obrazovka je list trhacieho kalendára. */
+:root {
+  --paper: #eef2f5;
+  --surface: #ffffff;
+  --surface-2: #f4f7f9;
+  --ink: #132130;
+  --ink-2: #536373;
+  --line: #d6dee5;
+  --accent: #1c6cc0;
+  --accent-ink: #ffffff;
+  --red: #c42f28;
+  --red-soft: rgba(196, 47, 40, .09);
+  --bar-bg: rgba(248, 250, 252, .88);
+  --bar-line: rgba(19, 33, 48, .1);
+  --shadow: 0 1px 2px rgba(19, 33, 48, .06), 0 10px 28px rgba(19, 33, 48, .08);
+
+  /* list trhacieho kalendára je fyzický papier: rovnaký v svetlom aj tmavom režime */
+  --cal-paper: #fdfdfb;
+  --cal-ink: #17191c;
+  --cal-ink-2: #5c6169;
+  --cal-red: #c42f28;
+  --cal-bind: #6f1b17;
+
+  --font-ui: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Archivo", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --r: 18px;
+  --tabbar-h: 62px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0c1219;
+    --surface: #151e28;
+    --surface-2: #1b2632;
+    --ink: #e5ecf2;
+    --ink-2: #95a4b3;
+    --line: #26333f;
+    --accent: #6db0f2;
+    --accent-ink: #06121f;
+    --red: #ff6d62;
+    --red-soft: rgba(255, 109, 98, .12);
+    --bar-bg: rgba(13, 19, 26, .88);
+    --bar-line: rgba(255, 255, 255, .08);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 15px/1.45 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+body.mode-wx { background: #1d4f82; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.view-wx :focus-visible { outline-color: #fff; }
+h1, h2, h3 { text-wrap: balance; }
+.ico { flex: none; display: block; }
+.num { font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.view {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: calc(env(safe-area-inset-top, 0px) + 12px) calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 28px);
+}
+
+/* ---------- spodná lišta ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid var(--bar-line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.tabbar-inner { display: flex; max-width: 520px; margin: 0 auto; }
+.tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 4px 8px; border: 0; background: none;
+  color: var(--ink-2); font-size: 11.5px; font-weight: 500; letter-spacing: .01em;
+}
+.tab[aria-current="page"] { color: var(--accent); }
+body.mode-wx .tabbar { background: rgba(8, 20, 36, .42); border-top-color: rgba(255, 255, 255, .12); }
+body.mode-wx .tab { color: rgba(255, 255, 255, .6); }
+body.mode-wx .tab[aria-current="page"] { color: #fff; }
+
+/* ---------- úvodná obrazovka: trhací kalendár ---------- */
+.splash {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  background: var(--paper);
+  overflow-y: auto;
+  transition: opacity 360ms ease 300ms;
+}
+.splash.tearing { opacity: 0; pointer-events: none; }
+.splash-inner { width: min(360px, 100%); cursor: pointer; }
+.splash-hint { text-align: center; color: var(--ink-2); font-size: 12.5px; margin: 22px 0 0; }
+
+.cal-block { position: relative; }
+.cal-block::before, .cal-block::after {
+  content: ""; position: absolute; left: 7px; right: 7px; height: 100%;
+  background: var(--cal-paper); border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(20, 30, 40, .12);
+}
+.cal-block::before { top: 7px; left: 4px; right: 4px; }
+.cal-block::after { top: 13px; left: 9px; right: 9px; z-index: -1; opacity: .9; }
+.cal-block::before { z-index: 0; }
+.cal-page {
+  position: relative; z-index: 1;
+  background: var(--cal-paper); color: var(--cal-ink);
+  border-radius: 6px 6px 5px 5px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .04), 0 22px 44px rgba(20, 30, 40, .2);
+  overflow: hidden;
+  transform-origin: 18% 0;
+}
+.splash.tearing .cal-page {
+  transform: translate(-4%, -60px) rotate(-11deg);
+  opacity: 0;
+  transition: transform 560ms cubic-bezier(.45, 0, .85, .5), opacity 380ms ease 180ms;
+}
+.cal-bind {
+  height: 30px; background: var(--cal-bind);
+  display: flex; justify-content: center; align-items: center; gap: 140px;
+}
+.cal-bind span { width: 11px; height: 11px; border-radius: 50%; background: var(--paper); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .45); }
+.cal-perf { height: 0; border-top: 2px dotted rgba(0, 0, 0, .22); margin: 5px 10px 0; }
+.cal-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 14px 20px 0;
+  font: 700 13px/1 var(--font-display); font-stretch: 88%;
+  letter-spacing: .16em; text-transform: uppercase;
+}
+.cal-day {
+  font-family: var(--font-display); font-weight: 900; font-stretch: 62%;
+  font-size: 172px; line-height: .84; text-align: center; letter-spacing: -.02em;
+  margin: 16px 0 0; font-variant-numeric: lining-nums tabular-nums;
+}
+.cal-dow {
+  text-align: center; font: 700 24px/1.1 var(--font-display); font-stretch: 78%;
+  letter-spacing: .03em; margin-top: 8px;
+}
+.cal-red { color: var(--cal-red); }
+.cal-hol { text-align: center; color: var(--cal-red); font-weight: 600; font-size: 13.5px; margin: 6px 20px 0; line-height: 1.3; }
+.cal-hol small { display: block; color: var(--cal-ink-2); font-weight: 500; font-size: 12px; }
+.cal-names { margin: 16px 20px 0; padding: 0; }
+.cal-names > div {
+  display: grid; grid-template-columns: 5.6em 1fr; gap: 10px; align-items: baseline;
+  padding: 9px 0; border-top: 1px solid rgba(0, 0, 0, .09);
+}
+.cal-names dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: var(--cal-ink-2); }
+.cal-names dd { margin: 0; font-size: 19px; font-weight: 600; line-height: 1.25; min-width: 0; }
+.cal-names dd.none { color: var(--cal-ink-2); font-weight: 400; font-size: 15px; }
+.cal-bday {
+  margin: 12px 20px 0; padding: 10px 12px; border-radius: 8px;
+  background: rgba(196, 47, 40, .08); color: var(--cal-ink);
+  display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.35;
+}
+.cal-bday .ico { color: var(--cal-red); margin-top: 1px; }
+.cal-bday b { font-weight: 650; }
+.cal-bday.soft { background: rgba(0, 0, 0, .04); }
+.cal-bday.soft .ico { color: var(--cal-ink-2); }
+.cal-foot {
+  display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+  padding: 14px 20px 15px; font-size: 11.5px; color: var(--cal-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.cal-progress { height: 3px; background: rgba(0, 0, 0, .06); }
+.cal-progress i { display: block; height: 100%; background: var(--cal-red); transform-origin: left; transform: scaleX(0); }
+.splash.run .cal-progress i { animation: fill var(--splash-ms, 4000ms) linear forwards; }
+@keyframes fill { to { transform: scaleX(1); } }
+
+/* ---------- Počasie ---------- */
+.sky { position: fixed; inset: 0; z-index: -1; background: #1d4f82; }
+.view-wx { color: #fff; }
+.wx-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-height: 40px;
+}
+.icon-btn {
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border: 0; border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff;
+}
+.icon-btn:hover { background: rgba(255, 255, 255, .2); }
+.icon-btn.spin .ico { animation: spin 900ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.dots { display: flex; gap: 7px; align-items: center; justify-content: center; flex-wrap: wrap; min-width: 0; }
+.dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .35); }
+.dots button[aria-current="true"] { background: #fff; }
+.dots .geo { width: 10px; height: 10px; background: none; color: rgba(255, 255, 255, .45); display: grid; place-items: center; }
+.dots .geo[aria-current="true"] { color: #fff; background: none; }
+
+.wx-body { display: grid; gap: 12px; margin-top: 4px; }
+.hero { text-align: center; padding: 18px 0 14px; text-shadow: 0 1px 12px rgba(0, 20, 40, .18); }
+.hero-place { margin: 0; font-size: 30px; font-weight: 500; line-height: 1.15; display: inline-flex; gap: 6px; align-items: center; }
+.hero-sub { margin: 4px 0 0; font-size: 13.5px; color: rgba(255, 255, 255, .78); }
+.hero-temp { font-size: 104px; font-weight: 200; line-height: 1; margin: 8px 0 0 .12em; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.hero-cond { margin: 4px 0 0; font-size: 19px; font-weight: 500; }
+.hero-hl { margin: 3px 0 0; font-size: 16px; color: rgba(255, 255, 255, .88); font-variant-numeric: tabular-nums; }
+
+.banner {
+  display: flex; gap: 10px; align-items: center;
+  padding: 10px 14px; border-radius: 14px; font-size: 13.5px;
+  background: rgba(0, 0, 0, .24); border: 1px solid rgba(255, 255, 255, .16);
+}
+.banner button { margin-left: auto; border: 0; border-radius: 10px; padding: 6px 12px; background: rgba(255, 255, 255, .9); color: #10263d; font-weight: 600; font-size: 13px; }
+
+.wx-card {
+  background: rgba(8, 22, 40, .2);
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: var(--r);
+  padding: 13px 15px 14px;
+  -webkit-backdrop-filter: blur(22px) saturate(1.25); backdrop-filter: blur(22px) saturate(1.25);
+  min-width: 0;
+}
+.card-h {
+  margin: 0 0 10px; display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em;
+  color: rgba(255, 255, 255, .66);
+}
+.summary { margin: 0 0 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, .16); font-size: 15px; line-height: 1.4; }
+
+.hours { display: flex; overflow-x: auto; gap: 2px; scrollbar-width: none; margin: 0 -6px; padding: 0 2px; overscroll-behavior-x: contain; }
+.hours::-webkit-scrollbar { display: none; }
+.hour {
+  flex: 0 0 58px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-variant-numeric: tabular-nums; padding: 2px 0;
+}
+.hour-t { font-size: 13.5px; font-weight: 500; }
+.hour .wxi { width: 34px; height: 34px; }
+.hour-p { font-size: 11.5px; font-weight: 600; color: #9bd6ff; min-height: 15px; }
+.hour-temp { font-size: 17px; font-weight: 500; }
+.hour.ev .hour-temp { font-size: 12.5px; font-weight: 500; color: rgba(255, 255, 255, .8); padding-top: 3px; }
+
+/* oblačnosť */
+.cc-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.cc-now { font-size: 34px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.cc-desc { font-size: 15px; font-weight: 500; }
+.cc {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 112px 18px;
+  column-gap: 8px;
+}
+.cc-plot { position: relative; touch-action: pan-y; cursor: crosshair; }
+.cc-plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.cc-y { display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; margin: -6px 0; }
+.cc-x { position: relative; font-size: 11px; color: rgba(255, 255, 255, .66); }
+.cc-x span { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; }
+.cc-x span:first-child { transform: none; }
+.cc-x span:last-child { transform: translateX(-100%); }
+.cc-cursor { position: absolute; inset: 0; pointer-events: none; }
+.cc-line { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, .55); }
+.cc-dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(20, 40, 64, .55); }
+.cc-tip {
+  position: absolute; top: -4px; transform: translate(-50%, -100%);
+  background: rgba(8, 20, 36, .82); color: #fff; font-size: 12px; font-weight: 600;
+  padding: 4px 8px; border-radius: 8px; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.layers { display: grid; gap: 7px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .16); }
+.layer { display: grid; grid-template-columns: 7.4em minmax(0, 1fr) 3em; gap: 10px; align-items: center; font-size: 13px; }
+.layer small { display: block; font-size: 11px; color: rgba(255, 255, 255, .6); }
+.meter { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .16); overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 3px; background: rgba(255, 255, 255, .85); }
+.layer .num { text-align: right; font-weight: 600; }
+
+/* 10 dní */
+.days { list-style: none; margin: 0; padding: 0; }
+.days details { border-top: 1px solid rgba(255, 255, 255, .14); }
+.days li:first-child details { border-top: 0; }
+.days summary {
+  list-style: none; display: grid; grid-template-columns: 3.1em 3.2em 2.4em minmax(0, 1fr) 2.4em;
+  gap: 8px; align-items: center; padding: 8px 0; cursor: pointer;
+  font-variant-numeric: tabular-nums; font-size: 16px;
+}
+.days summary::-webkit-details-marker { display: none; }
+.d-name { font-weight: 500; }
+.d-icon { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.d-icon .wxi { width: 30px; height: 30px; }
+.d-icon small { font-size: 10.5px; font-weight: 600; color: #9bd6ff; margin-top: 1px; }
+.d-min { text-align: right; color: rgba(255, 255, 255, .66); }
+.d-max { text-align: left; font-weight: 500; }
+.d-bar { position: relative; height: 5px; border-radius: 3px; background: rgba(0, 0, 0, .2); }
+.d-bar i { position: absolute; top: 0; bottom: 0; border-radius: 3px; min-width: 5px; }
+.d-bar b { position: absolute; top: 50%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(20, 40, 64, .5); }
+.d-more { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 6px 14px; padding: 2px 0 12px; font-size: 13px; color: rgba(255, 255, 255, .85); }
+.d-more span b { font-weight: 600; color: #fff; }
+
+/* dlaždice */
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tile { display: flex; flex-direction: column; min-height: 158px; }
+.tile .card-h { margin-bottom: 8px; }
+.tile-main { font-size: 32px; font-weight: 400; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.tile-main small { font-size: 16px; font-weight: 500; margin-left: 2px; }
+.tile-lvl { font-size: 16px; font-weight: 600; margin-top: 2px; }
+.tile-sub { margin: auto 0 0; padding-top: 10px; font-size: 13px; line-height: 1.35; color: rgba(255, 255, 255, .86); }
+.scale { position: relative; height: 5px; border-radius: 3px; margin: 10px 0 2px; }
+.scale b { position: absolute; top: 50%; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px rgba(20, 40, 64, .55); }
+.scale.uv { background: linear-gradient(90deg, #5ac85a, #e5d43c 28%, #f29a2e 52%, #e2463b 74%, #9b59c9); }
+.scale.aq { background: linear-gradient(90deg, #52b6e8, #56c77b 20%, #e5d43c 40%, #f29a2e 60%, #e2463b 80%, #8e3fa8); }
+.compass { width: 100%; max-width: 118px; margin: 0 auto; display: block; }
+.sunarc { width: 100%; display: block; margin-top: 4px; }
+.moon-row { display: flex; align-items: center; gap: 12px; }
+.moon-row svg { width: 50px; height: 50px; flex: none; }
+
+.wx-foot { text-align: center; font-size: 12px; color: rgba(255, 255, 255, .72); margin: 6px 0 0; line-height: 1.5; }
+.wx-foot a { color: inherit; }
+
+.wx-empty { text-align: center; padding: 60px 12px; }
+.wx-empty h1 { font-size: 26px; font-weight: 500; margin: 0 0 8px; }
+.wx-empty p { margin: 0 auto 20px; max-width: 34ch; color: rgba(255, 255, 255, .82); }
+.btn-light { border: 0; border-radius: 14px; padding: 12px 20px; background: #fff; color: #10263d; font-weight: 600; }
+.skeleton { height: 110px; border-radius: var(--r); background: rgba(255, 255, 255, .1); }
+
+.wxi { display: block; }
+
+/* ---------- spoločné: stránky Narodeniny a Kalendár ---------- */
+.page-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0 4px; }
+.page-h h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 34px; letter-spacing: -.01em; }
+.page-sub { margin: 0 0 18px; color: var(--ink-2); font-size: 14px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 12px; padding: 9px 14px; font-weight: 600; font-size: 14px;
+}
+.btn:hover { border-color: var(--ink-2); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { filter: brightness(1.06); border-color: var(--accent); }
+.btn-danger { color: var(--red); }
+.btn-danger.armed { background: var(--red); border-color: var(--red); color: #fff; }
+.section-h { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-2); margin: 26px 0 10px; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); }
+
+/* narodeniny */
+.bd-list { list-style: none; margin: 0; padding: 0; }
+.bd-list li + li { border-top: 1px solid var(--line); }
+.bd-row {
+  width: 100%; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  padding: 12px 14px; border: 0; background: none; text-align: left;
+}
+.bd-row:hover { background: var(--surface-2); }
+.bd-list li:first-child .bd-row { border-radius: var(--r) var(--r) 0 0; }
+.bd-list li:last-child .bd-row { border-radius: 0 0 var(--r) var(--r); }
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 15px; color: #fff; letter-spacing: .02em;
+}
+.bd-name { display: block; font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
+.bd-meta { display: block; font-size: 13px; color: var(--ink-2); margin-top: 1px; }
+.bd-meta span + span::before { content: " · "; }
+.bd-when { text-align: right; font-variant-numeric: tabular-nums; }
+.bd-when b { display: block; font-size: 22px; font-weight: 600; line-height: 1.1; font-family: var(--font-display); font-stretch: 80%; }
+.bd-when small { font-size: 12px; color: var(--ink-2); }
+.bd-row.today { background: var(--red-soft); }
+.bd-row.today .bd-when b, .bd-row.today .bd-when small { color: var(--red); }
+.bd-row.today:hover { background: var(--red-soft); }
+
+.empty { text-align: center; padding: 34px 20px 30px; }
+.empty svg { color: var(--red); }
+.empty h2 { margin: 12px 0 6px; font-size: 19px; }
+.empty p { margin: 0 auto 18px; max-width: 38ch; color: var(--ink-2); }
+
+.backup { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.backup p { flex-basis: 100%; margin: 0 0 2px; font-size: 13.5px; color: var(--ink-2); }
+
+/* kalendár */
+.kal-nav { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 0; }
+.kal-nav .btn { min-width: 44px; }
+.kal-wrap { max-width: 360px; margin: 8px auto 0; }
+.search {
+  display: flex; align-items: center; gap: 8px; padding: 0 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+}
+.search input { flex: 1; min-width: 0; border: 0; background: none; padding: 12px 0; outline: none; font-size: 16px; }
+.search:focus-within { border-color: var(--accent); }
+.nd-results { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.nd-results li { padding: 11px 14px; }
+.nd-results b { font-size: 16px; }
+.nd-results div { font-size: 13.5px; color: var(--ink-2); margin-top: 2px; }
+.nd-results .muted { color: var(--ink-2); padding: 6px 2px; background: none; border: 0; box-shadow: none; }
+.upcoming { list-style: none; margin: 0; padding: 0; }
+.upcoming li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 11px 14px; align-items: start; }
+.upcoming li + li { border-top: 1px solid var(--line); }
+.up-date { text-align: center; line-height: 1; padding-top: 2px; }
+.up-date b { display: block; font-family: var(--font-display); font-weight: 800; font-stretch: 68%; font-size: 30px; font-variant-numeric: tabular-nums; }
+.up-date small { font-size: 11.5px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .06em; }
+.up-date.red b, .up-date.red small { color: var(--red); }
+.up-names { font-weight: 600; }
+.up-names small { font-weight: 400; color: var(--ink-2); }
+.up-extra { font-size: 13px; margin-top: 3px; color: var(--ink-2); }
+.up-extra.red { color: var(--red); font-weight: 500; }
+
+/* ---------- vysúvacie okná ---------- */
+.sheet { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-bg { position: absolute; inset: 0; background: rgba(6, 14, 24, .42); animation: fade 200ms ease; }
+.sheet-panel {
+  position: relative; width: 100%; max-width: 560px; max-height: calc(100% - env(safe-area-inset-top, 0px) - 24px);
+  overflow-y: auto; overscroll-behavior: contain;
+  background: var(--paper); color: var(--ink);
+  border-radius: 22px 22px 0 0;
+  padding-inline: 16px;
+  padding-block: 8px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, .25);
+  animation: rise 260ms cubic-bezier(.2, .8, .2, 1);
+}
+.sheet-panel::before { content: ""; display: block; width: 38px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 8px; }
+@media (min-width: 640px) {
+  .sheet { align-items: center; padding: 24px; }
+  .sheet-panel { border-radius: 22px; max-height: min(760px, 100%); padding-block: 8px 20px; }
+}
+@keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+@keyframes fade { from { opacity: 0; } }
+.sheet-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0 12px; position: sticky; top: -8px; background: var(--paper); z-index: 2; }
+.sheet-h h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 26px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sheet-h .actions { display: flex; gap: 8px; flex: none; }
+.sheet-h .actions .btn { padding: 8px 12px; }
+
+.geo-btn { width: 100%; margin-top: 10px; }
+.results { list-style: none; margin: 10px 0 0; padding: 0; }
+.results li + li { border-top: 1px solid var(--line); }
+.results button { width: 100%; text-align: left; border: 0; background: none; padding: 11px 14px; display: flex; gap: 10px; align-items: center; }
+.results button:hover { background: var(--surface-2); }
+.results .r-name { font-weight: 600; }
+.results .r-sub { font-size: 13px; color: var(--ink-2); }
+.results .r-add { margin-left: auto; color: var(--accent); }
+.results .note { padding: 12px 14px; color: var(--ink-2); font-size: 14px; }
+
+.place-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.place-card {
+  position: relative; width: 100%; border: 0; text-align: left; color: #fff;
+  border-radius: 18px; padding: 13px 15px; min-height: 96px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .14);
+}
+.place-card.sel { box-shadow: 0 0 0 3px var(--accent), 0 4px 14px rgba(0, 0, 0, .14); }
+.pc-name { font-size: 19px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; display: flex; gap: 6px; align-items: center; }
+.pc-sub { font-size: 12.5px; color: rgba(255, 255, 255, .82); }
+.pc-cond { align-self: end; font-size: 13.5px; font-weight: 500; }
+.pc-temp { font-size: 40px; font-weight: 300; line-height: 1; text-align: right; font-variant-numeric: tabular-nums; }
+.pc-hl { align-self: end; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+.pc-edit { display: flex; gap: 6px; grid-column: 1 / -1; margin-top: 6px; }
+.pc-edit button { border: 0; border-radius: 10px; padding: 6px 10px; background: rgba(255, 255, 255, .22); color: #fff; font-size: 13px; font-weight: 600; display: inline-flex; gap: 4px; align-items: center; }
+.pc-edit button:disabled { opacity: .35; }
+.pc-edit .rm { margin-left: auto; background: rgba(0, 0, 0, .3); }
+
+.form { display: grid; gap: 14px; padding-top: 4px; }
+.field { display: grid; gap: 5px; min-width: 0; }
+.field > span { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.field em { font-style: normal; font-weight: 400; }
+.field input, .field select {
+  width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 12px;
+  padding: 11px 12px; font-size: 16px; min-width: 0;
+}
+.field input:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.field-row { display: grid; grid-template-columns: 5em minmax(0, 1fr) 6.2em; gap: 10px; }
+.form-err { margin: 0; color: var(--red); font-size: 14px; font-weight: 500; }
+.form-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 4px; }
+.form-actions .spacer { flex: 1; }
+.form-hint { margin: 0; font-size: 13px; color: var(--ink-2); }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 14px); z-index: 90;
+  transform: translateX(-50%); max-width: calc(100% - 32px);
+  display: flex; align-items: center; gap: 14px;
+  background: #16232f; color: #fff; padding: 11px 16px; border-radius: 14px; font-size: 14px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .3); animation: rise 220ms ease;
+}
+.toast button { border: 0; background: none; color: #8cc4ff; font-weight: 700; padding: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  .splash.run .cal-progress i { animation-duration: var(--splash-ms, 4000ms) !important; }
+  .splash.tearing .cal-page { transform: none; }
+}
+@media (max-width: 380px) {
+  .hero-temp { font-size: 88px; }
+  .cal-day { font-size: 150px; }
+  .field-row { grid-template-columns: 4.6em minmax(0, 1fr); }
+  .field-row .field:last-child { grid-column: 1 / -1; }
+  .days summary { grid-template-columns: 2.8em 2.9em 2.2em minmax(0, 1fr) 2.2em; gap: 6px; }
+}
+</style>
+</head>
+<body class="mode-wx">
+
+<!-- Úvodná obrazovka (4 s pri každom otvorení) -->
+<div id="splash" class="splash" role="dialog" aria-label="Dnešný deň">
+  <div class="splash-inner" id="splash-inner"></div>
+</div>
+
+<div class="sky" id="sky" aria-hidden="true"></div>
+
+<main id="app">
+  <section id="view-pocasie" class="view view-wx" aria-label="Počasie">
+    <header class="wx-top">
+      <button class="icon-btn" id="wx-places" aria-label="Moje miesta" title="Moje miesta"></button>
+      <div class="dots" id="wx-dots" role="tablist" aria-label="Prepínanie miest"></div>
+      <button class="icon-btn" id="wx-refresh" aria-label="Obnoviť počasie" title="Obnoviť"></button>
+    </header>
+    <div class="wx-body" id="wx-body"></div>
+  </section>
+
+  <section id="view-narodeniny" class="view" aria-label="Narodeniny" hidden>
+    <header class="page-h">
+      <h1>Narodeniny</h1>
+      <button class="btn btn-primary" id="bd-add"></button>
+    </header>
+    <p class="page-sub" id="bd-sub"></p>
+    <div id="bd-content"></div>
+    <h2 class="section-h">Záloha</h2>
+    <div class="backup">
+      <p>Údaje sú uložené len v tomto zariadení. Zálohu si stiahni do súboru a obnov ju napríklad v novom telefóne.</p>
+      <button class="btn" id="bk-export">Stiahnuť zálohu</button>
+      <button class="btn" id="bk-import">Obnoviť zo zálohy</button>
+      <input type="file" id="bk-file" accept="application/json,.json" hidden>
+    </div>
+  </section>
+
+  <section id="view-kalendar" class="view" aria-label="Kalendár" hidden>
+    <header class="page-h">
+      <h1>Kalendár</h1>
+    </header>
+    <div class="kal-wrap" id="kal-page"></div>
+    <div class="kal-nav">
+      <button class="btn" id="kal-prev" aria-label="Predchádzajúci deň"></button>
+      <button class="btn" id="kal-today">Dnes</button>
+      <button class="btn" id="kal-next" aria-label="Nasledujúci deň"></button>
+    </div>
+    <h2 class="section-h">Kedy má meniny?</h2>
+    <label class="search" for="nd-q">
+      <span id="nd-ico"></span>
+      <input id="nd-q" type="search" placeholder="Napíš meno, napr. Katarína" autocomplete="off" enterkeyhint="search">
+    </label>
+    <ul class="nd-results" id="nd-results"></ul>
+    <h2 class="section-h">Najbližších 14 dní</h2>
+    <ol class="upcoming panel" id="kal-upcoming"></ol>
+  </section>
+</main>
+
+<nav class="tabbar" aria-label="Hlavná navigácia">
+  <div class="tabbar-inner">
+    <button class="tab" data-tab="pocasie"><span data-ico="cloudsun"></span>Počasie</button>
+    <button class="tab" data-tab="narodeniny"><span data-ico="cake"></span>Narodeniny</button>
+    <button class="tab" data-tab="kalendar"><span data-ico="calendar"></span>Kalendár</button>
+  </div>
+</nav>
+
+<div id="sheet-root"></div>
+<div id="toast-root" aria-live="polite"></div>
+
+<!-- ============================================================
+     DÁTA: slovenské meniny a české svátky (občiansky kalendár).
+     Jeden riadok = jeden mesiac, "" = deň bez mena (sviatok).
+     ============================================================ -->
+<script>
+const MENINY_SK = [
+  /* január */ ["", "Alexandra, Karina", "Daniela", "Drahoslav", "Andrea", "Antónia", "Bohuslava", "Severín", "Alexej", "Dáša", "Malvína", "Ernest", "Rastislav", "Radovan", "Dobroslav", "Kristína", "Nataša", "Bohdana", "Drahomíra, Mário", "Dalibor", "Vincent", "Zora", "Miloš", "Timotej", "Gejza", "Tamara", "Bohuš", "Alfonz", "Gašpar", "Ema", "Emil"],
+  /* február */ ["Tatiana", "Erik, Erika", "Blažej", "Veronika", "Agáta", "Dorota", "Vanda", "Zoja", "Zdenko", "Gabriela", "Dezider", "Perla", "Arpád", "Valentín", "Pravoslav", "Ida, Liana", "Miloslava", "Jaromír", "Vlasta", "Lívia", "Eleonóra", "Etela", "Roman, Romana", "Matej", "Frederik, Frederika", "Viktor", "Alexander", "Zlatica", "Radomír"],
+  /* marec */ ["Albín", "Anežka", "Bohumil, Bohumila", "Kazimír", "Fridrich", "Radoslav, Radoslava", "Tomáš", "Alan, Alana", "Františka", "Branislav, Bruno", "Angela, Angelika", "Gregor", "Vlastimil", "Matilda", "Svetlana", "Boleslav", "Ľubica", "Eduard", "Jozef", "Víťazoslav", "Blahoslav", "Beňadik", "Adrián", "Gabriel", "Marián", "Emanuel", "Alena", "Soňa", "Miroslav", "Vieroslava", "Benjamín"],
+  /* apríl */ ["Hugo", "Zita", "Richard", "Izidor", "Miroslava", "Irena", "Zoltán", "Albert", "Milena", "Igor", "Július", "Estera", "Aleš", "Justína", "Fedor", "Dana, Danica", "Rudolf", "Valér", "Jela", "Marcel", "Ervín", "Slavomír", "Vojtech", "Juraj", "Marek", "Jaroslava", "Jaroslav", "Jarmila", "Lea", "Anastázia"],
+  /* máj */ ["", "Žigmund", "Galina", "Florián", "Lesana", "Hermína", "Monika", "Ingrida", "Roland", "Viktória", "Blažena", "Pankrác", "Servác", "Bonifác", "Žofia", "Svetozár", "Gizela", "Viola", "Gertrúda", "Bernard", "Zina", "Júlia, Juliana", "Želmíra", "Ela", "Urban", "Dušan", "Iveta", "Viliam", "Vilma", "Ferdinand", "Petronela"],
+  /* jún */ ["Žaneta", "Xénia", "Karolína", "Lenka", "Laura", "Norbert", "Róbert", "Medard", "Stanislava", "Margaréta", "Dobroslava", "Zlatko", "Anton", "Vasil", "Vít", "Blanka", "Adolf", "Vratislav", "Alfréd", "Valéria", "Alojz", "Paulína", "Sidónia", "Ján", "Olívia", "Adriána", "Ladislav, Ladislava", "Beáta", "Peter, Pavol, Petra", "Melánia"],
+  /* júl */ ["Diana", "Berta", "Miloslav", "Prokop", "Cyril, Metod", "Patrik, Patrícia", "Oliver", "Ivan", "Lujza", "Amália", "Milota", "Nina", "Margita", "Kamil", "Henrich", "Drahomír", "Bohuslav", "Kamila", "Dušana", "Iľja", "Daniel", "Magdaléna", "Oľga", "Vladimír", "Jakub", "Anna, Hana", "Božena", "Krištof", "Marta", "Libuša", "Ignác"],
+  /* august */ ["Božidara", "Gustáv", "Jerguš", "Dominik, Dominika", "Hortenzia", "Jozefína", "Štefánia", "Oskar", "Ľubomíra", "Vavrinec", "Zuzana", "Darina", "Ľubomír", "Mojmír", "Marcela", "Leonard", "Milica", "Elena, Helena", "Lýdia", "Anabela, Liliana", "Jana", "Tichomír", "Filip", "Bartolomej", "Ľudovít", "Samuel", "Silvia", "Augustín", "Nikola, Nikolaj", "Ružena", "Nora"],
+  /* september */ ["Drahoslava", "Linda, Rebeka", "Belo", "Rozália", "Regína", "Alica", "Marianna", "Miriama", "Martina", "Oleg", "Bystrík", "Mária", "Ctibor", "Ľudomil", "Jolana", "Ľudmila", "Olympia", "Eugénia", "Konštantín", "Ľuboslav, Ľuboslava", "Matúš", "Móric", "Zdenka", "Ľuboš, Ľubor", "Vladislav, Vladislava", "Edita", "Cyprián", "Václav", "Michal, Michaela", "Jarolím"],
+  /* október */ ["Arnold", "Levoslav", "Stela", "František", "Viera", "Natália", "Eliška", "Brigita", "Dionýz", "Slavomíra", "Valentína", "Maximilián", "Koloman", "Boris", "Terézia", "Vladimíra", "Hedviga", "Lukáš", "Kristián", "Vendelín", "Uršuľa", "Sergej", "Alojzia", "Kvetoslava", "Aurel", "Demeter", "Sabína", "Dobromila", "Klára", "Šimon, Simona", "Aurélia"],
+  /* november */ ["Denis, Denisa", "", "Hubert", "Karol", "Imrich", "Renáta", "René", "Bohumír", "Teodor", "Tibor", "Martin", "Svätopluk", "Stanislav", "Irma", "Leopold", "Agnesa", "Klaudia", "Eugen", "Alžbeta", "Félix", "Elvíra", "Cecília", "Klement", "Emília", "Katarína", "Kornel", "Milan", "Henrieta", "Vratko", "Ondrej, Andrej"],
+  /* december */ ["Edmund", "Bibiána", "Oldrich", "Barbora, Barbara", "Oto", "Mikuláš", "Ambróz", "Marína", "Izabela", "Radúz", "Hilda", "Otília", "Lucia", "Branislava, Bronislava", "Ivica", "Albína", "Kornélia", "Sláva", "Judita", "Dagmara", "Bohdan", "Adela", "Nadežda", "Adam, Eva", "", "Štefan", "Filoména", "Ivana, Ivona", "Milada", "Dávid", "Silvester"]
+];
+
+const SVATKY_CZ = [
+  /* leden */ ["", "Karina", "Radmila", "Diana", "Dalimil", "Kašpar, Melichar, Baltazar", "Vilma", "Čestmír", "Vladan", "Břetislav", "Bohdana", "Pravoslav", "Edita", "Radovan", "Alice", "Ctirad", "Drahoslav", "Vladislav", "Doubravka", "Ilona", "Běla", "Slavomír", "Zdeněk", "Milena", "Miloš", "Zora", "Ingrid", "Otýlie", "Zdislava", "Robin", "Marika"],
+  /* únor */ ["Hynek", "Nela", "Blažej", "Jarmila", "Dobromila", "Vanda", "Veronika", "Milada", "Apolena", "Mojmír", "Božena", "Slavěna", "Věnceslav", "Valentýn", "Jiřina", "Ljuba", "Miloslava", "Gizela", "Patrik", "Oldřich", "Lenka", "Petr", "Svatopluk", "Matěj", "Liliana", "Dorota", "Alexandr", "Lumír", "Horymír"],
+  /* březen */ ["Bedřich", "Anežka", "Kamil", "Stela", "Kazimír", "Miroslav", "Tomáš", "Gabriela", "Františka", "Viktorie", "Anděla", "Řehoř", "Růžena", "Rút, Matylda", "Ida", "Elena, Herbert", "Vlastimil", "Eduard", "Josef", "Světlana", "Radek", "Leona", "Ivona", "Gabriel", "Marián", "Emanuel", "Dita", "Soňa", "Taťána", "Arnošt", "Kvido"],
+  /* duben */ ["Hugo", "Erika", "Richard", "Ivana", "Miroslava", "Vendula", "Heřman, Hermína", "Ema", "Dušan", "Darja", "Izabela", "Julius", "Aleš", "Vincenc", "Anastázie", "Irena", "Rudolf", "Valérie", "Rostislav", "Marcela", "Alexandra", "Evženie", "Vojtěch", "Jiří", "Marek", "Oto", "Jaroslav", "Vlastislav", "Robert", "Blahoslav"],
+  /* květen */ ["", "Zikmund", "Alexej", "Květoslav", "Klaudie", "Radoslav", "Stanislav", "", "Ctibor", "Blažena", "Svatava", "Pankrác", "Servác", "Bonifác", "Žofie", "Přemysl", "Aneta", "Nataša", "Ivo", "Zbyšek", "Monika", "Emil", "Vladimír", "Jana", "Viola", "Filip", "Valdemar", "Vilém", "Maxmilián", "Ferdinand", "Kamila"],
+  /* červen */ ["Laura", "Jarmil", "Tamara", "Dalibor", "Dobroslav", "Norbert", "Iveta, Slavoj", "Medard", "Stanislava", "Gita", "Bruno", "Antonie", "Antonín", "Roland", "Vít", "Zbyněk", "Adolf", "Milan", "Leoš", "Květa", "Alois", "Pavla", "Zdeňka", "Jan", "Ivan", "Adriana", "Ladislav", "Lubomír", "Petr, Pavel", "Šárka"],
+  /* červenec */ ["Jaroslava", "Patricie", "Radomír", "Prokop", "Cyril, Metoděj", "", "Bohuslava", "Nora", "Drahoslava", "Libuše, Amálie", "Olga", "Bořek", "Markéta", "Karolína", "Jindřich", "Luboš", "Martina", "Drahomíra", "Čeněk", "Ilja", "Vítězslav", "Magdaléna", "Libor", "Kristýna", "Jakub", "Anna", "Věroslav", "Viktor", "Marta", "Bořivoj", "Ignác"],
+  /* srpen */ ["Oskar", "Gustav", "Miluše", "Dominik", "Kristián", "Oldřiška", "Lada", "Soběslav", "Roman", "Vavřinec", "Zuzana", "Klára", "Alena", "Alan", "Hana", "Jáchym", "Petra", "Helena", "Ludvík", "Bernard", "Johana", "Bohuslav", "Sandra", "Bartoloměj", "Radim", "Luděk", "Otakar", "Augustýn", "Evelína", "Vladěna", "Pavlína"],
+  /* září */ ["Linda, Samuel", "Adéla", "Bronislav", "Jindřiška", "Boris", "Boleslav", "Regína", "Mariana", "Daniela", "Irma", "Denisa", "Marie", "Lubor", "Radka", "Jolana", "Ludmila", "Naděžda", "Kryštof", "Zita", "Oleg", "Matouš", "Darina", "Berta", "Jaromír", "Zlata", "Andrea", "Jonáš", "Václav", "Michal", "Jeroným"],
+  /* říjen */ ["Igor", "Olivie, Oliver", "Bohumil", "František", "Eliška", "Hanuš", "Justýna", "Věra", "Štefan, Sára", "Marina", "Andrej", "Marcel", "Renáta", "Agáta", "Tereza", "Havel", "Hedvika", "Lukáš", "Michaela", "Vendelín", "Brigita", "Sabina", "Teodor", "Nina", "Beáta", "Erik", "Šarlota, Zoe", "", "Silvie", "Tadeáš", "Štěpánka"],
+  /* listopad */ ["Felix", "", "Hubert", "Karel", "Miriam", "Liběna", "Saskie", "Bohumír", "Bohdan", "Evžen", "Martin", "Benedikt", "Tibor", "Sáva", "Leopold", "Otmar", "Mahulena", "Romana", "Alžběta", "Nikola", "Albert", "Cecílie", "Klement", "Emílie", "Kateřina", "Artur", "Xenie", "René", "Zina", "Ondřej"],
+  /* prosinec */ ["Iva", "Blanka", "Svatoslav", "Barbora", "Jitka", "Mikuláš", "Ambrož, Benjamín", "Květoslava", "Vratislav", "Julie", "Dana", "Simona", "Lucie", "Lýdie", "Radana, Radan", "Albína", "Daniel", "Miloslav", "Ester", "Dagmar", "Natálie", "Šimon", "Vlasta", "Adam, Eva", "", "Štěpán", "Žaneta", "Bohumila", "Judita", "David", "Silvestr"]
+];
+
+/* Štátne sviatky s pevným dátumom ("MM-DD"). Veľká noc sa dopočítava. */
+const SVIATKY_SK = {
+  "01-01": "Deň vzniku Slovenskej republiky",
+  "01-06": "Zjavenie Pána (Traja králi)",
+  "05-01": "Sviatok práce",
+  "05-08": "Deň víťazstva nad fašizmom",
+  "07-05": "Sviatok sv. Cyrila a Metoda",
+  "08-29": "Výročie SNP",
+  "09-01": "Deň Ústavy SR",
+  "09-15": "Sedembolestná Panna Mária",
+  "11-01": "Sviatok všetkých svätých",
+  "11-02": "Pamiatka zosnulých",
+  "11-17": "Deň boja za slobodu a demokraciu",
+  "12-24": "Štedrý deň",
+  "12-25": "Prvý sviatok vianočný",
+  "12-26": "Druhý sviatok vianočný"
+};
+const SVATKY_STATNI_CZ = {
+  "01-01": "Den obnovy samostatného českého státu",
+  "05-01": "Svátek práce",
+  "05-08": "Den vítězství",
+  "07-05": "Den slovanských věrozvěstů Cyrila a Metoděje",
+  "07-06": "Den upálení mistra Jana Husa",
+  "09-28": "Den české státnosti",
+  "10-28": "Den vzniku samostatného československého státu",
+  "11-02": "Památka zesnulých",
+  "11-17": "Den boje za svobodu a demokracii",
+  "12-24": "Štědrý den",
+  "12-25": "1. svátek vánoční",
+  "12-26": "2. svátek vánoční"
+};
+</script>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   Pomocné funkcie
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const DAY = 864e5;
+
+const store = {
+  get(k, def) { try { const v = localStorage.getItem('obzor.' + k); return v == null ? def : JSON.parse(v); } catch { return def; } },
+  set(k, v) { try { localStorage.setItem('obzor.' + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem('obzor.' + k); } catch {} }
+};
+
+const MESIACE = ['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december'];
+const MESIACE_GEN = ['januára', 'februára', 'marca', 'apríla', 'mája', 'júna', 'júla', 'augusta', 'septembra', 'októbra', 'novembra', 'decembra'];
+const DNI = ['nedeľa', 'pondelok', 'utorok', 'streda', 'štvrtok', 'piatok', 'sobota'];
+const DNI_KR = ['Ne', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So'];
+
+/** Slovenské skloňovanie podľa čísla: 1 deň, 2–4 dni, 5+ dní */
+const plural = (n, one, few, many) => { const a = Math.abs(n); return a === 1 ? one : (a >= 2 && a <= 4 ? few : many); };
+const fmtNum = (v, d = 1) => Number(v).toLocaleString('sk-SK', { maximumFractionDigits: d });
+const pad = (n) => String(n).padStart(2, '0');
+const mmdd = (d) => pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const daysBetween = (a, b) => Math.round((b - a) / DAY);
+const isLeap = (y) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+const norm = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const shortDate = (m, d) => `${d}. ${MESIACE_GEN[m - 1]}`;
+
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const wd = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - wd);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - y0) / DAY + 1) / 7);
+}
+
+/* ---------- ikony (čiarové, 24×24) ---------- */
+const ICONS = {
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".6"/><circle cx="4.5" cy="12" r=".6"/><circle cx="4.5" cy="18" r=".6"/>',
+  refresh: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  cloud: '<path d="M7 18.5h10a4 4 0 0 0 .7-7.94A6 6 0 0 0 6.2 11.1 3.7 3.7 0 0 0 7 18.5z"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  thermo: '<path d="M14 14.6V5a2 2 0 1 0-4 0v9.6a4 4 0 1 0 4 0z"/><path d="M12 11v6"/>',
+  drop: '<path d="M12 3.5s6 6.4 6 10.8a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5z"/>',
+  wind: '<path d="M3 9h11.5a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h7"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  rain: '<path d="M7 14.5h10a4 4 0 0 0 .7-7.94A6 6 0 0 0 6.2 7.1 3.7 3.7 0 0 0 7 14.5z"/><path d="M8 17.5l-1 2.5M12 17.5l-1 2.5M16 17.5l-1 2.5"/>',
+  eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+  gauge: '<path d="M4.2 17.5a8.5 8.5 0 1 1 15.6 0"/><path d="M12 13.5l3.6-4.2"/><circle cx="12" cy="14" r="1"/>',
+  sunrise: '<path d="M3 18h18M6.5 18a5.5 5.5 0 0 1 11 0M12 3.5v5M9 6l3-2.5L15 6"/>',
+  sunset: '<path d="M3 18h18M6.5 18a5.5 5.5 0 0 1 11 0M12 3.5v5M9 6l3 2.5L15 6"/>',
+  leaf: '<path d="M5 19c0-8 5-13.5 14.5-14.5C19.5 14 14 19 5 19zM5 19l7.5-7.5"/>',
+  moon: '<path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  cake: '<path d="M4 20.5h16M5.5 20.5v-7h13v7M5.5 16.5c1.6 1.2 3.1 1.2 4.4 0 1.4-1.2 2.8-1.2 4.2 0 1.4 1.2 2.9 1.2 4.4 0M12 13.5V10M12 7.2c-.9 0-1.4-.7-1.4-1.4 0-1 1.4-2.6 1.4-2.6s1.4 1.6 1.4 2.6c0 .7-.5 1.4-1.4 1.4z"/>',
+  gift: '<rect x="4" y="9" width="16" height="11.5" rx="1.5"/><path d="M3 9h18M12 9v11.5M12 9c-2.5 0-5-1-5-3 0-1.4 1-2 2-2 2 0 3 3 3 5zM12 9c2.5 0 5-1 5-3 0-1.4-1-2-2-2-2 0-3 3-3 5z"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/>',
+  left: '<path d="M15 5.5L8.5 12l6.5 6.5"/>',
+  right: '<path d="M9 5.5l6.5 6.5L9 18.5"/>',
+  up: '<path d="M12 19V5.5M6 11.5l6-6 6 6"/>',
+  down: '<path d="M12 5v13.5M6 12.5l6 6 6-6"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  pin: '<path d="M19.5 4.5L4.5 11l6.7 1.8L13 19.5z"/>',
+  cloudsun: '<path d="M8.5 2.8v1.4M3.2 8H4.6M4.7 4.2l1 1M12.3 4.2l-1 1"/><path d="M11.4 9.3A3.6 3.6 0 0 0 5.2 10.7"/><path d="M9.2 20.5h8.3a4 4 0 0 0 .6-7.95 5.2 5.2 0 0 0-9.7.95 3.5 3.5 0 0 0 .8 7z"/>'
+};
+const ico = (name, size = 20, sw = 1.8) =>
+  `<svg class="ico" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+
+function fillIcons(root = document) {
+  $$('[data-ico]', root).forEach((el) => { el.innerHTML = ico(el.dataset.ico, 24); });
+}
+
+/* ============================================================
+   Kalendár: meniny, svátky, sviatky, Veľká noc
+   ============================================================ */
+const Kal = {
+  easter(y) {
+    const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
+    const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(y, month - 1, day);
+  },
+  _hol: {},
+  holidays(y) {
+    if (this._hol[y]) return this._hol[y];
+    const sk = { ...SVIATKY_SK }, cz = { ...SVATKY_STATNI_CZ };
+    const e = this.easter(y);
+    sk[mmdd(addDays(e, -2))] = 'Veľký piatok';
+    sk[mmdd(e)] = 'Veľkonočná nedeľa';
+    sk[mmdd(addDays(e, 1))] = 'Veľkonočný pondelok';
+    cz[mmdd(addDays(e, -2))] = 'Velký pátek';
+    cz[mmdd(e)] = 'Velikonoční neděle';
+    cz[mmdd(addDays(e, 1))] = 'Velikonoční pondělí';
+    return (this._hol[y] = { sk, cz });
+  },
+  forDate(d) {
+    const m = d.getMonth(), day = d.getDate() - 1, key = mmdd(d);
+    const hol = this.holidays(d.getFullYear());
+    return {
+      sk: MENINY_SK[m][day] || '',
+      cz: SVATKY_CZ[m][day] || '',
+      skHol: hol.sk[key] || '',
+      czHol: hol.cz[key] || ''
+    };
+  },
+  _index: null,
+  index() {
+    if (this._index) return this._index;
+    const idx = new Map();
+    const add = (list, country) => list.forEach((month, m) => month.forEach((str, d) => {
+      if (!str) return;
+      str.split(',').map((s) => s.trim()).filter(Boolean).forEach((name) => {
+        const k = norm(name);
+        if (!idx.has(k)) idx.set(k, { name, sk: [], cz: [] });
+        idx.get(k)[country].push({ m: m + 1, d: d + 1 });
+      });
+    }));
+    add(MENINY_SK, 'sk');
+    add(SVATKY_CZ, 'cz');
+    return (this._index = idx);
+  },
+  lookup(firstName) { return this.index().get(norm(firstName)) || null; },
+  search(q) {
+    const nq = norm(q);
+    if (nq.length < 2) return [];
+    const starts = [], contains = [];
+    for (const [k, v] of this.index()) {
+      if (k.startsWith(nq)) starts.push(v); else if (k.includes(nq)) contains.push(v);
+    }
+    const byName = (a, b) => a.name.localeCompare(b.name, 'sk');
+    return [...starts.sort(byName), ...contains.sort(byName)].slice(0, 12);
+  }
+};
+
+/* ============================================================
+   Počasie – kódy WMO, ikony, obloha
+   ============================================================ */
+const WX_TEXT = {
+  0: 'Jasno', 1: 'Prevažne jasno', 2: 'Polojasno', 3: 'Zamračené',
+  45: 'Hmla', 48: 'Hmla s námrazou',
+  51: 'Slabé mrholenie', 53: 'Mrholenie', 55: 'Husté mrholenie', 56: 'Mrznúce mrholenie', 57: 'Silné mrznúce mrholenie',
+  61: 'Slabý dážď', 63: 'Dážď', 65: 'Silný dážď', 66: 'Mrznúci dážď', 67: 'Silný mrznúci dážď',
+  71: 'Slabé sneženie', 73: 'Sneženie', 75: 'Silné sneženie', 77: 'Snehové zrná',
+  80: 'Slabé prehánky', 81: 'Prehánky', 82: 'Prudké prehánky', 85: 'Snehové prehánky', 86: 'Silné snehové prehánky',
+  95: 'Búrka', 96: 'Búrka s krúpami', 99: 'Silná búrka s krúpami'
+};
+const wxText = (c) => WX_TEXT[c] || 'Neznáme';
+function wxKind(c) {
+  if (c <= 1) return 'clear';
+  if (c === 2) return 'partly';
+  if (c === 3) return 'cloudy';
+  if (c === 45 || c === 48) return 'fog';
+  if (c >= 51 && c <= 57) return 'drizzle';
+  if ((c >= 61 && c <= 67) || (c >= 80 && c <= 82)) return 'rain';
+  if ((c >= 71 && c <= 77) || c === 85 || c === 86) return 'snow';
+  if (c >= 95) return 'storm';
+  return 'cloudy';
+}
+const isWet = (c) => (c >= 51 && c <= 67) || (c >= 71 && c <= 99);
+
+const C_SUN = '#FFC23A', C_MOON = '#E6EBF5', C_CLOUD = '#F3F6F9', C_CLOUD2 = '#C8D1DB', C_CLOUD3 = '#8D98A7', C_RAIN = '#6CC3FF', C_BOLT = '#FFD43B';
+function svgSun(cx, cy, r) {
+  let rays = '';
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4, c = Math.cos(a), s = Math.sin(a);
+    rays += `<line x1="${(cx + c * (r + 4)).toFixed(1)}" y1="${(cy + s * (r + 4)).toFixed(1)}" x2="${(cx + c * (r + 8.5)).toFixed(1)}" y2="${(cy + s * (r + 8.5)).toFixed(1)}"/>`;
+  }
+  return `<g stroke="${C_SUN}" stroke-width="3" stroke-linecap="round">${rays}</g><circle cx="${cx}" cy="${cy}" r="${r}" fill="${C_SUN}"/>`;
+}
+const svgMoon = (tx = 0, ty = 0, s = 1) => `<path transform="translate(${tx} ${ty}) scale(${s})" d="M38 12a19 19 0 1 0 14 30A15.5 15.5 0 0 1 38 12z" fill="${C_MOON}"/>`;
+const svgCloud = (tx, ty, s, fill) =>
+  `<g transform="translate(${tx} ${ty}) scale(${s})" fill="${fill}"><circle cx="22" cy="38" r="10"/><circle cx="34" cy="29" r="13"/><circle cx="45" cy="38" r="10"/><rect x="22" y="37" width="23" height="11"/></g>`;
+
+function wxIcon(code, day = true) {
+  const k = wxKind(code);
+  let b = '';
+  switch (k) {
+    case 'clear':
+      b = code === 1
+        ? (day ? svgSun(28, 26, 10) : svgMoon(-4, -2, 0.9)) + svgCloud(14, 16, 0.72, C_CLOUD)
+        : (day ? svgSun(32, 32, 11) : svgMoon(-2, 0, 1));
+      break;
+    case 'partly':
+      b = (day ? svgSun(24, 22, 8.5) : svgMoon(-12, -6, 0.85)) + svgCloud(5, 7, 0.9, C_CLOUD);
+      break;
+    case 'cloudy':
+      b = svgCloud(-6, -7, 0.85, C_CLOUD2) + svgCloud(5, 5, 0.9, C_CLOUD);
+      break;
+    case 'fog':
+      b = svgCloud(0, -8, 1, C_CLOUD2) + `<g stroke="${C_CLOUD}" stroke-width="3" stroke-linecap="round"><line x1="14" y1="47" x2="50" y2="47"/><line x1="10" y1="53" x2="44" y2="53"/><line x1="20" y1="59" x2="54" y2="59"/></g>`;
+      break;
+    case 'drizzle':
+      b = svgCloud(0, -8, 1, C_CLOUD) + `<g fill="${C_RAIN}"><circle cx="23" cy="50" r="2"/><circle cx="33" cy="54" r="2"/><circle cx="43" cy="50" r="2"/><circle cx="28" cy="59" r="2"/><circle cx="38" cy="60" r="2"/></g>`;
+      break;
+    case 'rain':
+      b = svgCloud(0, -8, 1, C_CLOUD2) + `<g stroke="${C_RAIN}" stroke-width="3" stroke-linecap="round"><line x1="24" y1="47" x2="20" y2="56"/><line x1="34" y1="47" x2="30" y2="56"/><line x1="44" y1="47" x2="40" y2="56"/><line x1="29" y1="55" x2="26" y2="61"/><line x1="39" y1="55" x2="36" y2="61"/></g>`;
+      break;
+    case 'snow':
+      b = svgCloud(0, -8, 1, C_CLOUD2) + `<g fill="#fff"><circle cx="22" cy="49" r="2.6"/><circle cx="33" cy="52" r="2.6"/><circle cx="44" cy="49" r="2.6"/><circle cx="27" cy="58" r="2.6"/><circle cx="39" cy="59" r="2.6"/></g>`;
+      break;
+    case 'storm':
+      b = svgCloud(0, -9, 1, C_CLOUD3) + `<path d="M34 38 25 52h7l-4 11 13-16h-7l4-9z" fill="${C_BOLT}"/>`;
+      break;
+  }
+  return `<svg class="wxi" viewBox="0 0 64 64" width="36" height="36" aria-hidden="true">${b}</svg>`;
+}
+const sunEventIcon = (rise) =>
+  `<svg class="wxi" viewBox="0 0 64 64" width="36" height="36" aria-hidden="true">${svgSun(32, 36, 9)}<rect x="6" y="40" width="52" height="30" fill="none"/><line x1="10" y1="46" x2="54" y2="46" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="${rise ? 'M26 58l6-6 6 6' : 'M26 52l6 6 6-6'}" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/** Farba oblohy podľa počasia a dňa/noci (ako v Apple/Google appkách) */
+function skyFor(code, day) {
+  const k = wxKind(code);
+  const S = {
+    clear: day ? ['#2a74c4', '#4f97dc', '#86bdea'] : ['#0a1430', '#15254b', '#263b68'],
+    partly: day ? ['#3572b5', '#5d93c9', '#8fb4d6'] : ['#111a31', '#1f2c4a', '#34425f'],
+    cloudy: day ? ['#51606f', '#6d7c8b', '#909caa'] : ['#1a1f27', '#272e39', '#3a424f'],
+    fog: day ? ['#6b7680', '#88929b', '#a8b0b6'] : ['#23282e', '#343a41', '#4a5158'],
+    drizzle: day ? ['#44576a', '#5b6f82', '#7b8d9e'] : ['#141b24', '#222c38', '#34404d'],
+    rain: day ? ['#3a4c5e', '#506376', '#6c7f90'] : ['#10161e', '#1c2530', '#2c3743'],
+    snow: day ? ['#6883a0', '#8ea5bd', '#b9c8d7'] : ['#232c3b', '#35425a', '#4d5c75'],
+    storm: day ? ['#2d2c45', '#46445f', '#63627a'] : ['#131220', '#221f33', '#35314a']
+  }[k];
+  return `linear-gradient(180deg, ${S[0]} 0%, ${S[1]} 48%, ${S[2]} 100%)`;
+}
+
+/** Farba teploty pre pásiky v 10-dňovej predpovedi */
+const T_STOPS = [[-15, [138, 125, 255]], [-5, [90, 168, 255]], [5, [89, 210, 232]], [13, [143, 220, 138]], [20, [243, 214, 90]], [27, [255, 159, 67]], [35, [255, 91, 79]]];
+function tempColor(t) {
+  if (t <= T_STOPS[0][0]) return `rgb(${T_STOPS[0][1]})`;
+  for (let i = 1; i < T_STOPS.length; i++) {
+    const [t1, c1] = T_STOPS[i];
+    if (t <= t1) {
+      const [t0, c0] = T_STOPS[i - 1], f = (t - t0) / (t1 - t0);
+      return `rgb(${c0.map((v, j) => Math.round(v + (c1[j] - v) * f)).join(',')})`;
+    }
+  }
+  return `rgb(${T_STOPS[T_STOPS.length - 1][1]})`;
+}
+
+const SMERY = ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'];
+const SMERY_SLOVOM = ['severný', 'severný', 'severovýchodný', 'východný', 'východný', 'východný', 'juhovýchodný', 'južný', 'južný', 'južný', 'juhozápadný', 'západný', 'západný', 'západný', 'severozápadný', 'severný'];
+const dirIdx = (deg) => Math.round(((deg % 360) + 360) % 360 / 22.5) % 16;
+
+const hhmm = (iso) => iso.slice(11, 16).replace(/^0/, '');
+const hourOf = (iso) => +iso.slice(11, 13);
+const minutesOf = (iso) => +iso.slice(11, 13) * 60 + +iso.slice(14, 16);
+
+function cloudWord(p) {
+  if (p < 10) return 'Jasno';
+  if (p < 35) return 'Malá oblačnosť';
+  if (p < 65) return 'Polojasno';
+  if (p < 90) return 'Oblačno';
+  return 'Zamračené';
+}
+function uvLevel(u) {
+  if (u < 3) return ['Nízky', 'Ochrana nie je potrebná.'];
+  if (u < 6) return ['Stredný', 'Na poludnie použi opaľovací krém.'];
+  if (u < 8) return ['Vysoký', 'Okolo obeda vyhľadaj tieň.'];
+  if (u < 11) return ['Veľmi vysoký', 'Obmedz pobyt na slnku.'];
+  return ['Extrémny', 'Vyhni sa priamemu slnku.'];
+}
+function aqLevel(v) {
+  if (v <= 20) return 'Dobrá';
+  if (v <= 40) return 'Prijateľná';
+  if (v <= 60) return 'Stredná';
+  if (v <= 80) return 'Zlá';
+  if (v <= 100) return 'Veľmi zlá';
+  return 'Extrémne zlá';
+}
+
+/* Fáza Mesiaca – počítaná lokálne */
+function moonPhase(date = new Date()) {
+  const SYN = 29.530588853, ref = Date.UTC(2000, 0, 6, 18, 14);
+  let p = ((date - ref) / DAY / SYN) % 1;
+  if (p < 0) p += 1;
+  const names = [[0.0339, 'Nov'], [0.216, 'Dorastajúci kosák'], [0.284, 'Prvá štvrť'], [0.466, 'Dorastajúci Mesiac'], [0.534, 'Spln'], [0.716, 'Ubúdajúci Mesiac'], [0.784, 'Posledná štvrť'], [0.9661, 'Ubúdajúci kosák'], [1.01, 'Nov']];
+  const name = names.find(([lim]) => p < lim)[1];
+  const illum = (1 - Math.cos(2 * Math.PI * p)) / 2;
+  const toFull = ((0.5 - p + 1) % 1) * SYN;
+  return { p, name, illum, toFull: Math.round(toFull) };
+}
+function moonSVG(p) {
+  const r = 22, cx = 25, cy = 25, k = Math.cos(2 * Math.PI * p), rx = (Math.abs(k) * r).toFixed(2);
+  const waxing = p < 0.5;
+  const limb = waxing ? 1 : 0;
+  const term = waxing ? (k > 0 ? 0 : 1) : (k > 0 ? 1 : 0);
+  const lit = `M${cx} ${cy - r} A${r} ${r} 0 0 ${limb} ${cx} ${cy + r} A${rx} ${r} 0 0 ${term} ${cx} ${cy - r}Z`;
+  return `<svg viewBox="0 0 50 50" aria-hidden="true"><circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(255,255,255,.14)"/><path d="${lit}" fill="#F2EEDC"/></svg>`;
+}
+
+/* ============================================================
+   Počasie – dáta a zobrazenie
+   ============================================================ */
+const WX_TTL = 10 * 60 * 1000;
+const DEFAULT_PLACES = [{ id: 'g3060972', name: 'Bratislava', admin: 'Bratislavský kraj', country: 'Slovensko', lat: 48.14816, lon: 17.10674 }];
+
+async function fetchForecast(p) {
+  const q = new URLSearchParams({
+    latitude: p.lat, longitude: p.lon, timezone: 'auto', forecast_days: 10, wind_speed_unit: 'kmh',
+    current: 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+    hourly: 'temperature_2m,precipitation_probability,precipitation,weather_code,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,uv_index,is_day,dew_point_2m,pressure_msl',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant'
+  });
+  const r = await fetch('https://api.open-meteo.com/v1/forecast?' + q);
+  if (!r.ok) throw new Error('Server počasia odpovedal chybou ' + r.status);
+  return r.json();
+}
+async function fetchAir(p) {
+  const q = new URLSearchParams({ latitude: p.lat, longitude: p.lon, timezone: 'auto', current: 'european_aqi,pm2_5,pm10' });
+  const r = await fetch('https://air-quality-api.open-meteo.com/v1/air-quality?' + q);
+  if (!r.ok) throw new Error('AQ ' + r.status);
+  return r.json();
+}
+async function searchPlaces(name) {
+  const q = new URLSearchParams({ name, count: 8, language: 'sk', format: 'json' });
+  const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?' + q);
+  if (!r.ok) throw new Error('Vyhľadávanie zlyhalo');
+  return (await r.json()).results || [];
+}
+
+const Wx = {
+  places: [], sel: 0, cache: {}, pending: {}, errors: {},
+
+  init() {
+    const saved = store.get('places', null);
+    this.places = Array.isArray(saved) ? saved : DEFAULT_PLACES.slice();
+    this.sel = clamp(store.get('sel', 0) | 0, 0, Math.max(0, this.places.length - 1));
+    for (const p of this.places) { const c = store.get('wx.' + p.id, null); if (c && c.data) this.cache[p.id] = c; }
+
+    $('#wx-places').innerHTML = ico('list', 22);
+    $('#wx-refresh').innerHTML = ico('refresh', 21);
+    $('#wx-places').addEventListener('click', () => Places.open());
+    $('#wx-refresh').addEventListener('click', () => this.refreshAll(true));
+    this.bindSwipe();
+  },
+  save() { store.set('places', this.places); store.set('sel', this.sel); },
+  current() { return this.places[this.sel] || null; },
+
+  select(i) {
+    if (!this.places.length) return;
+    this.sel = (i + this.places.length) % this.places.length;
+    this.save();
+    this.render();
+    window.scrollTo({ top: 0 });
+    this.load(this.current()).then(() => this.render());
+  },
+
+  load(p, force = false) {
+    if (!p) return Promise.resolve();
+    const c = this.cache[p.id];
+    if (!force && c && Date.now() - c.at < WX_TTL) return Promise.resolve();
+    if (this.pending[p.id]) return this.pending[p.id];
+    const job = (async () => {
+      try {
+        const [data, aq] = await Promise.all([fetchForecast(p), fetchAir(p).catch(() => null)]);
+        this.cache[p.id] = { data, aq, at: Date.now() };
+        delete this.errors[p.id];
+        store.set('wx.' + p.id, this.cache[p.id]);
+      } catch (e) {
+        this.errors[p.id] = (e && e.message) || 'Neznáma chyba';
+      } finally {
+        delete this.pending[p.id];
+      }
+    })();
+    this.pending[p.id] = job;
+    return job;
+  },
+
+  async refreshAll(force = false) {
+    const btn = $('#wx-refresh');
+    btn.classList.add('spin');
+    const cur = this.current();
+    const first = this.load(cur, force);
+    this.render();
+    await first;
+    this.render();
+    await Promise.allSettled(this.places.map((p) => this.load(p, force)));
+    btn.classList.remove('spin');
+    this.render();
+    Places.renderList();
+  },
+
+  bindSwipe() {
+    const body = $('#view-pocasie');
+    let sx = 0, sy = 0, ok = false;
+    body.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      ok = !e.target.closest('.hours, .cc-plot, details[open] .d-more') && e.touches.length === 1;
+      sx = t.clientX; sy = t.clientY;
+    }, { passive: true });
+    body.addEventListener('touchend', (e) => {
+      if (!ok || this.places.length < 2) return;
+      const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) this.select(this.sel + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    document.addEventListener('keydown', (e) => {
+      if (App.tab !== 'pocasie' || $('#sheet-root').firstChild || !$('#splash').hidden) return;
+      if (e.target.closest('input, textarea, select')) return;
+      if (e.key === 'ArrowRight') this.select(this.sel + 1);
+      if (e.key === 'ArrowLeft') this.select(this.sel - 1);
+    });
+  },
+
+  renderDots() {
+    const dots = $('#wx-dots');
+    if (this.places.length < 2) { dots.innerHTML = ''; return; }
+    dots.innerHTML = this.places.map((p, i) =>
+      `<button role="tab" class="${p.geo ? 'geo' : ''}" aria-current="${i === this.sel}" aria-label="${esc(p.name)}" data-i="${i}">${p.geo ? ico('pin', 11, 2.4) : ''}</button>`).join('');
+    $$('button', dots).forEach((b) => b.addEventListener('click', () => this.select(+b.dataset.i)));
+  },
+
+  render() {
+    this.renderDots();
+    const body = $('#wx-body'), sky = $('#sky');
+    const p = this.current();
+    if (!p) {
+      sky.style.background = skyFor(1, true);
+      body.innerHTML = `<div class="wx-empty"><h1>Zatiaľ žiadne miesto</h1><p>Pridaj mestá, ktoré chceš sledovať. Počasie sa zobrazí pre každé z nich.</p><button class="btn-light" id="wx-add-first">Pridať miesto</button></div>`;
+      $('#wx-add-first').addEventListener('click', () => Places.open(true));
+      return;
+    }
+    const c = this.cache[p.id];
+    const err = this.errors[p.id];
+    if (!c) {
+      sky.style.background = skyFor(2, true);
+      body.innerHTML = `<section class="hero"><h1 class="hero-place">${esc(p.name)}</h1><p class="hero-sub">${err ? '' : 'Načítavam počasie…'}</p></section>` +
+        (err
+          ? `<div class="banner">Počasie sa nepodarilo načítať. Skontroluj pripojenie na internet.<button id="wx-retry">Skúsiť znova</button></div>`
+          : '<div class="skeleton"></div><div class="skeleton"></div>');
+      if (err) $('#wx-retry').addEventListener('click', () => this.refreshAll(true));
+      return;
+    }
+    body.innerHTML = this.detailHTML(p, c, err);
+    sky.style.background = skyFor(c.data.current.weather_code, c.data.current.is_day === 1);
+    const retry = $('#wx-retry');
+    if (retry) retry.addEventListener('click', () => this.refreshAll(true));
+    this.bindCloudChart(c.data);
+  },
+
+  detailHTML(p, c, err) {
+    const d = c.data, cur = d.current, h = d.hourly, dl = d.daily;
+    let i0 = h.time.indexOf(cur.time.slice(0, 13) + ':00');
+    if (i0 < 0) i0 = 0;
+    const T = (v) => Math.round(v);
+    const localOffset = -new Date().getTimezoneOffset() * 60;
+    const placeNow = new Date(Date.now() + d.utc_offset_seconds * 1000);
+    const timeThere = placeNow.getUTCHours() + ':' + pad(placeNow.getUTCMinutes());
+    const sub = d.utc_offset_seconds !== localOffset
+      ? `Miestny čas ${timeThere}` + (p.admin ? ' · ' + esc(p.admin) : '')
+      : esc([p.admin, p.country].filter(Boolean).join(', '));
+
+    let html = '';
+    const ageMin = Math.round((Date.now() - c.at) / 60000);
+    if (err && ageMin > 15) {
+      html += `<div class="banner">Bez pripojenia – zobrazujem údaje spred ${ageMin < 90 ? ageMin + ' min' : Math.round(ageMin / 60) + ' h'}.<button id="wx-retry">Skúsiť znova</button></div>`;
+    }
+
+    // Hlavička
+    html += `<section class="hero">
+      <h1 class="hero-place">${p.geo ? ico('pin', 18, 2.2) : ''}${esc(p.name)}</h1>
+      <p class="hero-sub">${sub}</p>
+      <div class="hero-temp">${T(cur.temperature_2m)}°</div>
+      <p class="hero-cond">${wxText(cur.weather_code)}</p>
+      <p class="hero-hl">Max. ${T(dl.temperature_2m_max[0])}° · Min. ${T(dl.temperature_2m_min[0])}°</p>
+    </section>`;
+
+    // Hodinová predpoveď
+    html += `<section class="wx-card"><p class="summary">${esc(this.summary(d, i0))}</p><div class="hours" aria-label="Predpoveď na 24 hodín">${this.hoursHTML(d, i0)}</div></section>`;
+
+    // Oblačnosť
+    html += this.cloudHTML(d, i0);
+
+    // 10 dní
+    html += this.daysHTML(d);
+
+    // Dlaždice
+    html += `<div class="tiles">${this.tilesHTML(d, c.aq, i0)}</div>`;
+
+    const at = new Date(c.at);
+    html += `<p class="wx-foot">Aktualizované ${at.getHours()}:${pad(at.getMinutes())} · Údaje: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a></p>`;
+    return html;
+  },
+
+  summary(d, i0) {
+    const h = d.hourly, cur = d.current, dl = d.daily;
+    let first = '';
+    const end = Math.min(h.time.length, i0 + 12);
+    if (isWet(cur.weather_code) || cur.precipitation > 0) {
+      for (let i = i0 + 1; i < end; i++) {
+        if (!isWet(h.weather_code[i]) && (h.precipitation_probability[i] ?? 0) < 40) { first = `Zrážky by mali ustať okolo ${hhmm(h.time[i])}.`; break; }
+      }
+      if (!first) first = 'Zrážky budú pokračovať aj v najbližších hodinách.';
+    } else {
+      for (let i = i0 + 1; i < end; i++) {
+        if (isWet(h.weather_code[i]) && (h.precipitation_probability[i] ?? 0) >= 40) {
+          first = `Okolo ${hhmm(h.time[i])} sa očakávajú zrážky (${h.precipitation_probability[i]} %).`; break;
+        }
+      }
+    }
+    let day = `Dnes ${wxText(dl.weather_code[0]).toLowerCase()}, najvyššia teplota ${Math.round(dl.temperature_2m_max[0])}°.`;
+    if (dl.wind_gusts_10m_max[0] >= 50) day += ` Nárazy vetra až ${Math.round(dl.wind_gusts_10m_max[0])} km/h.`;
+    return [first, day].filter(Boolean).join(' ');
+  },
+
+  hoursHTML(d, i0) {
+    const h = d.hourly, dl = d.daily;
+    const end = Math.min(h.time.length - 1, i0 + 24);
+    const events = [];
+    dl.sunrise.forEach((t) => events.push({ t, rise: true }));
+    dl.sunset.forEach((t) => events.push({ t, rise: false }));
+    let out = '';
+    for (let i = i0; i <= end; i++) {
+      const pp = h.precipitation_probability[i];
+      const temp = i === i0 ? d.current.temperature_2m : h.temperature_2m[i];
+      const code = i === i0 ? d.current.weather_code : h.weather_code[i];
+      const isDay = i === i0 ? d.current.is_day : h.is_day[i];
+      out += `<div class="hour"><span class="hour-t">${i === i0 ? 'Teraz' : hourOf(h.time[i]) + ':00'}</span>${wxIcon(code, isDay === 1)}<span class="hour-p">${pp >= 20 ? pp + ' %' : ''}</span><span class="hour-temp">${Math.round(temp)}°</span></div>`;
+      const hourKey = h.time[i].slice(0, 13);
+      events.filter((e) => e.t && e.t.slice(0, 13) === hourKey && (i > i0 || minutesOf(e.t) >= minutesOf(d.current.time)))
+        .forEach((e) => {
+          out += `<div class="hour ev"><span class="hour-t">${hhmm(e.t)}</span>${sunEventIcon(e.rise)}<span class="hour-p"></span><span class="hour-temp">${e.rise ? 'Východ' : 'Západ'}</span></div>`;
+        });
+    }
+    return out;
+  },
+
+  cloudHTML(d, i0) {
+    const h = d.hourly, n = 24;
+    const vals = [];
+    for (let k = 0; k <= n; k++) vals.push(h.cloud_cover[Math.min(h.time.length - 1, i0 + k)] ?? 0);
+    vals[0] = d.current.cloud_cover ?? vals[0];
+    const W = 300, H = 100;
+    const pts = vals.map((v, k) => [(k / n) * W, H - (clamp(v, 0, 100) / 100) * H]);
+    const line = 'M' + pts.map(([x, y]) => x.toFixed(1) + ',' + y.toFixed(1)).join('L');
+    const area = line + `L${W},${H}L0,${H}Z`;
+    const labels = [0, 6, 12, 18, 24].map((k) => {
+      const t = h.time[Math.min(h.time.length - 1, i0 + k)];
+      return `<span style="left:${(k / n) * 100}%">${k === 0 ? 'Teraz' : hourOf(t) + ':00'}</span>`;
+    }).join('');
+    const now = Math.round(vals[0]);
+    const low = h.cloud_cover_low[i0] ?? 0, mid = h.cloud_cover_mid[i0] ?? 0, high = h.cloud_cover_high[i0] ?? 0;
+    const layer = (name, hint, v) => `<div class="layer"><span>${name}<small>${hint}</small></span><span class="meter"><i style="width:${clamp(v, 0, 100)}%"></i></span><span class="num">${Math.round(v)} %</span></div>`;
+    const times = [];
+    for (let k = 0; k <= n; k++) times.push(k === 0 ? 'Teraz' : hhmm(h.time[Math.min(h.time.length - 1, i0 + k)]));
+    this._cc = { vals, times };
+    return `<section class="wx-card">
+      <h2 class="card-h">${ico('cloud', 15, 2)}Oblačnosť</h2>
+      <div class="cc-top"><span class="cc-now">${now} %</span><span class="cc-desc">${cloudWord(now)}</span></div>
+      <div class="cc" aria-label="Oblačnosť na najbližších 24 hodín">
+        <div class="cc-plot" id="cc-plot">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+            <g stroke="rgba(255,255,255,.18)" stroke-width="1" vector-effect="non-scaling-stroke">
+              <line x1="0" y1="0" x2="${W}" y2="0" vector-effect="non-scaling-stroke"/>
+              <line x1="0" y1="50" x2="${W}" y2="50" vector-effect="non-scaling-stroke" stroke-dasharray="3 4"/>
+              <line x1="0" y1="${H}" x2="${W}" y2="${H}" vector-effect="non-scaling-stroke"/>
+            </g>
+            <path d="${area}" fill="rgba(255,255,255,.2)"/>
+            <path d="${line}" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <div class="cc-cursor" hidden><i class="cc-line"></i><i class="cc-dot"></i><span class="cc-tip"></span></div>
+        </div>
+        <div class="cc-y"><span>100 %</span><span>50 %</span><span>0 %</span></div>
+        <div class="cc-x">${labels}</div>
+      </div>
+      <div class="layers">
+        ${layer('Nízka', 'do 2 km', low)}
+        ${layer('Stredná', '2 – 6 km', mid)}
+        ${layer('Vysoká', 'nad 6 km', high)}
+      </div>
+    </section>`;
+  },
+
+  bindCloudChart() {
+    const plot = $('#cc-plot');
+    if (!plot || !this._cc) return;
+    const { vals, times } = this._cc;
+    const cursor = $('.cc-cursor', plot), lineEl = $('.cc-line', plot), dot = $('.cc-dot', plot), tip = $('.cc-tip', plot);
+    const n = vals.length - 1;
+    const show = (clientX) => {
+      const r = plot.getBoundingClientRect();
+      const k = clamp(Math.round(((clientX - r.left) / r.width) * n), 0, n);
+      const x = (k / n) * r.width, y = r.height - (clamp(vals[k], 0, 100) / 100) * r.height;
+      cursor.hidden = false;
+      lineEl.style.left = x + 'px';
+      dot.style.left = x + 'px'; dot.style.top = y + 'px';
+      tip.textContent = `${times[k]} · ${Math.round(vals[k])} %`;
+      const tw = tip.offsetWidth / 2;
+      tip.style.left = clamp(x, tw, r.width - tw) + 'px';
+    };
+    plot.addEventListener('pointermove', (e) => show(e.clientX));
+    plot.addEventListener('pointerdown', (e) => show(e.clientX));
+    plot.addEventListener('pointerleave', () => { cursor.hidden = true; });
+  },
+
+  daysHTML(d) {
+    const dl = d.daily;
+    const n = dl.time.length;
+    const lo = Math.min(...dl.temperature_2m_min), hi = Math.max(...dl.temperature_2m_max);
+    const span = Math.max(1, hi - lo);
+    let rows = '';
+    for (let i = 0; i < n; i++) {
+      const date = new Date(dl.time[i] + 'T12:00:00');
+      const name = i === 0 ? 'Dnes' : DNI_KR[date.getDay()];
+      const mn = dl.temperature_2m_min[i], mx = dl.temperature_2m_max[i];
+      const left = ((mn - lo) / span) * 100, width = ((mx - mn) / span) * 100;
+      const pp = dl.precipitation_probability_max[i];
+      const dot = i === 0 ? `<b style="left:${clamp(((d.current.temperature_2m - lo) / span) * 100, 0, 100)}%"></b>` : '';
+      const wind = dl.wind_direction_10m_dominant[i];
+      rows += `<li><details><summary aria-label="${esc(DNI[date.getDay()])} ${date.getDate()}. ${MESIACE_GEN[date.getMonth()]}: ${wxText(dl.weather_code[i])}, ${Math.round(mn)} až ${Math.round(mx)} °C">
+        <span class="d-name">${name}</span>
+        <span class="d-icon">${wxIcon(dl.weather_code[i], true)}<small>${pp >= 20 ? pp + ' %' : ''}</small></span>
+        <span class="d-min">${Math.round(mn)}°</span>
+        <span class="d-bar"><i style="left:${left}%;width:${width}%;background:linear-gradient(90deg, ${tempColor(mn)}, ${tempColor(mx)})"></i>${dot}</span>
+        <span class="d-max">${Math.round(mx)}°</span>
+      </summary>
+      <div class="d-more">
+        <span>${esc(DNI[date.getDay()])} ${date.getDate()}. ${MESIACE_GEN[date.getMonth()]}</span>
+        <span>${wxText(dl.weather_code[i])}</span>
+        <span>Zrážky <b>${fmtNum(dl.precipitation_sum[i])} mm</b>${pp != null ? ` (${pp} %)` : ''}</span>
+        <span>Vietor <b>${Math.round(dl.wind_speed_10m_max[i])} km/h</b> ${wind != null ? SMERY[dirIdx(wind)] : ''}</span>
+        <span>Nárazy <b>${Math.round(dl.wind_gusts_10m_max[i])} km/h</b></span>
+        <span>UV index <b>${fmtNum(dl.uv_index_max[i], 0)}</b></span>
+        <span>Východ <b>${hhmm(dl.sunrise[i])}</b> · západ <b>${hhmm(dl.sunset[i])}</b></span>
+      </div></details></li>`;
+    }
+    return `<section class="wx-card"><h2 class="card-h">${ico('calendar', 15, 2)}Predpoveď na ${n} dní</h2><ol class="days">${rows}</ol></section>`;
+  },
+
+  tilesHTML(d, aq, i0) {
+    const cur = d.current, h = d.hourly, dl = d.daily;
+    const T = (v) => Math.round(v);
+    const tile = (icon, title, body) => `<section class="wx-card tile"><h2 class="card-h">${ico(icon, 15, 2)}${title}</h2>${body}</section>`;
+    const out = [];
+
+    // Pocitová teplota
+    const diff = cur.apparent_temperature - cur.temperature_2m;
+    const feelTxt = diff <= -2 ? 'Vietor spôsobuje, že je chladnejšie.' : diff >= 2 ? 'Vlhkosť spôsobuje, že je teplejšie.' : 'Podobná ako skutočná teplota.';
+    out.push(tile('thermo', 'Pocitová teplota', `<div class="tile-main">${T(cur.apparent_temperature)}°</div><p class="tile-sub">${feelTxt}</p>`));
+
+    // Vietor
+    const wdir = cur.wind_direction_10m, wi = dirIdx(wdir);
+    const compass = `<svg class="compass" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/>
+      ${Array.from({ length: 36 }, (_, k) => { const a = (k * 10 * Math.PI) / 180, r1 = k % 9 === 0 ? 33 : 36; return `<line x1="${(50 + Math.sin(a) * r1).toFixed(1)}" y1="${(50 - Math.cos(a) * r1).toFixed(1)}" x2="${(50 + Math.sin(a) * 40).toFixed(1)}" y2="${(50 - Math.cos(a) * 40).toFixed(1)}" stroke="rgba(255,255,255,${k % 9 === 0 ? '.8' : '.3'})" stroke-width="1"/>`; }).join('')}
+      <g font-size="9" font-weight="600" fill="rgba(255,255,255,.75)" text-anchor="middle" font-family="Onest, system-ui, sans-serif"><text x="50" y="23">S</text><text x="80" y="53">V</text><text x="50" y="84">J</text><text x="20" y="53">Z</text></g>
+      <g transform="rotate(${(wdir + 180) % 360} 50 50)"><line x1="50" y1="78" x2="50" y2="26" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M50 20l-6 10h12z" fill="#fff"/><circle cx="50" cy="78" r="3.5" fill="none" stroke="#fff" stroke-width="2"/></g>
+      <circle cx="50" cy="50" r="13" fill="rgba(12,28,48,.75)"/>
+      <text x="50" y="50" font-size="12" font-weight="600" fill="#fff" text-anchor="middle" font-family="Onest, system-ui, sans-serif">${T(cur.wind_speed_10m)}</text>
+      <text x="50" y="59" font-size="6.5" fill="rgba(255,255,255,.8)" text-anchor="middle" font-family="Onest, system-ui, sans-serif">km/h</text>
+    </svg>`;
+    out.push(tile('wind', 'Vietor', `${compass}<p class="tile-sub">${SMERY_SLOVOM[wi][0].toUpperCase() + SMERY_SLOVOM[wi].slice(1)} (${SMERY[wi]}), nárazy ${T(cur.wind_gusts_10m)} km/h.</p>`));
+
+    // UV index
+    const uvNow = h.uv_index[i0] ?? 0, uvMax = dl.uv_index_max[0] ?? 0;
+    const [uvName, uvTip] = uvLevel(uvNow);
+    out.push(tile('sun', 'UV index', `<div class="tile-main">${fmtNum(uvNow, 0)}</div><div class="tile-lvl">${uvName}</div><div class="scale uv" role="img" aria-label="UV ${fmtNum(uvNow, 0)} z 11"><b style="left:${clamp((uvNow / 11) * 100, 0, 100)}%"></b></div><p class="tile-sub">Dnes najviac ${fmtNum(uvMax, 0)}. ${uvTip}</p>`));
+
+    // Slnko
+    const sr = dl.sunrise[0], ss = dl.sunset[0];
+    const nowMin = minutesOf(cur.time);
+    const t = (nowMin - minutesOf(sr)) / Math.max(1, minutesOf(ss) - minutesOf(sr));
+    let arc = '';
+    for (let k = 0; k <= 40; k++) { const u = k / 40; arc += (k ? 'L' : 'M') + (8 + 104 * u).toFixed(1) + ',' + (46 - 34 * Math.sin(Math.PI * u)).toFixed(1); }
+    const sunDot = t >= 0 && t <= 1 ? `<circle cx="${(8 + 104 * t).toFixed(1)}" cy="${(46 - 34 * Math.sin(Math.PI * t)).toFixed(1)}" r="5" fill="#FFC23A" stroke="rgba(20,40,64,.5)" stroke-width="2"/>` : '';
+    const daylen = dl.daylight_duration[0] ? `${Math.floor(dl.daylight_duration[0] / 3600)} h ${Math.round((dl.daylight_duration[0] % 3600) / 60)} min` : '';
+    const nextSun = nowMin < minutesOf(sr) ? ['Východ slnka', hhmm(sr), `Západ ${hhmm(ss)}`] : nowMin < minutesOf(ss) ? ['Západ slnka', hhmm(ss), `Východ ${hhmm(sr)}`] : ['Východ slnka', hhmm(dl.sunrise[1] || sr), `Dnes západ ${hhmm(ss)}`];
+    out.push(tile(nextSun[0].startsWith('Západ') ? 'sunset' : 'sunrise', nextSun[0], `<div class="tile-main">${nextSun[1]}</div>
+      <svg class="sunarc" viewBox="0 0 120 52" aria-hidden="true"><line x1="0" y1="46" x2="120" y2="46" stroke="rgba(255,255,255,.35)" stroke-width="1"/><path d="${arc}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" stroke-dasharray="3 3"/>${sunDot}</svg>
+      <p class="tile-sub">${nextSun[2]}${daylen ? ` · deň trvá ${daylen}` : ''}</p>`));
+
+    // Zrážky
+    const rainToday = dl.precipitation_sum[0] ?? 0, rainTom = dl.precipitation_sum[1] ?? 0;
+    out.push(tile('rain', 'Zrážky', `<div class="tile-main">${fmtNum(rainToday)}<small>mm</small></div><div class="tile-lvl">dnes</div><p class="tile-sub">${rainTom > 0.05 ? `Zajtra sa očakáva ${fmtNum(rainTom)} mm (${dl.precipitation_probability_max[1] ?? 0} %).` : 'Zajtra sa zrážky neočakávajú.'}</p>`));
+
+    // Vlhkosť
+    const dew = h.dew_point_2m[i0];
+    out.push(tile('drop', 'Vlhkosť', `<div class="tile-main">${T(cur.relative_humidity_2m)} %</div><p class="tile-sub">Rosný bod je teraz ${dew != null ? T(dew) + '°' : '–'}.</p>`));
+
+    // Viditeľnosť
+    const vis = (h.visibility[i0] ?? 0) / 1000;
+    const visTxt = vis >= 10 ? 'Výborná viditeľnosť.' : vis >= 4 ? 'Dobrá viditeľnosť.' : vis >= 1 ? 'Zhoršená viditeľnosť.' : 'Veľmi zlá viditeľnosť, hmla.';
+    out.push(tile('eye', 'Viditeľnosť', `<div class="tile-main">${vis >= 10 ? Math.round(vis) : fmtNum(vis)}<small>km</small></div><p class="tile-sub">${visTxt}</p>`));
+
+    // Tlak
+    const pNow = cur.pressure_msl, pLater = h.pressure_msl[Math.min(h.time.length - 1, i0 + 3)];
+    const pd = pLater - pNow;
+    const pTrend = pd > 0.8 ? 'Tlak stúpa.' : pd < -0.8 ? 'Tlak klesá.' : 'Tlak je stabilný.';
+    out.push(tile('gauge', 'Tlak vzduchu', `<div class="tile-main">${Math.round(pNow)}<small>hPa</small></div><p class="tile-sub">${pTrend}</p>`));
+
+    // Kvalita ovzdušia
+    const aqi = aq && aq.current ? aq.current.european_aqi : null;
+    out.push(tile('leaf', 'Kvalita ovzdušia', aqi != null
+      ? `<div class="tile-main">${Math.round(aqi)}</div><div class="tile-lvl">${aqLevel(aqi)}</div><div class="scale aq" role="img" aria-label="Index ${Math.round(aqi)} zo 100"><b style="left:${clamp(aqi, 0, 100)}%"></b></div><p class="tile-sub">PM2,5: ${fmtNum(aq.current.pm2_5)} µg/m³ · PM10: ${fmtNum(aq.current.pm10)} µg/m³</p>`
+      : `<p class="tile-sub">Údaje o kvalite ovzdušia teraz nie sú dostupné.</p>`));
+
+    // Mesiac
+    const mp = moonPhase();
+    out.push(tile('moon', 'Mesiac', `<div class="moon-row">${moonSVG(mp.p)}<div><div class="tile-lvl">${mp.name}</div><div class="num">${Math.round(mp.illum * 100)} % osvetlený</div></div></div><p class="tile-sub">${mp.toFull === 0 || mp.name === 'Spln' ? 'Dnes je spln.' : `Spln o ${mp.toFull} ${plural(mp.toFull, 'deň', 'dni', 'dní')}.`}</p>`));
+
+    return out.join('');
+  }
+};
+
+/* ---------- Správa miest ---------- */
+const Places = {
+  editing: false, q: '', results: [], searching: false, searchErr: '', timer: 0,
+
+  open(focusSearch = false) {
+    this.editing = false; this.q = ''; this.results = []; this.searchErr = '';
+    Sheet.open(`
+      <div class="sheet-h"><h2 id="pl-title">Moje miesta</h2><div class="actions"><button class="btn" id="pl-edit">Upraviť</button><button class="btn btn-primary" data-close>Hotovo</button></div></div>
+      <label class="search" for="pl-q">${ico('search', 18)}<input id="pl-q" type="search" placeholder="Hľadať mesto alebo obec" autocomplete="off" enterkeyhint="search"></label>
+      <ul class="results panel" id="pl-results" hidden></ul>
+      <button class="btn geo-btn" id="pl-geo">${ico('pin', 16, 2)}Pridať moju polohu</button>
+      <ul class="place-list" id="pl-list"></ul>
+    `, { label: 'pl-title', onClose: () => { Wx.render(); } });
+    const input = $('#pl-q');
+    input.addEventListener('input', () => this.onQuery(input.value));
+    $('#pl-edit').addEventListener('click', (e) => { this.editing = !this.editing; e.currentTarget.textContent = this.editing ? 'Ukončiť' : 'Upraviť'; this.renderList(); });
+    $('#pl-geo').addEventListener('click', () => this.addGeo());
+    this.renderList();
+    if (focusSearch) setTimeout(() => input.focus(), 60);
+  },
+
+  onQuery(v) {
+    this.q = v.trim();
+    clearTimeout(this.timer);
+    if (this.q.length < 2) { this.results = []; this.searchErr = ''; this.renderResults(); return; }
+    this.searching = true; this.renderResults();
+    this.timer = setTimeout(async () => {
+      const q = this.q;
+      try { const r = await searchPlaces(q); if (q !== this.q) return; this.results = r; this.searchErr = ''; }
+      catch { this.results = []; this.searchErr = 'Vyhľadávanie zlyhalo. Skontroluj pripojenie na internet.'; }
+      this.searching = false; this.renderResults();
+    }, 300);
+  },
+
+  renderResults() {
+    const ul = $('#pl-results');
+    if (!ul) return;
+    if (this.q.length < 2) { ul.hidden = true; ul.innerHTML = ''; return; }
+    ul.hidden = false;
+    if (this.searching && !this.results.length) { ul.innerHTML = '<li class="note">Hľadám…</li>'; return; }
+    if (this.searchErr) { ul.innerHTML = `<li class="note">${esc(this.searchErr)}</li>`; return; }
+    if (!this.results.length) { ul.innerHTML = `<li class="note">Nenašiel som miesto „${esc(this.q)}“. Skús iný názov.</li>`; return; }
+    ul.innerHTML = this.results.map((r, i) => `<li><button data-i="${i}"><span><span class="r-name">${esc(r.name)}</span><br><span class="r-sub">${esc([r.admin1, r.country].filter(Boolean).join(', '))}</span></span><span class="r-add">${ico('plus', 20, 2)}</span></button></li>`).join('');
+    $$('button', ul).forEach((b) => b.addEventListener('click', () => this.add(this.results[+b.dataset.i])));
+  },
+
+  add(r) {
+    const id = 'g' + r.id;
+    const existing = Wx.places.findIndex((p) => p.id === id);
+    if (existing >= 0) { Wx.sel = existing; }
+    else {
+      Wx.places.push({ id, name: r.name, admin: r.admin1 || '', country: r.country || '', lat: r.latitude, lon: r.longitude });
+      Wx.sel = Wx.places.length - 1;
+    }
+    Wx.save();
+    toast(`Pridané: ${r.name}`);
+    Sheet.close();
+    Wx.render();
+    Wx.load(Wx.current(), true).then(() => Wx.render());
+  },
+
+  addGeo() {
+    const btn = $('#pl-geo');
+    if (!navigator.geolocation) { toast('Tento prehliadač nepodporuje zisťovanie polohy.'); return; }
+    btn.disabled = true; btn.lastChild.textContent = 'Zisťujem polohu…';
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = +pos.coords.latitude.toFixed(4), lon = +pos.coords.longitude.toFixed(4);
+      let name = 'Moja poloha', admin = '', country = '';
+      try {
+        const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=sk`);
+        const j = await r.json();
+        name = j.city || j.locality || name; admin = j.principalSubdivision || ''; country = j.countryName || '';
+      } catch {}
+      const place = { id: 'geo', geo: true, name, admin, country, lat, lon };
+      const i = Wx.places.findIndex((p) => p.id === 'geo');
+      if (i >= 0) Wx.places[i] = place; else Wx.places.unshift(place);
+      Wx.sel = Wx.places.findIndex((p) => p.id === 'geo');
+      Wx.save();
+      Sheet.close();
+      Wx.render();
+      Wx.load(place, true).then(() => Wx.render());
+    }, (err) => {
+      btn.disabled = false; btn.lastChild.textContent = 'Pridať moju polohu';
+      toast(err.code === 1 ? 'Prístup k polohe je zakázaný. Povoľ ho v nastaveniach prehliadača.' : 'Polohu sa nepodarilo zistiť. Skús to znova.');
+    }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 10 * 60 * 1000 });
+  },
+
+  renderList() {
+    const ul = $('#pl-list');
+    if (!ul) return;
+    if (!Wx.places.length) { ul.innerHTML = '<li class="results"><p class="note">Zatiaľ nemáš žiadne miesto. Vyhľadaj ho vyššie.</p></li>'; return; }
+    ul.innerHTML = Wx.places.map((p, i) => {
+      const c = Wx.cache[p.id];
+      const d = c && c.data;
+      const bg = d ? skyFor(d.current.weather_code, d.current.is_day === 1) : skyFor(2, true);
+      let sub = [p.admin, p.country].filter(Boolean).join(', ');
+      if (d && d.utc_offset_seconds !== -new Date().getTimezoneOffset() * 60) {
+        const t = new Date(Date.now() + d.utc_offset_seconds * 1000);
+        sub = `${t.getUTCHours()}:${pad(t.getUTCMinutes())} · ${sub}`;
+      }
+      return `<li><div class="place-card${i === Wx.sel ? ' sel' : ''}" role="button" tabindex="0" data-i="${i}" style="background:${bg}">
+        <div><div class="pc-name">${p.geo ? ico('pin', 14, 2.4) : ''}${esc(p.name)}</div><div class="pc-sub">${esc(sub)}</div></div>
+        <div class="pc-temp">${d ? Math.round(d.current.temperature_2m) + '°' : '–'}</div>
+        <div class="pc-cond">${d ? wxText(d.current.weather_code) : (Wx.pending[p.id] ? 'Načítavam…' : '')}</div>
+        <div class="pc-hl">${d ? `Max. ${Math.round(d.daily.temperature_2m_max[0])}° Min. ${Math.round(d.daily.temperature_2m_min[0])}°` : ''}</div>
+        ${this.editing ? `<div class="pc-edit">
+          <button data-act="up" ${i === 0 ? 'disabled' : ''} aria-label="Posunúť vyššie">${ico('up', 15, 2.2)}</button>
+          <button data-act="down" ${i === Wx.places.length - 1 ? 'disabled' : ''} aria-label="Posunúť nižšie">${ico('down', 15, 2.2)}</button>
+          <button data-act="rm" class="rm">${ico('close', 15, 2.2)}Odstrániť</button></div>` : ''}
+      </div></li>`;
+    }).join('');
+    $$('.place-card', ul).forEach((card) => {
+      const i = +card.dataset.i;
+      card.addEventListener('click', (e) => {
+        const act = e.target.closest('[data-act]');
+        if (act) { e.stopPropagation(); this.act(act.dataset.act, i); return; }
+        if (this.editing) return;
+        Wx.sel = i; Wx.save(); Sheet.close(); Wx.render(); Wx.load(Wx.current()).then(() => Wx.render());
+      });
+      card.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === card) { e.preventDefault(); card.click(); } });
+    });
+  },
+
+  act(what, i) {
+    const P = Wx.places;
+    const selId = P[Wx.sel] && P[Wx.sel].id;
+    if (what === 'up' && i > 0) [P[i - 1], P[i]] = [P[i], P[i - 1]];
+    if (what === 'down' && i < P.length - 1) [P[i + 1], P[i]] = [P[i], P[i + 1]];
+    if (what === 'rm') {
+      const [removed] = P.splice(i, 1);
+      const cached = Wx.cache[removed.id];
+      store.del('wx.' + removed.id);
+      toast(`Odstránené: ${removed.name}`, 'Späť', () => {
+        P.splice(i, 0, removed);
+        if (cached) { Wx.cache[removed.id] = cached; store.set('wx.' + removed.id, cached); }
+        Wx.save(); this.renderList(); Wx.render();
+      });
+    }
+    const ni = P.findIndex((p) => p.id === selId);
+    Wx.sel = ni >= 0 ? ni : clamp(Wx.sel, 0, Math.max(0, P.length - 1));
+    Wx.save();
+    this.renderList();
+  }
+};
+
+/* ============================================================
+   Narodeniny
+   ============================================================ */
+const AVATAR_COLORS = ['#2f6fb0', '#b0482f', '#2f8a5b', '#7a4fb0', '#b07a1f', '#1f8a8a', '#a8406f', '#586a7d'];
+const hash = (s) => { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); };
+const initials = (name) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+const Bd = {
+  list: [],
+  init() {
+    const saved = store.get('birthdays', []);
+    this.list = Array.isArray(saved) ? saved : [];
+    $('#bd-add').innerHTML = ico('plus', 18, 2.2) + 'Pridať';
+    $('#bd-add').addEventListener('click', () => this.openForm());
+    $('#bk-export').addEventListener('click', () => Backup.export());
+    $('#bk-import').addEventListener('click', () => $('#bk-file').click());
+    $('#bk-file').addEventListener('change', (e) => Backup.import(e.target.files[0]));
+  },
+  save() { store.set('birthdays', this.list); },
+
+  dateIn(p, y) {
+    let day = p.day;
+    if (p.month === 2 && day === 29 && !isLeap(y)) day = 28;
+    return new Date(y, p.month - 1, day);
+  },
+  next(p, from = today()) {
+    let d = this.dateIn(p, from.getFullYear());
+    if (d < from) d = this.dateIn(p, from.getFullYear() + 1);
+    return { date: d, days: daysBetween(from, d), age: p.year ? d.getFullYear() - p.year : null };
+  },
+  upcoming(from = today()) {
+    return this.list.map((p) => ({ p, ...this.next(p, from) })).sort((a, b) => a.days - b.days || a.p.name.localeCompare(b.p.name, 'sk'));
+  },
+  on(date) { return this.list.filter((p) => { const d = this.dateIn(p, date.getFullYear()); return d.getMonth() === date.getMonth() && d.getDate() === date.getDate(); }); },
+  /** Ľudia zo zoznamu, ktorí majú v daný deň meniny (SK) alebo svátek (CZ) */
+  namedayOn(date) {
+    const info = Kal.forDate(date);
+    const names = new Set([...info.sk.split(','), ...info.cz.split(',')].map(norm).filter(Boolean));
+    return this.list.filter((p) => names.has(norm(p.name.trim().split(/\s+/)[0])));
+  },
+
+  whenLabel(days) { return days === 0 ? 'Dnes' : days === 1 ? 'Zajtra' : `o ${days} ${plural(days, 'deň', 'dni', 'dní')}`; },
+  ageLabel(age, days) {
+    if (age == null) return '';
+    const yrs = `${age} ${plural(age, 'rok', 'roky', 'rokov')}`;
+    return days === 0 ? `dnes má ${yrs}` : `bude mať ${yrs}`;
+  },
+
+  render() {
+    const box = $('#bd-content'), sub = $('#bd-sub');
+    const up = this.upcoming();
+    if (!up.length) {
+      sub.textContent = '';
+      box.innerHTML = `<div class="panel empty">${ico('gift', 44, 1.5)}<h2>Zatiaľ tu nikto nie je</h2><p>Pridaj ľudí, na ktorých narodeniny nechceš zabudnúť. V deň oslavy ti ich appka ukáže hneď pri spustení.</p><button class="btn btn-primary" id="bd-add-first">${ico('plus', 18, 2.2)}Pridať prvé narodeniny</button></div>`;
+      $('#bd-add-first').addEventListener('click', () => this.openForm());
+      return;
+    }
+    const n = up.length;
+    sub.textContent = `${n} ${plural(n, 'človek', 'ľudia', 'ľudí')} · najbližšie ${up[0].days === 0 ? 'dnes' : up[0].days === 1 ? 'zajtra' : 'o ' + up[0].days + ' ' + plural(up[0].days, 'deň', 'dni', 'dní')}: ${up[0].p.name}`;
+    box.innerHTML = `<ul class="bd-list panel">${up.map(({ p, days, age }) => {
+      const nd = Kal.lookup(p.name.trim().split(/\s+/)[0]);
+      let ndTxt = '';
+      if (nd) {
+        const sk = nd.sk[0], cz = nd.cz[0];
+        if (sk && cz && sk.m === cz.m && sk.d === cz.d) ndTxt = `meniny ${sk.d}. ${sk.m}.`;
+        else ndTxt = [sk ? `meniny ${sk.d}. ${sk.m}.` : '', cz ? `svátek ${cz.d}. ${cz.m}.` : ''].filter(Boolean).join(', ');
+      }
+      const meta = [`${p.day}. ${MESIACE_GEN[p.month - 1]}${p.year ? ' ' + p.year : ''}`, this.ageLabel(age, days), ndTxt, p.note].filter(Boolean);
+      return `<li><button class="bd-row${days === 0 ? ' today' : ''}" data-id="${esc(p.id)}">
+        <span class="avatar" style="background:${AVATAR_COLORS[hash(p.name) % AVATAR_COLORS.length]}">${esc(initials(p.name))}</span>
+        <span><span class="bd-name">${esc(p.name)}</span><span class="bd-meta">${meta.map((m) => `<span>${esc(m)}</span>`).join('')}</span></span>
+        <span class="bd-when">${days <= 1 ? `<b>${this.whenLabel(days)}</b>` : `<b>${days}</b><small>${plural(days, 'deň', 'dni', 'dní')}</small>`}</span>
+      </button></li>`;
+    }).join('')}</ul>`;
+    $$('.bd-row', box).forEach((b) => b.addEventListener('click', () => this.openForm(b.dataset.id)));
+  },
+
+  openForm(id) {
+    const p = id ? this.list.find((x) => x.id === id) : null;
+    const days = Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}" ${p && p.day === i + 1 ? 'selected' : ''}>${i + 1}.</option>`).join('');
+    const months = MESIACE.map((m, i) => `<option value="${i + 1}" ${p && p.month === i + 1 ? 'selected' : ''}>${m}</option>`).join('');
+    Sheet.open(`
+      <div class="sheet-h"><h2 id="bd-title">${p ? 'Upraviť narodeniny' : 'Nové narodeniny'}</h2><div class="actions"><button class="btn" data-close aria-label="Zavrieť">${ico('close', 18, 2)}</button></div></div>
+      <form class="form" id="bd-form" novalidate>
+        <label class="field"><span>Meno</span><input id="bd-name" maxlength="60" autocomplete="off" placeholder="napr. Jana Nováková" value="${p ? esc(p.name) : ''}"></label>
+        <div class="field-row">
+          <label class="field"><span>Deň</span><select id="bd-day">${days}</select></label>
+          <label class="field"><span>Mesiac</span><select id="bd-month">${months}</select></label>
+          <label class="field"><span>Rok <em>(nepovinný)</em></span><input id="bd-year" inputmode="numeric" maxlength="4" placeholder="napr. 1990" value="${p && p.year ? p.year : ''}"></label>
+        </div>
+        <label class="field"><span>Poznámka <em>(nepovinná)</em></span><input id="bd-note" maxlength="120" autocomplete="off" placeholder="napr. rada čokoládu" value="${p && p.note ? esc(p.note) : ''}"></label>
+        <p class="form-hint" id="bd-hint"></p>
+        <p class="form-err" id="bd-err" hidden></p>
+        <div class="form-actions">
+          ${p ? '<button type="button" class="btn btn-danger" id="bd-del">Zmazať</button>' : ''}
+          <span class="spacer"></span>
+          <button type="button" class="btn" data-close>Zrušiť</button>
+          <button type="submit" class="btn btn-primary">Uložiť</button>
+        </div>
+      </form>`, { label: 'bd-title' });
+
+    const hint = () => {
+      const name = $('#bd-name').value.trim().split(/\s+/)[0];
+      const nd = name ? Kal.lookup(name) : null;
+      const parts = [];
+      if (nd && nd.sk.length) parts.push('meniny na Slovensku ' + nd.sk.map((x) => shortDate(x.m, x.d)).join(' a '));
+      if (nd && nd.cz.length) parts.push('svátek v Česku ' + nd.cz.map((x) => shortDate(x.m, x.d)).join(' a '));
+      $('#bd-hint').textContent = parts.length ? `${name} má ${parts.join(', ')}.` : '';
+    };
+    hint();
+    $('#bd-name').addEventListener('input', hint);
+    $('#bd-form').addEventListener('input', () => { $('#bd-err').hidden = true; });
+    if (!p) setTimeout(() => $('#bd-name').focus(), 60);
+
+    const del = $('#bd-del');
+    if (del) del.addEventListener('click', () => {
+      if (!del.classList.contains('armed')) { del.classList.add('armed'); del.textContent = 'Naozaj zmazať?'; return; }
+      const i = this.list.findIndex((x) => x.id === p.id);
+      const [removed] = this.list.splice(i, 1);
+      this.save(); Sheet.close(); this.render();
+      toast(`Zmazané: ${removed.name}`, 'Späť', () => { this.list.splice(i, 0, removed); this.save(); this.render(); });
+    });
+
+    $('#bd-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const err = $('#bd-err');
+      const name = $('#bd-name').value.trim().replace(/\s+/g, ' ');
+      const day = +$('#bd-day').value, month = +$('#bd-month').value;
+      const yRaw = $('#bd-year').value.trim();
+      const year = yRaw ? +yRaw : null;
+      const note = $('#bd-note').value.trim();
+      const maxDay = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+      let msg = '';
+      if (!name) msg = 'Napíš meno.';
+      else if (day > maxDay) msg = `${MESIACE[month - 1][0].toUpperCase() + MESIACE[month - 1].slice(1)} má najviac ${maxDay} dní.`;
+      else if (yRaw && (!/^\d{4}$/.test(yRaw) || year < 1900 || year > new Date().getFullYear())) msg = `Rok napíš ako štvorciferné číslo od 1900 do ${new Date().getFullYear()}, alebo ho nechaj prázdny.`;
+      else if (year && month === 2 && day === 29 && !isLeap(year)) msg = `Rok ${year} nebol priestupný, 29. február v ňom nebol.`;
+      if (msg) { err.textContent = msg; err.hidden = false; return; }
+      if (p) Object.assign(p, { name, day, month, year, note });
+      else this.list.push({ id: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, day, month, year, note });
+      this.save(); Sheet.close(); this.render();
+      toast(p ? 'Zmeny sú uložené.' : `Pridané: ${name}`);
+    });
+  }
+};
+
+/* ---------- Záloha ---------- */
+const Backup = {
+  export() {
+    const data = { app: 'obzor', version: 1, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const t = today();
+    a.download = `obzor-zaloha-${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast('Záloha je stiahnutá.');
+  },
+  async import(file) {
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || data.app !== 'obzor' || !Array.isArray(data.birthdays)) throw new Error();
+      const ok = (p) => p && typeof p.name === 'string' && p.day >= 1 && p.day <= 31 && p.month >= 1 && p.month <= 12;
+      Bd.list = data.birthdays.filter(ok).map((p) => ({ id: String(p.id || 'b' + Math.random().toString(36).slice(2)), name: p.name, day: +p.day, month: +p.month, year: p.year ? +p.year : null, note: p.note || '' }));
+      Bd.save();
+      if (Array.isArray(data.places) && data.places.length) {
+        Wx.places = data.places.filter((p) => p && p.id && typeof p.lat === 'number' && typeof p.lon === 'number');
+        Wx.sel = 0; Wx.save();
+        Wx.refreshAll();
+      }
+      Bd.render();
+      toast(`Obnovené: ${Bd.list.length} ${plural(Bd.list.length, 'narodeniny', 'narodeniny', 'narodenín')}, ${Wx.places.length} ${plural(Wx.places.length, 'miesto', 'miesta', 'miest')}.`);
+    } catch {
+      toast('Tento súbor nie je záloha z appky Obzor.');
+    } finally {
+      $('#bk-file').value = '';
+    }
+  }
+};
+
+/* ============================================================
+   List trhacieho kalendára (úvod + záložka Kalendár)
+   ============================================================ */
+function calPageHTML(date, { progress = false, withBirthdays = true } = {}) {
+  const info = Kal.forDate(date);
+  const red = date.getDay() === 0 || !!info.skHol;
+  const y = date.getFullYear();
+  const doy = daysBetween(new Date(y, 0, 1), date) + 1;
+  const left = (isLeap(y) ? 366 : 365) - doy;
+
+  let hol = '';
+  if (info.skHol) hol += esc(info.skHol);
+  if (info.czHol && info.czHol !== info.skHol) hol += `<small>ČR: ${esc(info.czHol)}</small>`;
+
+  let bdays = '';
+  if (withBirthdays) {
+    const todayList = Bd.on(date).map((p) => {
+      const age = p.year ? date.getFullYear() - p.year : null;
+      return `<b>${esc(p.name)}</b>${age != null ? ` (${age})` : ''}`;
+    });
+    if (todayList.length) {
+      bdays += `<div class="cal-bday">${ico('cake', 20, 1.8)}<div>Narodeniny ${todayList.length > 1 ? 'majú' : 'má'} ${todayList.join(', ')}</div></div>`;
+    }
+    const nameday = Bd.namedayOn(date).map((p) => `<b>${esc(p.name)}</b>`);
+    if (nameday.length) {
+      bdays += `<div class="cal-bday">${ico('gift', 20, 1.8)}<div>${nameday.length > 1 ? 'Meniny oslavujú' : 'Meniny oslavuje'} ${nameday.join(', ')}</div></div>`;
+    }
+    if (!todayList.length) {
+      const soon = Bd.upcoming(date).filter((u) => u.days > 0 && u.days <= 7).slice(0, 2);
+      if (soon.length) {
+        bdays += `<div class="cal-bday soft">${ico('cake', 20, 1.8)}<div>Čoskoro: ${soon.map((u) => `<b>${esc(u.p.name)}</b> ${u.days === 1 ? 'zajtra' : `o ${u.days} ${plural(u.days, 'deň', 'dni', 'dní')} (${DNI[u.date.getDay()]})`}`).join(', ')}</div></div>`;
+      }
+    }
+  }
+
+  const names = (s) => s ? `<dd>${esc(s)}</dd>` : '<dd class="none">bez mena</dd>';
+  return `<div class="cal-block"><article class="cal-page" aria-label="${date.getDate()}. ${MESIACE_GEN[date.getMonth()]} ${y}, ${DNI[date.getDay()]}">
+    <div class="cal-bind"><span></span><span></span></div>
+    <div class="cal-perf"></div>
+    <div class="cal-head"><span>${MESIACE[date.getMonth()]}</span><span>${y}</span></div>
+    <div class="cal-day${red ? ' cal-red' : ''}">${date.getDate()}</div>
+    <div class="cal-dow${red ? ' cal-red' : ''}">${DNI[date.getDay()]}</div>
+    ${hol ? `<div class="cal-hol">${hol}</div>` : ''}
+    <dl class="cal-names">
+      <div><dt>Meniny SK</dt>${names(info.sk)}</div>
+      <div><dt>Svátek CZ</dt>${names(info.cz)}</div>
+    </dl>
+    ${bdays}
+    <div class="cal-foot"><span>${isoWeek(date)}. týždeň · ${doy}. deň roka</span><span>do konca roka ${left} ${plural(left, 'deň', 'dni', 'dní')}</span></div>
+    ${progress ? '<div class="cal-progress"><i></i></div>' : ''}
+  </article></div>`;
+}
+
+/* ---------- Úvodná obrazovka ---------- */
+const Splash = {
+  ms: 4000, timer: 0,
+  show() {
+    const el = $('#splash');
+    $('#splash-inner').innerHTML = calPageHTML(today(), { progress: true }) + '<p class="splash-hint">Ťukni kamkoľvek a pokračuj</p>';
+    el.style.setProperty('--splash-ms', this.ms + 'ms');
+    el.hidden = false;
+    el.classList.remove('tearing', 'run');
+    void el.offsetWidth;
+    el.classList.add('run');
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.hide(), this.ms);
+  },
+  hide() {
+    const el = $('#splash');
+    if (el.hidden || el.classList.contains('tearing')) return;
+    clearTimeout(this.timer);
+    el.classList.add('tearing');
+    setTimeout(() => { el.hidden = true; el.classList.remove('tearing', 'run'); }, 700);
+  },
+  init() {
+    $('#splash').addEventListener('click', () => this.hide());
+    document.addEventListener('keydown', (e) => { if (!$('#splash').hidden && (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ')) this.hide(); });
+    this.show();
+  }
+};
+
+/* ---------- Záložka Kalendár ---------- */
+const KalView = {
+  offset: 0,
+  init() {
+    $('#kal-prev').innerHTML = ico('left', 18, 2.2);
+    $('#kal-next').innerHTML = ico('right', 18, 2.2);
+    $('#nd-ico').innerHTML = ico('search', 18);
+    $('#kal-prev').addEventListener('click', () => { this.offset--; this.renderPage(); });
+    $('#kal-next').addEventListener('click', () => { this.offset++; this.renderPage(); });
+    $('#kal-today').addEventListener('click', () => { this.offset = 0; this.renderPage(); });
+    $('#nd-q').addEventListener('input', (e) => this.renderSearch(e.target.value));
+  },
+  render() { this.renderPage(); this.renderUpcoming(); this.renderSearch($('#nd-q').value); },
+  renderPage() {
+    $('#kal-page').innerHTML = calPageHTML(addDays(today(), this.offset));
+    $('#kal-today').disabled = this.offset === 0;
+  },
+  renderSearch(q) {
+    const ul = $('#nd-results');
+    if (norm(q).length < 2) { ul.innerHTML = ''; return; }
+    const res = Kal.search(q);
+    if (!res.length) { ul.innerHTML = `<li class="muted">Meno „${esc(q.trim())}“ v kalendári nie je.</li>`; return; }
+    const fmt = (arr) => arr.map((x) => shortDate(x.m, x.d)).join(' a ');
+    ul.innerHTML = res.map((r) => `<li class="panel"><b>${esc(r.name)}</b><div>${[r.sk.length ? 'Meniny SK: ' + fmt(r.sk) : '', r.cz.length ? 'Svátek CZ: ' + fmt(r.cz) : ''].filter(Boolean).join(' · ')}</div></li>`).join('');
+  },
+  renderUpcoming() {
+    const t = today();
+    let html = '';
+    for (let i = 1; i <= 14; i++) {
+      const d = addDays(t, i), info = Kal.forDate(d);
+      const red = d.getDay() === 0 || !!info.skHol;
+      const bd = Bd.on(d);
+      const extra = [];
+      if (info.skHol) extra.push(`<div class="up-extra red">${esc(info.skHol)}</div>`);
+      if (bd.length) extra.push(`<div class="up-extra red">Narodeniny: ${bd.map((p) => esc(p.name)).join(', ')}</div>`);
+      html += `<li><div class="up-date${red ? ' red' : ''}"><b>${d.getDate()}</b><small>${DNI_KR[d.getDay()]} ${d.getMonth() + 1}.</small></div>
+        <div><div class="up-names">${esc(info.sk || '—')}${info.cz && info.cz !== info.sk ? ` <small>· CZ ${esc(info.cz)}</small>` : ''}</div>${extra.join('')}</div></li>`;
+    }
+    $('#kal-upcoming').innerHTML = html;
+  }
+};
+
+/* ============================================================
+   Vysúvacie okno a oznámenia
+   ============================================================ */
+const Sheet = {
+  onClose: null, prevFocus: null,
+  open(html, { label, onClose } = {}) {
+    this.prevFocus = document.activeElement;
+    this.onClose = onClose || null;
+    const root = $('#sheet-root');
+    root.innerHTML = `<div class="sheet"><div class="sheet-bg" data-close></div><div class="sheet-panel" role="dialog" aria-modal="true" ${label ? `aria-labelledby="${label}"` : ''}>${html}</div></div>`;
+    $$('[data-close]', root).forEach((b) => b.addEventListener('click', () => this.close()));
+    document.body.style.overflow = 'hidden';
+  },
+  close() {
+    const root = $('#sheet-root');
+    if (!root.firstChild) return;
+    root.innerHTML = '';
+    document.body.style.overflow = '';
+    const cb = this.onClose; this.onClose = null;
+    if (cb) cb();
+    if (this.prevFocus && this.prevFocus.focus) this.prevFocus.focus();
+  }
+};
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#sheet-root').firstChild) Sheet.close(); });
+
+let toastTimer = 0;
+function toast(msg, actionLabel, action) {
+  const root = $('#toast-root');
+  clearTimeout(toastTimer);
+  root.innerHTML = `<div class="toast"><span>${esc(msg)}</span>${actionLabel ? `<button>${esc(actionLabel)}</button>` : ''}</div>`;
+  const b = $('button', root);
+  if (b) b.addEventListener('click', () => { root.innerHTML = ''; action(); });
+  toastTimer = setTimeout(() => { root.innerHTML = ''; }, actionLabel ? 6000 : 3000);
+}
+
+/* ============================================================
+   Aplikácia – záložky, spustenie
+   ============================================================ */
+const App = {
+  tab: 'pocasie',
+  tabs: ['pocasie', 'narodeniny', 'kalendar'],
+  show(tab) {
+    if (!this.tabs.includes(tab)) tab = 'pocasie';
+    this.tab = tab;
+    store.set('tab', tab);
+    this.tabs.forEach((t) => { $('#view-' + t).hidden = t !== tab; });
+    $$('.tab').forEach((b) => b.setAttribute('aria-current', b.dataset.tab === tab ? 'page' : 'false'));
+    document.body.classList.toggle('mode-wx', tab === 'pocasie');
+    $('#sky').hidden = tab !== 'pocasie';
+    document.querySelector('meta[name="theme-color"]').content = tab === 'pocasie' ? '#1d4f82' : getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#eef2f5';
+    if (tab === 'pocasie') Wx.render();
+    if (tab === 'narodeniny') Bd.render();
+    if (tab === 'kalendar') KalView.render();
+    if (location.hash.slice(1) !== tab) history.replaceState(null, '', '#' + tab);
+    window.scrollTo({ top: 0 });
+  },
+  init() {
+    fillIcons();
+    Bd.init();
+    Wx.init();
+    KalView.init();
+    Splash.init();
+    $$('.tab').forEach((b) => b.addEventListener('click', () => this.show(b.dataset.tab)));
+    window.addEventListener('hashchange', () => this.show(location.hash.slice(1)));
+    this.show(location.hash.slice(1) || store.get('tab', 'pocasie'));
+    Wx.refreshAll();
+
+    // Návrat do appky po dlhšej pauze = nové "otvorenie"
+    let hiddenAt = 0;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { hiddenAt = Date.now(); return; }
+      const away = hiddenAt ? Date.now() - hiddenAt : 0;
+      if (away > 10 * 60 * 1000) {
+        Splash.show();
+        Wx.refreshAll();
+        if (this.tab !== 'pocasie') this.show(this.tab);
+      }
+      hiddenAt = 0;
+    });
+
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  }
+};
+
+App.init();
+})();
+</script>
+</body>
+</html>
