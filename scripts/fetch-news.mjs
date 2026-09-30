@@ -14,9 +14,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const KEEP_HOURS = 48;
-const MAX_ITEMS = 600;
-const SUMMARY_MAX = 420;
+const KEEP_HOURS = 30;
+const MAX_ITEMS = 1400;
+const SUMMARY_MAX = 380;
 const FETCH_TIMEOUT = 15000;
 const CONCURRENCY = 8;
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36 ObzorNews/1.0';
@@ -218,11 +218,11 @@ const RULES = {
   vojna: ['vojn', 'valk', '=war', '=wars', 'ukrajin', 'ukrajn', 'ukrain', 'invaz', 'invasion', 'front', 'ofenziv', 'offensive', 'armad', 'army', 'vojak', 'vojensk', 'military', 'soldier', 'troops', 'raket', 'missile', 'dron', 'bombard', 'bomb', 'ostrel', 'ostrel', 'zbran', 'weapon', 'munici', 'ammunition', '=nato', 'hamas', 'hizbal', 'hezbol', 'izrael', 'israel', '=gaza', '=gazy', '=gaze', '=gazu', '=gazou', '=iran', 'iranu', 'iransk', 'konflikt', 'conflict', 'primeri', 'ceasefire', 'teror', 'rukojem', 'hostage', 'okupac', 'kyjev', 'kyiv', '=kiev', 'charkov', 'charkiv', 'donbas', 'donec', 'krym', 'crimea', 'mobiliz', 'putin', 'zelensk', 'kreml', 'kremlin', 'airstrike', 'shelling', 'genocid', 'jemen', 'yemen', 'huti', 'houthi', 'sudan'],
   ekonomika: ['ekonom', 'econom', 'financ', 'burz', 'inflac', 'inflat', '=ecb', '=fed', 'urok', 'sadzb', 'hypot', 'mortgage', 'mzd', 'mzda', '=dane', '=dani', 'danov', 'zdanen', '=dph', 'rozpoct', 'budget', 'deficit', 'dlhu', 'dlhov', 'zadlz', '=hdp', '=gdp', 'bank', '=euro', '=eur', 'eurozon', 'dolar', 'dollar', 'bitcoin', 'krypto', 'crypto', 'investic', 'investor', 'invest', 'firma', 'firmy', 'firem', 'firmam', 'podnik', 'podnikatel', 'business', '=trh', '=trhu', '=trhy', 'trhov', 'market', 'stock', 'akcie', 'akciov', 'akcii', 'tariff', 'tarif', '=clo', '=cla', 'clami', '=ceny', '=cien', 'cenov', 'zdraz', 'zlacn', 'energi', 'energy', 'benzin', 'nafta', 'ropa', 'ropy', '=oil', 'plyn', 'dochodk', 'duchod', 'pension', 'nezamestn', 'unemploy', 'recesi', 'recession', 'export', 'import', 'priemys', 'prumysl', 'industry', 'automobilk', '=zisk', '=zisku', '=zisky', 'ziskov', 'trzb', 'trzeb', 'profit', 'revenue', 'earnings', 'akvizic', 'acquisition', 'fuzi', 'merger', 'startup', 'nehnutel', 'nemovit', 'real estate', 'spotrebitel', 'spotrebit', 'consumer', 'obchod', 'retail', 'predaj', 'prodej', 'sales', 'layoff', 'prepust'],
   technologie: ['technolog', 'tech', '=ai', 'umela inteligenc', 'umelou inteligenc', 'umelej inteligenc', 'artificial intelligence', 'chatbot', '=cip', '=cipy', 'cipov', 'cipu', '=chip', '=chips', 'semicond', 'polovodic', 'softver', 'software', 'aplikaci', 'aplikac', 'smartfon', 'smartphone', '=mobil', 'mobilu', 'mobiln', 'mobilov', 'iphone', 'android', 'google', 'apple', 'microsoft', 'openai', 'chatgpt', 'gemini', 'claude', 'anthropic', '=meta', 'facebook', 'instagram', 'tiktok', 'whatsapp', 'youtube', '=tesla', 'robot', 'kyber', 'cyber', 'hacker', 'haker', 'hack', 'internet', 'nvidia', 'samsung', 'elektromobil', 'electric vehicle', 'digital', 'algoritm', 'algorithm', 'procesor', 'processor', 'wifi', '=5g', 'spacex', 'starlink', '=musk', 'muska', 'quantum', 'kvantov', 'gadget', 'konzol', 'playstation', 'xbox', 'nintendo', '=hry', 'gaming', 'videohr', 'pocitac', 'computer', 'laptop', 'notebook', 'dataset', 'datov', 'cloud', 'server', 'platform', 'platforma', 'socialn siet', 'social media', 'deepfake', 'bateri', 'battery'],
-  veda: ['vedc', 'vedk', 'vedeck', 'vyskum', 'vyzkum', 'research', 'scien', 'studi', 'vesmir', '=space', 'kozmick', 'kosmick', '=nasa', '=esa', 'planet', 'astronaut', 'kozmonaut', 'kosmonaut', 'fyzik', 'physic', 'chemi', 'biolog', 'genet', '=dna', 'objav', 'objev', 'discover', 'archeolog', 'fosil', 'fossil', 'dinosaur', 'teleskop', 'telescope', '=mars', 'asteroid', 'komet', 'galax', 'evoluc', 'mikrob', 'neuro', 'nobel', '=moon', 'sonda', 'druzic', 'satelit', 'satellite', 'laborator', 'experiment', 'matematik', 'vedci'],
+  veda: ['vedc', 'vedk', 'vedeck', 'vyskum', 'vyzkum', 'research', 'scien', 'studi', 'vesmir', '=space', 'kozmick', 'kosmick', '=nasa', '=esa', 'planet', 'astronaut', 'kozmonaut', 'kosmonaut', 'fyzik', 'physic', 'chemi', 'biolog', 'genet', '=dna', 'discover', 'archeolog', 'fosil', 'fossil', 'dinosaur', 'teleskop', 'telescope', '=mars', 'asteroid', 'komet', 'galax', 'evoluc', 'mikrob', 'neuro', 'nobel', '=moon', 'sonda', 'druzic', 'satelit', 'satellite', 'laborator', 'experiment', 'matematik', 'vedci'],
   zdravie: ['zdravi', 'zdravot', 'health', 'nemocnic', 'hospital', 'lekar', 'doctor', 'pacient', 'patient', 'virus', 'viru', 'chripk', '=flu', 'ockov', 'vakcin', 'vaccin', 'rakovin', 'cancer', 'onkolog', 'liek', '=lek', 'leky', 'lieciv', 'medicin', 'epidemi', 'pandem', 'covid', 'infekc', 'infection', 'diabet', 'obezit', 'obesity', 'stravovan', '=who', 'mental', 'depresi', 'dusevn', 'alzheim', 'ambulanc', 'zachrank', 'nemoc', 'chorob', 'disease', 'srdcov', 'mozg', 'spanok', 'spanek', 'sleep', 'fitness', 'cvicen', 'exercise', 'vitamin', 'poistov'],
   klima: ['klim', 'climat', 'pocasi', 'weather', 'povod', 'flood', 'sucho', 'drought', 'horuc', 'vedr', 'heatwave', 'poziar', 'pozar', 'wildfire', 'emisi', 'emission', '=co2', 'ekolog', 'environment', 'prirod', 'nature', 'zemetras', 'zemetres', 'earthquake', 'hurikan', 'hurricane', 'tajfun', 'typhoon', 'tornad', 'burk', 'storm', 'lavin', 'ladovc', 'glacier', 'uhlik', 'carbon', 'obnoviteln', 'renewable', 'solarn', 'fotovolt', 'vetern', 'biodiverz', 'zviera', 'zvirat', 'animal', 'wildlife', '=lesy', 'lesov', 'medved', 'vlk', 'ocean', 'znecist', 'pollution', 'plast', 'odpad', 'waste', 'recykl', 'sopka', 'volcan', 'tsunami'],
   sport: ['futbal', 'fotbal', 'football', 'soccer', 'hokej', 'hockey', 'tenis', 'tennis', 'olymp', 'zapas', 'match', 'liga', 'league', 'reprezent', '=gol', '=goly', 'golov', '=goal', 'trener', 'coach', '=f1', 'formul', 'majstrovstv', 'mistrovstv', 'sampion', 'champion', 'turnaj', 'tournament', 'cyklist', 'atlet', 'lyzov', 'lyzar', 'biatlon', '=nhl', '=nba', 'uefa', 'fifa', 'sport', 'hrac', 'player', 'slovan', 'sparta', 'slavia', 'extralig', 'bundeslig', 'premier league', 'champions league', 'liga majstrov', 'wimbledon', 'maraton', 'marathon', 'plavan', 'vlachovsk', 'kolesar', 'slafkovsk'],
-  kultura: ['film', 'kino', 'cinema', 'hudb', 'music', 'koncert', 'concert', 'herec', 'hereck', 'actor', 'actress', 'divadl', 'theat', 'kniha', 'knihy', 'knih', 'book', 'serial', 'festival', 'umelec', 'umelk', 'vystav', 'exhibit', 'celebrit', 'spevak', 'spevack', 'zpevak', 'zpevac', 'album', 'oscar', 'grammy', 'netflix', 'hbo', 'galeri', 'muze', 'balet', 'opera', 'literat', 'spisovat', 'reziser', 'moderator', 'influencer', 'showbiz', 'televiz', 'kultur', 'culture', 'pesnic', 'pisnic', 'song', 'rapper', 'raper', 'disney', 'marvel', 'eurovizi'],
+  kultura: ['film', 'kino', 'cinema', 'hudb', 'music', 'koncert', 'concert', 'herec', 'hereck', 'actor', 'actress', 'divadl', 'theat', 'kniha', 'knihy', 'knih', 'book', 'serial', 'festival', 'umelec', 'umelk', 'vystav', 'exhibit', 'celebrit', 'spevak', 'spevack', 'zpevak', 'zpevac', 'album', 'oscar', 'grammy', 'netflix', 'hbo', 'galeri', 'muzeu', 'muzea', 'muzej', 'museum', 'balet', '=opera', '=opery', '=opere', '=operu', 'operne', 'literat', 'spisovat', 'reziser', 'moderator', 'influencer', 'showbiz', 'televiz', 'kultur', 'culture', 'pesnic', 'pisnic', 'song', 'rapper', 'raper', 'disney', 'marvel', 'eurovizi'],
   krimi: ['polici', 'police', 'vrazd', 'murder', 'zabil', 'zabit', 'killed', 'nehod', 'crash', 'accident', 'havari', 'zranen', 'injur', '=sud', '=sudu', 'sudny', 'sudkyn', 'sudc', 'soud', 'court', 'obzalob', 'obvinen', 'charged', 'zatkn', 'zadrz', 'arrest', 'podvod', 'fraud', 'korupc', 'corrupt', 'kradez', 'kradol', 'kradl', 'theft', 'lupez', 'strelb', 'shooting', 'tragedi', 'tragick', 'umrtie', 'zomrel', 'zemrel', 'vazb', 'vazen', 'prison', 'vezen', 'kriminal', 'crime', 'prokurat', 'prosecut', 'vysetrov', 'investigat', 'obet', 'mrtv', 'dead', 'utek', 'ukradn', 'znasil', 'drog'],
   slovensko: ['slovensk', 'slovak', 'bratislav', 'kosic', 'presov', 'zilin', 'nitra', 'nitre', 'nitrian', 'banska bystrica', 'banskej bystrici', 'trnav', 'trencin', 'poprad', '=nrsr', '=sr', 'tatr', 'fico', 'pellegrini', 'simeck', 'matovic', 'sulik', 'sutaj', 'kalinak', 'kamenick', 'tarab', 'danko', 'gasparovic', 'caputov', 'stvr', 'rtvs', 'dialnic', '=d1', 'nbs', 'zeleznic'],
   svet: ['=usa', '=eu', 'europsk', 'evropsk', 'europe', 'nemeck', 'nemec', 'nemci', 'german', 'francuz', 'franci', 'french', 'france', 'britan', 'british', 'londyn', 'london', 'washington', 'americk', 'america', '=cina', '=ciny', 'cinsk', 'china', 'chinese', 'japon', 'japan', '=india', 'indie', 'indii', 'indick', 'afrik', 'africa', 'rusk', 'russia', 'moskv', 'moscow', 'ukrajin', 'ukrain', 'izrael', 'israel', 'turec', 'turk', 'polsk', 'poland', 'polish', 'madar', 'hungar', 'rakus', 'austri', 'taliansk', 'italy', 'italian', 'spanielsk', 'spain', 'orban', 'trump', 'putin', 'zelensk', 'macron', '=osn', '=un', 'united nations', 'brusel', 'brussels', 'kanad', 'canada', 'brazil', 'mexik', 'mexico', 'korej', 'korea', 'taiwan', 'tchaj', 'austral', 'venezuel', 'syri', 'irak', 'iraq', 'afgan', 'pakistan', 'saudsk', 'saudi']
@@ -278,8 +278,9 @@ export function styleOf(item) {
    Spájanie rovnakých správ z rôznych médií
    ============================================================ */
 const STOP = new Set(('ktory ktora ktore ktori ktoreho ktoru ktery ktera ktere kteri ako aj ale ani alebo nebo pred podla podle proti medzi mezi este jeste uz len jen budu bude byt bol bola boli bolo bylo byla byly jsou sme ste som jsem tento tato toto tieto tyto tak teda takze preto proto kvoli kvuli pre pro nad pod cez pres pri bez ich jeho jej jejich svoje svoj svuj their there this that with from have has will would about after over into says said what when which while your more most than then they them were been also just only novy nova nove dnes vcera zajtra roka rokov roku rokoch year years ludi lidi people slovensko slovenska slovenske slovensku cesko ceska ceske online video foto fotky galeria clanok prvy prva prve dalsi dalsie dalsich mozno muze moze mohli mohol chce chcu stale uplne velmi viac vice menej mene new says could should first after before still over under what heres here').split(' '));
+const GENERIC = ['zakon', 'vlad', 'navrh', 'minist', 'premier', 'poslan', 'parlament', 'schval', 'prezident', 'polici', 'koalic', 'opozic', 'hovor', 'tvrd', 'uvied', 'povedal', 'rekl', 'uvedl', 'podla', 'ludi', 'lidi', 'slovensk', 'cesk', 'sveta', 'svet', 'krajin', 'zeme', 'miliard', 'milion', 'percent', 'procent', 'eur', 'korun'];
 export function clusterKeys(title) {
-  return [...new Set(tokens(title).filter((t) => t.length >= 4 && !STOP.has(t)).map((t) => t.slice(0, 6)))];
+  return [...new Set(tokens(title).filter((t) => t.length >= 4 && !STOP.has(t) && !GENERIC.some((g) => t.startsWith(g))).map((t) => t.slice(0, 6)))];
 }
 function similar(a, b) {
   let inter = 0;
@@ -290,22 +291,25 @@ function similar(a, b) {
   const overlap = inter / small.length;
   return (inter >= 3 && overlap >= 0.45) || (inter >= 2 && overlap >= 0.67 && small.length <= 4);
 }
+/** Od najstaršej správy: pridá sa k udalosti, ak sa podobá na jej prvú správu alebo aspoň na dve jej správy (bez reťazenia). */
 export function cluster(items) {
-  const parent = items.map((_, i) => i);
-  const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
   const keys = items.map((it) => clusterKeys(it.title));
   const relKeys = items.map((it) => (it.related || []).map((r) => clusterKeys(r.title)));
-  for (let i = 0; i < items.length; i++) {
-    for (let j = i + 1; j < items.length; j++) {
-      if (Math.abs(items[i].published - items[j].published) > 36 * 3600e3) continue;
-      if (similar(keys[i], keys[j]) || relKeys[i].some((k) => similar(k, keys[j])) || relKeys[j].some((k) => similar(k, keys[i]))) {
-        parent[find(i)] = find(j);
-      }
+  const sim = (i, j) => similar(keys[i], keys[j]) || relKeys[i].some((k) => similar(k, keys[j])) || relKeys[j].some((k) => similar(k, keys[i]));
+  const order = items.map((_, i) => i).sort((a, b) => items[a].published - items[b].published);
+  const clusters = [];
+  for (const i of order) {
+    let best = null, bestHits = 0;
+    for (const c of clusters) {
+      if (items[i].published - items[c[0]].published > 36 * 3600e3) continue;
+      let hits = 0;
+      for (const j of c) if (sim(i, j)) hits++;
+      if ((sim(i, c[0]) || hits >= 2) && hits > bestHits) { best = c; bestHits = hits; }
     }
+    if (best) best.push(i); else clusters.push([i]);
   }
-  const groups = new Map();
-  items.forEach((it, i) => { const r = find(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(it); });
-  for (const g of groups.values()) {
+  for (const c of clusters) {
+    const g = c.map((i) => items[i]);
     const sources = new Set();
     g.forEach((it) => { sources.add(norm(it.source)); (it.related || []).forEach((r) => sources.add(norm(r.source))); });
     const cid = g.map((it) => it.id).sort()[0];
@@ -343,11 +347,13 @@ async function loadFeed(feed) {
     catch { throw new Error('fixture chýba'); }
     xml = decodeBody(new Uint8Array(buf), '');
   } else {
-    const res = await fetch(feed.url, {
+    const get = () => fetch(feed.url, {
       headers: { 'User-Agent': UA, Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8' },
       signal: AbortSignal.timeout(FETCH_TIMEOUT),
       redirect: 'follow'
     });
+    let res = await get();
+    if (res.status === 429 || res.status === 503) { await new Promise((r) => setTimeout(r, 4000)); res = await get(); }
     if (!res.ok) throw new Error('HTTP ' + res.status);
     xml = decodeBody(new Uint8Array(await res.arrayBuffer()), res.headers.get('content-type') || '');
   }
