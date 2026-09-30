@@ -289,9 +289,9 @@ function similar(a, b) {
   for (const k of small) if (set.has(k)) inter++;
   if (!small.length) return false;
   const overlap = inter / small.length;
-  return (inter >= 3 && overlap >= 0.45) || (inter >= 2 && overlap >= 0.67 && small.length <= 4);
+  return (inter >= 3 && overlap >= 0.4) || (inter >= 2 && overlap >= 0.67 && small.length <= 4);
 }
-/** Od najstaršej správy: pridá sa k udalosti, ak sa podobá na jej prvú správu alebo aspoň na dve jej správy (bez reťazenia). */
+/** Od najstaršej správy: pridá sa k udalosti, ak sa podobá aspoň na polovicu jej správ (bez reťazenia cez jednu podobnosť). */
 export function cluster(items) {
   const keys = items.map((it) => clusterKeys(it.title));
   const relKeys = items.map((it) => (it.related || []).map((r) => clusterKeys(r.title)));
@@ -304,7 +304,7 @@ export function cluster(items) {
       if (items[i].published - items[c[0]].published > 36 * 3600e3) continue;
       let hits = 0;
       for (const j of c) if (sim(i, j)) hits++;
-      if ((sim(i, c[0]) || hits >= 2) && hits > bestHits) { best = c; bestHits = hits; }
+      if (hits * 2 >= c.length && hits > bestHits) { best = c; bestHits = hits; }
     }
     if (best) best.push(i); else clusters.push([i]);
   }
