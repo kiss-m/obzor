@@ -2237,7 +2237,7 @@ const News = {
   /* ---------- výber správ ---------- */
   repScore(it) {
     return (it.summary ? Math.min(it.summary.length, 300) / 100 : 0) + (it.image ? 0.8 : 0)
-      + (String(it.feed || '').startsWith('gn-') ? -2 : 0) + (it.lang === 'sk' ? 0.3 : 0)
+      + (String(it.feed || '').startsWith('gn-') ? -2 : 0) + ({ sk: 1.5, cs: 0.5 }[it.lang] || 0)
       + 3 * this.lin(['s:' + norm(it.source || '')]);
   },
   /** Nové, ešte nevidené správy z vybraných okruhov – jedna za každú udalosť */
