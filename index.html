@@ -30,6 +30,7 @@
   --accent-ink: #ffffff;
   --red: #c42f28;
   --red-soft: rgba(196, 47, 40, .09);
+  --good: #1e8a4c;
   --bar-bg: rgba(248, 250, 252, .88);
   --bar-line: rgba(19, 33, 48, .1);
   --shadow: 0 1px 2px rgba(19, 33, 48, .06), 0 10px 28px rgba(19, 33, 48, .08);
@@ -59,6 +60,7 @@
     --accent-ink: #06121f;
     --red: #ff6d62;
     --red-soft: rgba(255, 109, 98, .12);
+    --good: #4cc17f;
     --bar-bg: rgba(13, 19, 26, .88);
     --bar-line: rgba(255, 255, 255, .08);
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .35);
@@ -105,8 +107,8 @@ h1, h2, h3 { text-wrap: balance; }
 .tabbar-inner { display: flex; max-width: 520px; margin: 0 auto; }
 .tab {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 9px 4px 8px; border: 0; background: none;
-  color: var(--ink-2); font-size: 11.5px; font-weight: 500; letter-spacing: .01em;
+  padding: 9px 2px 8px; border: 0; background: none; min-width: 0;
+  color: var(--ink-2); font-size: 11px; font-weight: 500; letter-spacing: .01em;
 }
 .tab[aria-current="page"] { color: var(--accent); }
 body.mode-wx .tabbar { background: rgba(8, 20, 36, .42); border-top-color: rgba(255, 255, 255, .12); }
@@ -419,7 +421,7 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
 .up-extra.red { color: var(--red); font-weight: 500; }
 
 /* ---------- vysúvacie okná ---------- */
-.sheet { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { position: fixed; inset: 0; z-index: 97; display: flex; align-items: flex-end; justify-content: center; }
 .sheet-bg { position: absolute; inset: 0; background: rgba(6, 14, 24, .42); animation: fade 200ms ease; }
 .sheet-panel {
   position: relative; width: 100%; max-width: 560px; max-height: calc(100% - env(safe-area-inset-top, 0px) - 24px);
@@ -487,7 +489,7 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
 .form-hint { margin: 0; font-size: 13px; color: var(--ink-2); }
 
 .toast {
-  position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 14px); z-index: 90;
+  position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 14px); z-index: 98;
   transform: translateX(-50%); max-width: calc(100% - 32px);
   display: flex; align-items: center; gap: 14px;
   background: #16232f; color: #fff; padding: 11px 16px; border-radius: 14px; font-size: 14px;
@@ -495,10 +497,181 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
 }
 .toast button { border: 0; background: none; color: #8cc4ff; font-weight: 700; padding: 0; }
 
+
+/* ---------- Novinky: balíček kariet na swipovanie ---------- */
+.deck {
+  position: fixed; inset: 0; z-index: 95; background: var(--paper); color: var(--ink);
+  display: flex; flex-direction: column; align-items: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+  overflow: hidden;
+}
+.deck-top { width: 100%; max-width: 440px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.deck-title { font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 27px; line-height: 1.05; }
+.deck-count { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.deck-dots { display: flex; gap: 5px; margin-top: 8px; }
+.deck-dots i { width: 20px; height: 4px; border-radius: 2px; background: var(--line); }
+.deck-dots i.done { background: var(--ink-2); }
+.deck-dots i.cur { background: var(--accent); }
+.deck-stage { position: relative; width: 100%; max-width: 440px; flex: 1 1 auto; min-height: 300px; max-height: 620px; margin: 14px 0 14px; }
+.deck-stage.setup { max-height: none; margin-bottom: 0; }
+.deck-actions { display: flex; justify-content: center; align-items: center; gap: 22px; }
+.deck-btn {
+  width: 62px; height: 62px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
+  display: grid; place-items: center; box-shadow: var(--shadow); transition: transform 120ms ease;
+}
+.deck-btn:active { transform: scale(.92); }
+.deck-btn.no { color: var(--red); }
+.deck-btn.yes { color: var(--good); }
+.deck-btn.meh { width: 50px; height: 50px; color: var(--ink-2); }
+.deck-hint { margin: 10px 0 0; font-size: 12px; color: var(--ink-2); text-align: center; max-width: 440px; }
+
+.ncard {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow);
+  overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+  transform-origin: 50% 85%; cursor: grab;
+}
+.ncard:active { cursor: grabbing; }
+.ncard[data-depth="1"], .ncard[data-depth="2"] { pointer-events: none; transition: transform 260ms ease; }
+.ncard[data-depth="1"] { transform: translateY(12px) scale(.955); }
+.ncard[data-depth="2"] { transform: translateY(24px) scale(.91); }
+.ncard-img { flex: 0 0 36%; min-height: 0; background: var(--surface-2); overflow: hidden; }
+.ncard-img img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; }
+.ncard-band { flex: 0 0 22%; min-height: 70px; position: relative; overflow: hidden; background: var(--tc); }
+.ncard-band span {
+  position: absolute; left: 16px; bottom: -12px; white-space: nowrap;
+  font: 900 64px/1 var(--font-display); font-stretch: 62%; text-transform: uppercase; color: rgba(255, 255, 255, .24);
+}
+.ncard-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 14px; }
+.ncard-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12.5px; color: var(--ink-2); }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--line); font-size: 12px; font-weight: 600; color: var(--ink);
+}
+.chip i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ncard-title {
+  margin: 0; font-family: var(--font-display); font-weight: 750; font-stretch: 84%;
+  font-size: 25px; line-height: 1.12; overflow-wrap: anywhere; flex: none;
+}
+.ncard-sum {
+  margin: 0; font-size: 15px; line-height: 1.45; flex: 1 1 auto; min-height: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent); mask-image: linear-gradient(to bottom, #000 78%, transparent);
+}
+.ncard-foot { margin-top: auto; flex: none; display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--ink-2); padding-top: 9px; border-top: 1px solid var(--line); }
+.stamp {
+  position: absolute; top: 20px; padding: 6px 12px; border: 3px solid currentColor; border-radius: 10px;
+  font: 800 20px/1 var(--font-display); font-stretch: 80%; text-transform: uppercase; letter-spacing: .04em;
+  background: var(--surface); opacity: 0; pointer-events: none;
+}
+.stamp.like { left: 18px; color: var(--good); transform: rotate(-12deg); }
+.stamp.nope { right: 18px; color: var(--red); transform: rotate(12deg); }
+.stamp.meh { left: 50%; top: auto; bottom: 64px; color: var(--ink-2); transform: translateX(-50%); }
+.deck-msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 24px; }
+.deck-msg h2 { margin: 0; font-size: 21px; }
+.deck-msg p { margin: 0 0 8px; color: var(--ink-2); max-width: 34ch; }
+.deck-skel { position: absolute; inset: 0; border-radius: 22px; background: var(--surface); border: 1px solid var(--line); padding: 20px; display: grid; align-content: start; gap: 12px; }
+.deck-skel i { display: block; height: 14px; border-radius: 7px; background: var(--surface-2); }
+.deck-setup { width: 100%; max-width: 440px; flex: 1 1 auto; overflow-y: auto; padding: 14px 2px 4px; display: grid; align-content: start; gap: 14px; }
+.deck-setup h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 28px; line-height: 1.1; }
+.deck-setup p { margin: 0; color: var(--ink-2); }
+.deck-setup .set-row { padding: 6px 0; }
+.deck-setup .btns { display: grid; gap: 8px; margin-top: 4px; }
+.deck-setup .btns .btn { padding: 13px; font-size: 15px; }
+
+/* detail správy */
+.nd-img { margin: 0 -16px 14px; aspect-ratio: 16 / 9; max-height: 280px; overflow: hidden; background: var(--surface-2); }
+.nd-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nd-title { margin: 10px 0 8px; font-family: var(--font-display); font-weight: 750; font-stretch: 84%; font-size: 27px; line-height: 1.12; overflow-wrap: anywhere; }
+.nd-sum { margin: 0 0 16px; font-size: 16.5px; line-height: 1.55; }
+.nd-sum.none { color: var(--ink-2); font-size: 15px; }
+.nd-open { width: 100%; padding: 13px; font-size: 15px; text-decoration: none; }
+.nd-rel { list-style: none; margin: 0; padding: 0; }
+.nd-rel li + li { border-top: 1px solid var(--line); }
+.nd-rel a { display: block; padding: 10px 14px; color: var(--ink); text-decoration: none; }
+.nd-rel a:hover { background: var(--surface-2); }
+.nd-rel small { display: block; color: var(--ink-2); font-size: 12px; margin-bottom: 1px; }
+.nd-why { margin-top: 16px; padding: 11px 13px; border-radius: 12px; background: var(--surface-2); font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.nd-why b { color: var(--ink); font-weight: 600; }
+.nd-rate { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.nd-rate .btn { flex-direction: column; gap: 3px; padding: 10px 6px; font-size: 13px; }
+.nd-rate .no { color: var(--red); }
+.nd-rate .yes { color: var(--good); }
+.nd-rate .meh { color: var(--ink-2); }
+.nd-rated { margin: 16px 0 0; font-size: 14px; color: var(--ink-2); display: flex; gap: 8px; align-items: center; }
+
+/* záložka Novinky */
+.chips-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.link-btn { border: 0; background: none; padding: 4px 2px; color: var(--accent); font-weight: 600; font-size: 13.5px; }
+.nlist { list-style: none; margin: 0; padding: 0; }
+.nlist li + li { border-top: 1px solid var(--line); }
+.nrow { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 0; background: none; text-align: left; }
+.nrow:hover { background: var(--surface-2); }
+.nlist li:first-child .nrow { border-radius: var(--r) var(--r) 0 0; }
+.nlist li:last-child .nrow { border-radius: 0 0 var(--r) var(--r); }
+.nlist li:only-child .nrow { border-radius: var(--r); }
+.nrow-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 12px; color: var(--ink-2); }
+.nrow-title { display: block; font-weight: 600; font-size: 15.5px; line-height: 1.3; margin-top: 3px; overflow-wrap: anywhere; }
+.nrow img { width: 62px; height: 62px; border-radius: 10px; object-fit: cover; display: block; background: var(--surface-2); }
+.rate-ico { display: inline-flex; }
+.rate-ico.r1 { color: var(--good); }
+.rate-ico.r0 { color: var(--red); }
+.rate-ico.r5 { color: var(--ink-2); }
+.panel-note { padding: 16px; color: var(--ink-2); font-size: 14px; margin: 0; }
+
+/* Nastavenia */
+.set-group { padding: 2px 16px; }
+.set-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; }
+.set-row + .set-row { border-top: 1px solid var(--line); }
+.set-row.col { flex-direction: column; align-items: stretch; gap: 10px; }
+.set-row b { font-weight: 600; }
+.set-row p { margin: 2px 0 0; font-size: 13px; color: var(--ink-2); }
+.topic-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.tchip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14px;
+}
+.tchip i { width: 9px; height: 9px; border-radius: 50%; background: var(--tc, var(--ink-2)); }
+.tchip[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, var(--surface)); box-shadow: inset 0 0 0 1px var(--accent); }
+.stepper { display: flex; align-items: center; flex: none; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.stepper button { width: 44px; height: 42px; border: 0; background: none; font-size: 21px; line-height: 1; color: var(--ink); }
+.stepper button:disabled { opacity: .35; }
+.stepper output { min-width: 36px; text-align: center; font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
+.learn { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.learn li { display: grid; grid-template-columns: minmax(0, 1fr) 42%; gap: 12px; align-items: center; font-size: 14px; }
+.learn span { overflow-wrap: anywhere; }
+.lbar { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); }
+.lbar::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--ink-2); opacity: .5; }
+.lbar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+.lbar i.pos { left: 50%; background: var(--good); }
+.lbar i.neg { right: 50%; background: var(--red); }
+.learn-legend { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-2); margin: 4px 0 0 calc(58% + 12px); }
+.src-list { list-style: none; margin: 0; padding: 0 16px 10px; columns: 2 200px; column-gap: 20px; }
+.src-list li { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; font-size: 13.5px; break-inside: avoid; }
+.src-list .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; transform: translateY(-1px); }
+.src-list .ok { background: var(--good); }
+.src-list .bad { background: var(--red); }
+.src-list small { color: var(--ink-2); margin-left: auto; font-variant-numeric: tabular-nums; }
+details.panel summary { padding: 14px 16px; cursor: pointer; font-weight: 600; }
+.about { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; margin: 0; }
+.about a { color: var(--accent); }
+
+/* karta noviniek na domovskej obrazovke (počasie) */
+.wx-news { display: flex; align-items: center; gap: 12px; }
+.wx-news-ico { width: 42px; height: 42px; border-radius: 12px; background: rgba(255, 255, 255, .16); display: grid; place-items: center; flex: none; }
+.wx-news-txt { flex: 1; min-width: 0; }
+.wx-news-txt b { display: block; font-size: 15px; font-weight: 600; }
+.wx-news-txt span { font-size: 13px; color: rgba(255, 255, 255, .82); }
+.wx-news button { border: 0; border-radius: 12px; padding: 9px 13px; background: #fff; color: #10263d; font-weight: 700; font-size: 14px; flex: none; }
+.wx-news button:disabled { opacity: .5; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
   .splash.run .cal-progress i { animation-duration: var(--splash-ms, 4000ms) !important; }
   .splash.tearing .cal-page { transform: none; }
+}
+@media (max-width: 400px) {
+  .deck-title { font-size: 24px; }
 }
 @media (max-width: 380px) {
   .hero-temp { font-size: 88px; }
@@ -516,6 +689,25 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
   <div class="splash-inner" id="splash-inner"></div>
 </div>
 
+<!-- Novinky po úvodnej obrazovke -->
+<div id="deck" class="deck" role="dialog" aria-label="Novinky na dnes" hidden>
+  <header class="deck-top">
+    <div>
+      <div class="deck-title" id="deck-title">Novinky na dnes</div>
+      <div class="deck-count" id="deck-count"></div>
+      <div class="deck-dots" id="deck-dots" aria-hidden="true"></div>
+    </div>
+    <button class="btn" id="deck-skip">Preskočiť</button>
+  </header>
+  <div class="deck-stage" id="deck-stage"></div>
+  <div class="deck-actions" id="deck-actions">
+    <button class="deck-btn no" data-dir="left" aria-label="Nezaujíma ma" title="Nezaujíma ma (šípka doľava)"></button>
+    <button class="deck-btn meh" data-dir="down" aria-label="Neutrálne" title="Neutrálne (šípka dole)"></button>
+    <button class="deck-btn yes" data-dir="right" aria-label="Páči sa mi" title="Páči sa mi (šípka doprava)"></button>
+  </div>
+  <p class="deck-hint" id="deck-hint">Doprava: páči sa mi · doľava: nezaujíma ma · dole: neutrálne · ťuknutím si prečítaš viac</p>
+</div>
+
 <div class="sky" id="sky" aria-hidden="true"></div>
 
 <main id="app">
@@ -528,6 +720,19 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
     <div class="wx-body" id="wx-body"></div>
   </section>
 
+  <section id="view-novinky" class="view" aria-label="Novinky" hidden>
+    <header class="page-h">
+      <h1>Novinky</h1>
+      <button class="btn btn-primary" id="nw-more">Ďalšie novinky</button>
+    </header>
+    <p class="page-sub" id="nw-sub"></p>
+    <div class="chips-row" id="nw-topics"></div>
+    <h2 class="section-h">Páčili sa ti</h2>
+    <div id="nw-liked"></div>
+    <h2 class="section-h">Nedávno prezreté</h2>
+    <div id="nw-history"></div>
+  </section>
+
   <section id="view-narodeniny" class="view" aria-label="Narodeniny" hidden>
     <header class="page-h">
       <h1>Narodeniny</h1>
@@ -535,13 +740,6 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
     </header>
     <p class="page-sub" id="bd-sub"></p>
     <div id="bd-content"></div>
-    <h2 class="section-h">Záloha</h2>
-    <div class="backup">
-      <p>Údaje sú uložené len v tomto zariadení. Zálohu si stiahni do súboru a obnov ju napríklad v novom telefóne.</p>
-      <button class="btn" id="bk-export">Stiahnuť zálohu</button>
-      <button class="btn" id="bk-import">Obnoviť zo zálohy</button>
-      <input type="file" id="bk-file" accept="application/json,.json" hidden>
-    </div>
   </section>
 
   <section id="view-kalendar" class="view" aria-label="Kalendár" hidden>
@@ -563,13 +761,49 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
     <h2 class="section-h">Najbližších 14 dní</h2>
     <ol class="upcoming panel" id="kal-upcoming"></ol>
   </section>
+
+  <section id="view-nastavenia" class="view" aria-label="Nastavenia" hidden>
+    <header class="page-h">
+      <h1>Nastavenia</h1>
+    </header>
+    <h2 class="section-h">Novinky</h2>
+    <div class="panel set-group">
+      <div class="set-row col">
+        <div><b>Okruhy</b><p>Z týchto okruhov ti appka vyberá správy.</p></div>
+        <div class="topic-grid" id="st-topics"></div>
+      </div>
+      <div class="set-row">
+        <div><b>Počet noviniek po spustení</b><p id="st-count-hint"></p></div>
+        <div id="st-count-box"></div>
+      </div>
+      <div class="set-row col">
+        <div><b>Jazyk zdrojov</b><p>Správy z týchto médií sa môžu objaviť medzi novinkami.</p></div>
+        <div class="topic-grid" id="st-langs"></div>
+      </div>
+    </div>
+    <h2 class="section-h">Čo sa appka o tebe naučila</h2>
+    <div class="panel set-group" id="st-learned"></div>
+    <h2 class="section-h">Zdroje správ</h2>
+    <details class="panel" id="st-sources"></details>
+    <h2 class="section-h">Záloha</h2>
+    <div class="backup">
+      <p>Narodeniny, miesta aj to, čo sa appka naučila o tvojich záujmoch, sú uložené len v tomto zariadení. Zálohu si stiahni do súboru a obnov ju napríklad v novom telefóne.</p>
+      <button class="btn" id="bk-export">Stiahnuť zálohu</button>
+      <button class="btn" id="bk-import">Obnoviť zo zálohy</button>
+      <input type="file" id="bk-file" accept="application/json,.json" hidden>
+    </div>
+    <h2 class="section-h">O appke</h2>
+    <p class="about">Počasie: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>. Novinky: RSS kanály slovenských, českých a svetových médií, ktoré každých 30 minút zbiera automatická úloha na GitHube. Výber správ sa učí priamo v tvojom zariadení; tvoje hodnotenia sa nikam neposielajú.</p>
+  </section>
 </main>
 
 <nav class="tabbar" aria-label="Hlavná navigácia">
   <div class="tabbar-inner">
     <button class="tab" data-tab="pocasie"><span data-ico="cloudsun"></span>Počasie</button>
+    <button class="tab" data-tab="novinky"><span data-ico="news"></span>Novinky</button>
     <button class="tab" data-tab="narodeniny"><span data-ico="cake"></span>Narodeniny</button>
     <button class="tab" data-tab="kalendar"><span data-ico="calendar"></span>Kalendár</button>
+    <button class="tab" data-tab="nastavenia"><span data-ico="gear"></span>Nastavenia</button>
   </div>
 </nav>
 
@@ -716,6 +950,11 @@ const ICONS = {
   down: '<path d="M12 5v13.5M6 12.5l6 6 6-6"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
   pin: '<path d="M19.5 4.5L4.5 11l6.7 1.8L13 19.5z"/>',
+  news: '<path d="M5 4.5h11.5v14a2 2 0 0 0 2 2H6.5A1.5 1.5 0 0 1 5 19z"/><path d="M16.5 8.5H19a1 1 0 0 1 1 1v9a2 2 0 0 1-4 0M8 8h5.5M8 11.5h5.5M8 15h3.5"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  heart: '<path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.6 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/>',
+  minus: '<path d="M6 12h12"/>',
+  external: '<path d="M14 4.5h5.5V10M19.5 4.5L11 13M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
   cloudsun: '<path d="M8.5 2.8v1.4M3.2 8H4.6M4.7 4.2l1 1M12.3 4.2l-1 1"/><path d="M11.4 9.3A3.6 3.6 0 0 0 5.2 10.7"/><path d="M9.2 20.5h8.3a4 4 0 0 0 .6-7.95 5.2 5.2 0 0 0-9.7.95 3.5 3.5 0 0 0 .8 7z"/>'
 };
 const ico = (name, size = 20, sw = 1.8) =>
@@ -1050,7 +1289,7 @@ const Wx = {
       if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) this.select(this.sel + (dx < 0 ? 1 : -1));
     }, { passive: true });
     document.addEventListener('keydown', (e) => {
-      if (App.tab !== 'pocasie' || $('#sheet-root').firstChild || !$('#splash').hidden) return;
+      if (App.tab !== 'pocasie' || $('#sheet-root').firstChild || !$('#splash').hidden || Deck.isOpen()) return;
       if (e.target.closest('input, textarea, select')) return;
       if (e.key === 'ArrowRight') this.select(this.sel + 1);
       if (e.key === 'ArrowLeft') this.select(this.sel - 1);
@@ -1090,6 +1329,7 @@ const Wx = {
     sky.style.background = skyFor(c.data.current.weather_code, c.data.current.is_day === 1);
     const retry = $('#wx-retry');
     if (retry) retry.addEventListener('click', () => this.refreshAll(true));
+    NewsHome.bind();
     this.bindCloudChart(c.data);
   },
 
@@ -1119,6 +1359,9 @@ const Wx = {
       <p class="hero-cond">${wxText(cur.weather_code)}</p>
       <p class="hero-hl">Max. ${T(dl.temperature_2m_max[0])}° · Min. ${T(dl.temperature_2m_min[0])}°</p>
     </section>`;
+
+    // Novinky
+    html += NewsHome.html();
 
     // Hodinová predpoveď
     html += `<section class="wx-card"><p class="summary">${esc(this.summary(d, i0))}</p><div class="hours" aria-label="Predpoveď na 24 hodín">${this.hoursHTML(d, i0)}</div></section>`;
@@ -1651,7 +1894,7 @@ const Bd = {
 /* ---------- Záloha ---------- */
 const Backup = {
   export() {
-    const data = { app: 'obzor', version: 1, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places };
+    const data = { app: 'obzor', version: 2, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places, news: { prefs: News.prefs, model: News.model, seen: News.seen, history: News.history } };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1674,7 +1917,15 @@ const Backup = {
         Wx.sel = 0; Wx.save();
         Wx.refreshAll();
       }
+      if (data.news && typeof data.news === 'object') {
+        if (data.news.prefs && typeof data.news.prefs === 'object') News.prefs = { ...News.prefs, ...data.news.prefs };
+        if (data.news.model && data.news.model.w) News.model = { words: {}, sources: {}, n: {}, ratings: 0, b: 0, ...data.news.model };
+        if (data.news.seen && typeof data.news.seen === 'object') News.seen = data.news.seen;
+        if (Array.isArray(data.news.history)) News.history = data.news.history;
+        News.savePrefs(); News.saveModel();
+      }
       Bd.render();
+      if (App.tab === 'nastavenia') SettingsView.render();
       toast(`Obnovené: ${Bd.list.length} ${plural(Bd.list.length, 'narodeniny', 'narodeniny', 'narodenín')}, ${Wx.places.length} ${plural(Wx.places.length, 'miesto', 'miesta', 'miest')}.`);
     } catch {
       toast('Tento súbor nie je záloha z appky Obzor.');
@@ -1755,6 +2006,8 @@ const Splash = {
     const el = $('#splash');
     if (el.hidden || el.classList.contains('tearing')) return;
     clearTimeout(this.timer);
+    // Novinky sa pripravia pod listom kalendára, ktorý sa práve odtrhne
+    if (!News.configured() || (News.enabled() && News.prefs.count > 0)) Deck.open('daily');
     el.classList.add('tearing');
     setTimeout(() => { el.hidden = true; el.classList.remove('tearing', 'run'); }, 700);
   },
@@ -1808,6 +2061,686 @@ const KalView = {
 };
 
 /* ============================================================
+   Novinky – zdroj, učenie a výber správ
+   Správy zbiera automatická úloha na GitHube (scripts/fetch-news.mjs)
+   a zverejňuje ich vo vetve "news". Appka si ich stiahne, vyberie
+   najzaujímavejšie a z tvojich swipov sa učí, čo ťa baví.
+   ============================================================ */
+const NEWS_URL = (() => {
+  const m = location.hostname.match(/^([\w-]+)\.github\.io$/i);
+  const repo = location.pathname.split('/').filter(Boolean)[0];
+  return m && repo
+    ? `https://raw.githubusercontent.com/${m[1]}/${repo}/news/news.json`
+    : 'https://raw.githubusercontent.com/kiss-m/obzor/news/news.json';
+})();
+const NEWS_TTL = 15 * 60 * 1000;
+const NEWS_WINDOW_H = 30;
+const TOPICS = {
+  slovensko: ['Slovensko', '#2d6cb5'], svet: ['Svet', '#138a8a'], politika: ['Politika', '#7b4fb3'],
+  vojna: ['Vojna a konflikty', '#b4442c'], ekonomika: ['Ekonomika a financie', '#2b8a52'], technologie: ['Technológie', '#d0540f'],
+  veda: ['Veda a vesmír', '#4f5bd5'], zdravie: ['Zdravie', '#c23a73'], klima: ['Klíma a príroda', '#5f8a1f'],
+  sport: ['Šport', '#b8860b'], kultura: ['Kultúra a zábava', '#8a5a2b'], krimi: ['Krimi a nehody', '#5b6573']
+};
+const DEFAULT_TOPICS = ['technologie', 'vojna', 'ekonomika', 'politika'];
+const LANGS = { sk: 'Slovenské', cs: 'České', en: 'Anglické' };
+const STYLE_LABEL = {
+  analyza: 'analýzy, komentáre a rozhovory', live: 'priebežné online spravodajstvo', vysvetlenie: 'vysvetľujúce články',
+  otazka: 'titulky s otázkou', cisla: 'správy s číslami', 'bez-perexu': 'správy bez zhrnutia', kratka: 'krátke správy',
+  stredna: 'stredne dlhé správy', dlha: 'podrobnejšie správy', obrazok: 'správy s fotkou'
+};
+const LANG_LABEL = { sk: 'slovenské médiá', cs: 'české médiá', en: 'anglické médiá' };
+const NSTOP = new Set(('ktory ktora ktore ktori ktoreho ktoru ktery ktera ktere kteri tento tato toto tieto tyto preto proto kvoli kvuli podla podle proti medzi mezi este jeste budu bude bola boli bolo bylo byla byly jsou dnes vcera zajtra roka rokov roku year years ludi lidi people with from have will would about after over into says said what when which while your more most than then they them were been also just only this that there their novy nova nove online video foto clanok dalsi dalsie mozno muze moze chce chcu velmi viac vice').split(' '));
+const sigmoid = (z) => 1 / (1 + Math.exp(-z));
+function agoText(iso) {
+  const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
+  if (m < 1) return 'práve teraz';
+  if (m < 60) return `pred ${m} min`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `pred ${h} h`;
+  const d = Math.round(h / 24);
+  return d === 1 ? 'včera' : `pred ${d} dňami`;
+}
+const mediaCount = (n) => (n >= 5 ? `${n} médií o tom píše` : `${n} médiá o tom píšu`);
+const topicOf = (it) => TOPICS[(it.topics || [])[0]] || ['Novinky', '#5b6573'];
+const httpsImg = (u) => (u ? String(u).replace(/^http:\/\//i, 'https://') : '');
+const RATING = { 1: ['heart', 'Páči sa mi', 'r1'], 0: ['close', 'Nezaujíma ma', 'r0'], 0.5: ['minus', 'Neutrálne', 'r5'] };
+
+const News = {
+  data: null, at: 0, loading: null, error: '',
+  prefs: null, model: null, seen: null, history: null,
+
+  init() {
+    const p = store.get('news.prefs', null);
+    this.prefs = { topics: null, count: 5, langs: ['sk', 'cs'], ...(p && typeof p === 'object' ? p : {}) };
+    const m = store.get('news.model', null);
+    this.model = m && m.w ? m : { b: 0, w: {}, n: {}, words: {}, sources: {}, ratings: 0 };
+    this.model.words = this.model.words || {};
+    this.model.sources = this.model.sources || {};
+    this.seen = store.get('news.seen', {}) || {};
+    this.history = store.get('news.history', []) || [];
+    const cached = store.get('news.data', null);
+    if (cached && cached.data && Array.isArray(cached.data.items)) { this.data = cached.data; this.at = cached.at || 0; }
+    this.prune();
+  },
+  configured() { return Array.isArray(this.prefs.topics); },
+  enabled() { return this.configured() && this.prefs.topics.length > 0; },
+  savePrefs() { store.set('news.prefs', this.prefs); },
+  saveModel() {
+    store.set('news.model', this.model);
+    store.set('news.seen', this.seen);
+    store.set('news.history', this.history);
+  },
+  prune() {
+    const cut = Date.now() - 10 * DAY;
+    for (const [k, v] of Object.entries(this.seen)) if (!v || v.t < cut) delete this.seen[k];
+    if (this.history.length > 300) this.history.length = 300;
+    const keys = Object.keys(this.model.w);
+    if (keys.length > 2500) {
+      keys.sort((a, b) => Math.abs(this.model.w[b]) - Math.abs(this.model.w[a]));
+      keys.slice(2500).forEach((k) => { delete this.model.w[k]; delete this.model.n[k]; });
+    }
+    const words = Object.keys(this.model.words);
+    if (words.length > 3000) words.slice(0, words.length - 3000).forEach((k) => delete this.model.words[k]);
+  },
+
+  load(force = false) {
+    if (!force && this.data && Date.now() - this.at < NEWS_TTL) return Promise.resolve(this.data);
+    if (this.loading) return this.loading;
+    this.loading = (async () => {
+      try {
+        const r = await fetch(NEWS_URL + '?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' });
+        if (r.status === 404) throw new Error('missing');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        if (!d || !Array.isArray(d.items)) throw new Error('bad');
+        this.data = d; this.at = Date.now(); this.error = '';
+        store.set('news.data', { data: d, at: this.at });
+      } catch (e) {
+        this.error = e && e.message === 'missing' ? 'missing' : 'offline';
+      } finally {
+        this.loading = null;
+      }
+      return this.data;
+    })();
+    return this.loading;
+  },
+
+  /* ---------- model preferencií (online logistická regresia) ---------- */
+  /** Mená, miesta, firmy a skratky z titulku (Nvidia, Kyjev, ECB…) – z nich sa appka učí, čo ťa zaujíma */
+  words(title) {
+    const out = [];
+    for (const seg of String(title).split(/[:.!?–—]\s+/)) {
+      seg.split(/[^\p{L}\p{N}]+/u).filter(Boolean).forEach((w, i) => {
+        const caps = w.length >= 2 && w === w.toUpperCase() && /\p{L}/u.test(w);
+        if (!caps && !(i > 0 && /^\p{Lu}/u.test(w))) return;
+        const n = norm(w);
+        if (n.length >= 3 && !NSTOP.has(n)) out.push([n.slice(0, 5), w]);
+      });
+    }
+    return out;
+  },
+  features(it) {
+    const f = [];
+    (it.topics || []).forEach((t) => f.push('t:' + t));
+    f.push('s:' + norm(it.source || ''));
+    f.push('l:' + it.lang);
+    (it.style || []).forEach((s) => f.push('y:' + s));
+    [...new Set(this.words(it.title).map(([k]) => k))].slice(0, 8).forEach((k) => f.push('k:' + k));
+    return f;
+  },
+  lin(f) {
+    const v = 1 / Math.sqrt(f.length || 1);
+    let z = 0;
+    for (const k of f) z += (this.model.w[k] || 0) * v;
+    return z;
+  },
+  learn(it, y, lr) {
+    const f = this.features(it), v = 1 / Math.sqrt(f.length || 1);
+    const err = y - sigmoid(this.model.b + this.lin(f));
+    for (const k of f) {
+      this.model.w[k] = (this.model.w[k] || 0) * 0.995 + lr * err * v;
+      this.model.n[k] = (this.model.n[k] || 0) + 1;
+    }
+    this.model.b += lr * 0.1 * err;
+    for (const [k, w] of this.words(it.title)) this.model.words[k] = w;
+    this.model.sources[norm(it.source || '')] = it.source;
+  },
+  /** Hodnotenie: 1 = páči sa mi, 0 = nezaujíma ma, 0.5 = neutrálne */
+  rate(it, r) {
+    if (this.seen[it.id] && this.seen[it.id].r >= 0) return;
+    this.learn(it, r, r === 0.5 ? 0.3 : 0.6);
+    this.model.ratings = (this.model.ratings || 0) + 1;
+    const t = Date.now();
+    this.seen[it.id] = { r, t, c: it.cluster };
+    (it.others || []).forEach((o) => { if (o.id && !this.seen[o.id]) this.seen[o.id] = { r: -1, t, c: it.cluster }; });
+    this.history = this.history.filter((h) => h.id !== it.id);
+    this.history.unshift({
+      id: it.id, title: it.title, summary: it.summary, url: it.url, source: it.source, image: it.image || '',
+      topics: it.topics, style: it.style, lang: it.lang, published: it.published, cluster: it.cluster,
+      clusterSize: it.clusterSize, others: (it.others || []).slice(0, 6), r, t
+    });
+    this.prune();
+    this.saveModel();
+  },
+  /** Otvorenie detailu alebo článku = mierny signál záujmu */
+  opened(it) {
+    if (it._opened) return;
+    it._opened = true;
+    this.learn(it, 0.8, 0.2);
+    this.saveModel();
+  },
+  reset() {
+    this.model = { b: 0, w: {}, n: {}, words: {}, sources: {}, ratings: 0 };
+    this.saveModel();
+  },
+
+  /* ---------- výber správ ---------- */
+  repScore(it) {
+    return (it.summary ? Math.min(it.summary.length, 300) / 100 : 0) + (it.image ? 0.8 : 0)
+      + (String(it.feed || '').startsWith('gn-') ? -2 : 0) + (it.lang === 'sk' ? 0.3 : 0)
+      + 3 * this.lin(['s:' + norm(it.source || '')]);
+  },
+  /** Nové, ešte nevidené správy z vybraných okruhov – jedna za každú udalosť */
+  pool() {
+    if (!this.data || !this.enabled()) return [];
+    const now = Date.now();
+    const T = new Set(this.prefs.topics), L = new Set(this.prefs.langs);
+    const seenC = new Set(Object.values(this.seen).map((s) => s.c));
+    const groups = new Map();
+    for (const it of this.data.items) {
+      if (!groups.has(it.cluster)) groups.set(it.cluster, []);
+      groups.get(it.cluster).push(it);
+    }
+    const out = [];
+    for (const [c, group] of groups) {
+      if (seenC.has(c)) continue;
+      const ok = group.filter((it) => L.has(it.lang) && !this.seen[it.id] && now - Date.parse(it.published) < NEWS_WINDOW_H * 3600e3);
+      if (!ok.length) continue;
+      const allTopics = [...new Set(ok.flatMap((it) => it.topics || []))];
+      if (!allTopics.some((t) => T.has(t))) continue;
+      const rep = ok.slice().sort((a, b) => this.repScore(b) - this.repScore(a))[0];
+      const topics = [...allTopics.filter((t) => T.has(t)), ...allTopics.filter((t) => !T.has(t))].slice(0, 3);
+      const others = group.filter((x) => x !== rep).map((x) => ({ id: x.id, source: x.source, title: x.title, url: x.url }))
+        .concat(group.flatMap((x) => x.related || []).map((r) => ({ source: r.source, title: r.title, url: r.url })));
+      const uniq = [];
+      const seenSrc = new Set([norm(rep.source)]);
+      for (const o of others) { const k = norm(o.source); if (!seenSrc.has(k)) { seenSrc.add(k); uniq.push(o); } }
+      out.push({ ...rep, image: httpsImg(rep.image), topics, others: uniq, clusterSize: Math.max(rep.clusterSize || 1, uniq.length + 1) });
+    }
+    return out;
+  },
+  score(it) {
+    const f = this.features(it);
+    const ageH = (Date.now() - Date.parse(it.published)) / 3600e3;
+    const nTopic = this.model.n['t:' + it.topics[0]] || 0;
+    return 2.5 * this.lin(f)
+      + 0.45 * Math.log(it.clusterSize || 1)
+      + 0.35 * Math.exp(-ageH / 10)
+      + (it.summary ? 0.15 : -0.25) + (it.image ? 0.08 : 0)
+      + 0.25 / Math.sqrt(1 + nTopic)
+      + (Math.random() - 0.5) * 0.3;
+  },
+  pick(n) {
+    const cands = this.pool().map((it) => ({ it, s: this.score(it) }));
+    const chosen = [];
+    while (chosen.length < n && cands.length) {
+      let best = 0, bs = -Infinity;
+      cands.forEach((c, i) => {
+        let s = c.s;
+        for (const ch of chosen) {
+          if (ch.topics[0] === c.it.topics[0]) s -= 0.35;
+          if (norm(ch.source) === norm(c.it.source)) s -= 0.25;
+        }
+        if (s > bs) { bs = s; best = i; }
+      });
+      chosen.push(cands.splice(best, 1)[0].it);
+    }
+    return chosen;
+  },
+
+  /* ---------- vysvetlenia ---------- */
+  label(k) {
+    const [type, v] = [k.slice(0, 1), k.slice(2)];
+    if (type === 't') return (TOPICS[v] || [v])[0];
+    if (type === 's') return 'zdroj ' + (this.model.sources[v] || v);
+    if (type === 'l') return LANG_LABEL[v] || v;
+    if (type === 'y') return STYLE_LABEL[v] || v;
+    if (type === 'k') return '„' + (this.model.words[v] || v) + '“';
+    return k;
+  },
+  reasons(it) {
+    const out = [];
+    const sel = (it.topics || []).filter((t) => this.prefs.topics && this.prefs.topics.includes(t));
+    if (sel.length) out.push('patrí do okruhu ' + sel.map((t) => TOPICS[t][0]).join(', '));
+    const liked = this.features(it).filter((k) => !k.startsWith('t:') && (this.model.w[k] || 0) > 0.12 && (this.model.n[k] || 0) >= (k.startsWith('k:') ? 3 : 2))
+      .sort((a, b) => this.model.w[b] - this.model.w[a]).slice(0, 2);
+    if (liked.length) out.push('páčili sa ti ' + liked.map((k) => this.label(k)).join(' a '));
+    if ((it.clusterSize || 1) > 1) out.push(mediaCount(it.clusterSize));
+    if ((this.model.ratings || 0) < 15) out.push('appka sa ešte len učí, čo ťa zaujíma');
+    return out;
+  },
+  learned() {
+    return Object.keys(this.model.w).filter((k) => (this.model.n[k] || 0) >= (k.startsWith('k:') ? 3 : 2) && Math.abs(this.model.w[k]) > 0.05)
+      .sort((a, b) => this.model.w[b] - this.model.w[a]);
+  }
+};
+
+/* ---------- spoločné kúsky UI ---------- */
+function topicChipsHTML(selected) {
+  return Object.entries(TOPICS).map(([id, [label, c]]) =>
+    `<button type="button" class="tchip" data-topic="${id}" aria-pressed="${selected.includes(id)}" style="--tc:${c}"><i></i>${label}</button>`).join('');
+}
+function stepperHTML(value, min = 0, max = 20) {
+  return `<div class="stepper" role="group" aria-label="Počet noviniek po spustení">
+    <button type="button" data-step="-1" aria-label="Menej" ${value <= min ? 'disabled' : ''}>−</button>
+    <output aria-live="polite">${value}</output>
+    <button type="button" data-step="1" aria-label="Viac" ${value >= max ? 'disabled' : ''}>+</button></div>`;
+}
+function bindStepper(root, get, set, min = 0, max = 20) {
+  $$('[data-step]', root).forEach((b) => b.addEventListener('click', () => {
+    const v = clamp(get() + +b.dataset.step, min, max);
+    set(v);
+    $('output', root).textContent = v;
+    $$('[data-step]', root).forEach((x) => { x.disabled = (+x.dataset.step < 0 && v <= min) || (+x.dataset.step > 0 && v >= max); });
+  }));
+}
+function newsMetaHTML(it) {
+  const [tl, tc] = topicOf(it);
+  return `<div class="ncard-meta"><span class="chip"><i style="background:${tc}"></i>${esc(tl)}</span><span>${esc(it.source)} · ${agoText(it.published)}</span>${it.lang && it.lang !== 'sk' ? `<span class="chip">${esc(it.lang.toUpperCase())}</span>` : ''}</div>`;
+}
+
+/* ---------- Balíček kariet ---------- */
+const Deck = {
+  el: null, items: [], idx: 0, mode: 'daily', busy: false,
+
+  init() {
+    this.el = $('#deck');
+    const icons = { left: ico('close', 28, 2.4), down: ico('minus', 24, 2.4), right: ico('heart', 28, 2.2) };
+    $$('#deck-actions [data-dir]').forEach((b) => {
+      b.innerHTML = icons[b.dataset.dir];
+      b.addEventListener('click', () => this.swipe(b.dataset.dir));
+    });
+    $('#deck-skip').addEventListener('click', () => this.close());
+    document.addEventListener('keydown', (e) => {
+      if (!this.isOpen() || $('#sheet-root').firstChild || !$('#splash').hidden) return;
+      if (e.target.closest('input, textarea, select')) return;
+      const map = { ArrowRight: 'right', ArrowLeft: 'left', ArrowDown: 'down' };
+      if (map[e.key]) { e.preventDefault(); this.swipe(map[e.key]); }
+      else if (e.key === 'Enter' && this.items[this.idx]) { e.preventDefault(); this.detail(this.items[this.idx]); }
+      else if (e.key === 'Escape') this.close();
+    });
+  },
+  isOpen() { return this.el && !this.el.hidden; },
+
+  /** mode: "daily" = po úvodnej obrazovke, "more" = ďalšie novinky na požiadanie */
+  open(mode = 'daily') {
+    this.mode = mode;
+    this.items = []; this.idx = 0;
+    this.el.hidden = false;
+    document.body.style.overflow = 'hidden';
+    $('#deck-title').textContent = mode === 'more' ? 'Ďalšie novinky' : 'Novinky na dnes';
+    if (!News.configured()) { this.renderSetup(); return; }
+    const fill = () => {
+      const n = mode === 'more' ? Math.max(News.prefs.count, 5) : News.prefs.count;
+      this.items = News.pick(n);
+      this.idx = 0;
+      if (!this.items.length && mode === 'daily') { this.close(true); return; }
+      this.render();
+    };
+    if (News.data) {
+      fill();
+      if (Date.now() - News.at > NEWS_TTL) News.load().then(() => NewsHome.refresh());
+    } else {
+      this.renderMsg('loading');
+      News.load().then(() => {
+        if (!this.isOpen()) return;
+        if (News.data) fill();
+        else if (mode === 'daily') this.close(true);
+        else this.renderMsg(News.error || 'offline');
+      });
+    }
+  },
+  close(silent = false) {
+    if (!this.isOpen()) return;
+    this.el.hidden = true;
+    document.body.style.overflow = '';
+    if (this.mode === 'daily') App.show('pocasie');
+    else App.show(App.tab);
+    if (!silent && this.mode === 'daily' && !store.get('news.tipShown', false)) {
+      store.set('news.tipShown', true);
+      toast('Ďalšie novinky nájdeš na domovskej obrazovke alebo v záložke Novinky.');
+    }
+  },
+
+  setChrome(showActions, setup = false) {
+    $('#deck-stage').classList.toggle('setup', setup);
+    $('#deck-actions').hidden = !showActions;
+    $('#deck-hint').hidden = !showActions;
+    $('#deck-skip').textContent = showActions ? 'Preskočiť' : 'Zavrieť';
+    const total = this.items.length;
+    $('#deck-count').textContent = showActions && total ? `${Math.min(this.idx + 1, total)} / ${total}` : '';
+    $('#deck-dots').innerHTML = showActions ? this.items.map((_, i) => `<i class="${i < this.idx ? 'done' : i === this.idx ? 'cur' : ''}"></i>`).join('') : '';
+  },
+
+  renderMsg(kind) {
+    const stage = $('#deck-stage');
+    this.setChrome(false);
+    if (kind === 'loading') {
+      stage.innerHTML = '<div class="deck-skel" aria-label="Načítavam novinky"><i style="height:120px;border-radius:14px"></i><i style="width:40%"></i><i style="height:26px"></i><i style="height:26px;width:80%"></i><i></i><i></i><i style="width:60%"></i></div>';
+      return;
+    }
+    const msg = {
+      empty: ['Na teraz máš všetko prečítané', 'V tvojich okruhoch už nie sú ďalšie nové správy. Nové pribúdajú každých 30 minút, prípadne si v Nastaveniach pridaj ďalšie okruhy.'],
+      missing: ['Novinky sa ešte pripravujú', 'Zber správ na GitHube zatiaľ nebežal. Skús to o pár minút.'],
+      offline: ['Novinky sa nepodarilo načítať', 'Skontroluj pripojenie na internet a skús to znova.']
+    }[kind] || ['Novinky sa nepodarilo načítať', ''];
+    stage.innerHTML = `<div class="deck-msg">${ico('news', 44, 1.5)}<h2>${msg[0]}</h2><p>${msg[1]}</p><button class="btn btn-primary" id="deck-msg-ok">${kind === 'empty' ? 'Späť do appky' : 'Zavrieť'}</button></div>`;
+    $('#deck-msg-ok').addEventListener('click', () => this.close(true));
+  },
+
+  renderSetup() {
+    this.setChrome(false, true);
+    const sel = DEFAULT_TOPICS.slice();
+    let count = News.prefs.count || 5;
+    $('#deck-title').textContent = 'Novinky';
+    $('#deck-stage').innerHTML = `<div class="deck-setup" style="position:absolute;inset:0">
+      <h2>Aké novinky ťa zaujímajú?</h2>
+      <p>Vyber okruhy. Z nich ti appka po každom spustení ukáže najdôležitejšie správy dňa a z tvojich swipov sa naučí, čo ťa baví. Neskôr to zmeníš v Nastaveniach.</p>
+      <div class="topic-grid" id="dk-topics">${topicChipsHTML(sel)}</div>
+      <div class="set-row"><div><b>Počet noviniek po spustení</b></div><div id="dk-count">${stepperHTML(count)}</div></div>
+      <div class="btns"><button class="btn btn-primary" id="dk-save">Ukázať novinky</button><button class="btn" id="dk-later">Teraz nie</button></div>
+    </div>`;
+    $$('#dk-topics .tchip').forEach((b) => b.addEventListener('click', () => {
+      const t = b.dataset.topic, i = sel.indexOf(t);
+      if (i >= 0) sel.splice(i, 1); else sel.push(t);
+      b.setAttribute('aria-pressed', i < 0);
+      $('#dk-save').disabled = !sel.length;
+    }));
+    bindStepper($('#dk-count'), () => count, (v) => { count = v; }, 1, 20);
+    $('#dk-save').addEventListener('click', () => {
+      News.prefs.topics = sel.slice(); News.prefs.count = count; News.savePrefs();
+      this.open(this.mode);
+    });
+    $('#dk-later').addEventListener('click', () => {
+      News.prefs.topics = DEFAULT_TOPICS.slice(); News.prefs.count = 0; News.savePrefs();
+      this.close(true);
+      toast('Novinky po spustení sú vypnuté. Zapneš ich v Nastaveniach.');
+    });
+  },
+
+  cardHTML(it, depth) {
+    const [tl, tc] = topicOf(it);
+    const media = it.image
+      ? `<div class="ncard-img"><img src="${esc(it.image)}" alt="" referrerpolicy="no-referrer" draggable="false" decoding="async"></div>`
+      : `<div class="ncard-band" style="--tc:${tc}"><span>${esc(tl)}</span></div>`;
+    return `<article class="ncard" data-depth="${depth}" aria-label="${esc(it.title)}" tabindex="${depth === 0 ? 0 : -1}">
+      ${media}
+      <div class="ncard-body">
+        ${newsMetaHTML(it)}
+        <h2 class="ncard-title">${esc(it.title)}</h2>
+        ${it.summary ? `<p class="ncard-sum">${esc(it.summary)}</p>` : '<p class="ncard-sum"></p>'}
+        <div class="ncard-foot"><span>Ťukni pre viac</span><span>${(it.clusterSize || 1) > 1 ? mediaCount(it.clusterSize) : ''}</span></div>
+      </div>
+      <div class="stamp like">Páči sa mi</div><div class="stamp nope">Nezaujíma ma</div><div class="stamp meh">Neutrálne</div>
+    </article>`;
+  },
+
+  render() {
+    const stage = $('#deck-stage');
+    if (this.idx >= this.items.length) {
+      if (this.mode === 'daily') { this.close(); return; }
+      this.items = []; this.idx = 0;
+      this.renderMsg(News.pool().length ? 'done' : 'empty');
+      if (News.pool().length) {
+        stage.innerHTML = `<div class="deck-msg">${ico('news', 44, 1.5)}<h2>Hotovo</h2><p>Máš prezreté ďalšie novinky. Chceš ešte?</p><button class="btn btn-primary" id="deck-again">Ďalšie novinky</button><button class="btn" id="deck-msg-ok">Späť do appky</button></div>`;
+        $('#deck-again').addEventListener('click', () => this.open('more'));
+        $('#deck-msg-ok').addEventListener('click', () => this.close(true));
+      }
+      return;
+    }
+    this.setChrome(true);
+    const visible = this.items.slice(this.idx, this.idx + 3);
+    stage.innerHTML = visible.map((it, d) => this.cardHTML(it, d)).reverse().join('');
+    $$('.ncard img', stage).forEach((img) => img.addEventListener('error', () => {
+      const card = img.closest('.ncard');
+      const it = this.items[this.idx + +card.dataset.depth];
+      if (!it) return;
+      const [tl, tc] = topicOf(it);
+      img.parentNode.outerHTML = `<div class="ncard-band" style="--tc:${tc}"><span>${esc(tl)}</span></div>`;
+    }));
+    const top = $('.ncard[data-depth="0"]', stage);
+    if (top) this.bindDrag(top, this.items[this.idx]);
+  },
+
+  bindDrag(card, it) {
+    let sx = 0, sy = 0, dx = 0, dy = 0, t0 = 0, pid = null;
+    const stamps = { like: $('.stamp.like', card), nope: $('.stamp.nope', card), meh: $('.stamp.meh', card) };
+    const apply = () => {
+      card.style.transform = `translate(${dx}px, ${Math.max(dy, -30)}px) rotate(${dx / 18}deg)`;
+      const down = dy > 0 && dy > Math.abs(dx);
+      stamps.like.style.opacity = down ? 0 : clamp(dx / 110, 0, 1);
+      stamps.nope.style.opacity = down ? 0 : clamp(-dx / 110, 0, 1);
+      stamps.meh.style.opacity = down ? clamp(dy / 110, 0, 1) : 0;
+    };
+    card.addEventListener('pointerdown', (e) => {
+      if (this.busy || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      pid = e.pointerId;
+      try { card.setPointerCapture(pid); } catch {}
+      sx = e.clientX; sy = e.clientY; dx = 0; dy = 0; t0 = performance.now();
+      card.style.transition = 'none';
+    });
+    card.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== pid) return;
+      dx = e.clientX - sx; dy = e.clientY - sy;
+      apply();
+    });
+    const end = (e) => {
+      if (e.pointerId !== pid) return;
+      pid = null;
+      const dt = Math.max(1, performance.now() - t0);
+      const vx = dx / dt, vy = dy / dt;
+      if (Math.hypot(dx, dy) < 8 && dt < 600) { this.reset(card); this.detail(it); return; }
+      let dir = null;
+      if (dy > 0 && dy > Math.abs(dx) && (dy > 110 || (vy > 0.6 && dy > 40))) dir = 'down';
+      else if (dx > 110 || (vx > 0.6 && dx > 40)) dir = 'right';
+      else if (dx < -110 || (vx < -0.6 && dx < -40)) dir = 'left';
+      if (dir) this.fly(card, dir, dx, dy); else this.reset(card);
+    };
+    card.addEventListener('pointerup', end);
+    card.addEventListener('pointercancel', (e) => { if (e.pointerId === pid) { pid = null; this.reset(card); } });
+    card.addEventListener('keydown', (e) => { if (e.key === ' ') { e.preventDefault(); this.detail(it); } });
+  },
+  reset(card) {
+    card.style.transition = 'transform 280ms cubic-bezier(.2,.9,.3,1.2)';
+    card.style.transform = '';
+    $$('.stamp', card).forEach((s) => { s.style.opacity = 0; });
+  },
+  swipe(dir) {
+    const card = $('#deck-stage .ncard[data-depth="0"]');
+    if (!card || this.busy) return;
+    this.fly(card, dir, 0, 0);
+  },
+  fly(card, dir, dx, dy) {
+    if (this.busy) return;
+    const it = this.items[this.idx];
+    if (!it) return;
+    this.busy = true;
+    const r = { right: 1, left: 0, down: 0.5 }[dir];
+    News.rate(it, r);
+    const w = window.innerWidth, h = window.innerHeight;
+    const stamp = $('.stamp.' + { right: 'like', left: 'nope', down: 'meh' }[dir], card);
+    if (stamp) stamp.style.opacity = 1;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    card.style.transition = reduce ? 'opacity 150ms' : 'transform 320ms cubic-bezier(.4,0,.9,.6), opacity 320ms';
+    card.style.transform = reduce ? '' : dir === 'down'
+      ? `translate(${dx}px, ${h}px) rotate(${dx / 18}deg)`
+      : `translate(${(dir === 'right' ? 1 : -1) * w * 1.2}px, ${dy + 60}px) rotate(${dir === 'right' ? 28 : -28}deg)`;
+    card.style.opacity = '0';
+    setTimeout(() => { this.busy = false; this.idx++; this.render(); }, reduce ? 160 : 300);
+  },
+
+  detail(it, { fromDeck = true } = {}) {
+    News.opened(it);
+    const rated = News.seen[it.id] && News.seen[it.id].r >= 0 ? News.seen[it.id].r : null;
+    const canRate = fromDeck && this.isOpen() && this.items[this.idx] === it;
+    const others = (it.others || []).filter((o) => o.url);
+    const reasons = News.reasons(it);
+    Sheet.open(`
+      <div class="sheet-h"><h2 id="nd-h" style="font-size:18px">${esc(it.source)}</h2><div class="actions"><button class="btn" data-close>${canRate ? 'Späť na kartu' : 'Zavrieť'}</button></div></div>
+      ${it.image ? `<div class="nd-img"><img src="${esc(httpsImg(it.image))}" alt="" referrerpolicy="no-referrer"></div>` : ''}
+      ${newsMetaHTML(it)}
+      <h3 class="nd-title">${esc(it.title)}</h3>
+      ${it.summary ? `<p class="nd-sum">${esc(it.summary)}</p>` : '<p class="nd-sum none">Médium k tejto správe neposlalo zhrnutie. Celý článok nájdeš na jeho webe.</p>'}
+      <a class="btn btn-primary nd-open" id="nd-open" href="${esc(it.url)}" target="_blank" rel="noopener">${ico('external', 18, 2)}Čítať celý článok (${esc(it.source)})</a>
+      ${others.length ? `<h4 class="section-h">Píšu o tom aj</h4><ul class="nd-rel panel">${others.slice(0, 6).map((o) => `<li><a href="${esc(o.url)}" target="_blank" rel="noopener"><small>${esc(o.source)}</small>${esc(o.title)}</a></li>`).join('')}</ul>` : ''}
+      ${reasons.length ? `<div class="nd-why"><b>Prečo vidíš túto správu:</b> ${esc(reasons.join(' · '))}.</div>` : ''}
+      ${canRate ? `<div class="nd-rate">
+          <button class="btn no" data-dir="left">${ico('close', 22, 2.4)}Nezaujíma ma</button>
+          <button class="btn meh" data-dir="down">${ico('minus', 22, 2.4)}Neutrálne</button>
+          <button class="btn yes" data-dir="right">${ico('heart', 22, 2.2)}Páči sa mi</button></div>`
+        : rated != null ? `<p class="nd-rated"><span class="rate-ico ${RATING[rated][2]}">${ico(RATING[rated][0], 18, 2.2)}</span>Tvoje hodnotenie: ${RATING[rated][1]}</p>` : ''}
+    `, { label: 'nd-h' });
+    $$('.nd-rate [data-dir]').forEach((b) => b.addEventListener('click', () => { Sheet.close(); setTimeout(() => this.swipe(b.dataset.dir), 60); }));
+  }
+};
+
+/* ---------- Karta noviniek na domovskej obrazovke ---------- */
+const NewsHome = {
+  html() {
+    let title = 'Novinky', text = '', btn = 'Ďalšie novinky', disabled = false;
+    if (!News.configured()) { text = 'Vyber si okruhy a appka ti bude vyberať správy dňa.'; btn = 'Nastaviť'; }
+    else if (!News.enabled()) { text = 'Nemáš vybraný žiadny okruh noviniek.'; btn = 'Nastaviť'; }
+    else if (!News.data) { text = News.loading ? 'Načítavam novinky…' : News.error === 'missing' ? 'Zber správ sa ešte nespustil, skús to o pár minút.' : 'Novinky sa zatiaľ nepodarilo načítať.'; disabled = !!News.loading; }
+    else {
+      const seenToday = News.history.filter((h) => h.t >= today().getTime()).length;
+      const left = News.pool().length;
+      text = `Dnes prezreté: ${seenToday} · ${left ? `ďalšie nové: ${left}` : 'všetko máš prečítané'}`;
+      disabled = !left;
+    }
+    return `<section class="wx-card wx-news" id="wx-news"><span class="wx-news-ico">${ico('news', 22, 1.8)}</span><span class="wx-news-txt"><b>${title}</b><span>${text}</span></span><button type="button" ${disabled ? 'disabled' : ''}>${btn}</button></section>`;
+  },
+  bind() {
+    const b = $('#wx-news button');
+    if (!b) return;
+    b.addEventListener('click', () => {
+      if (!News.enabled()) {
+        if (!News.configured()) Deck.open('more'); else App.show('nastavenia');
+        return;
+      }
+      if (!News.data) { News.load(true).then(() => this.refresh()); this.refresh(); return; }
+      Deck.open('more');
+    });
+  },
+  refresh() {
+    const card = $('#wx-news');
+    if (card) { card.outerHTML = this.html(); this.bind(); }
+    if (App.tab === 'novinky') NewsView.render();
+  }
+};
+
+/* ---------- Záložka Novinky ---------- */
+const NewsView = {
+  init() {
+    $('#nw-more').addEventListener('click', () => {
+      if (!News.enabled()) { if (!News.configured()) Deck.open('more'); else App.show('nastavenia'); return; }
+      Deck.open('more');
+    });
+  },
+  rowHTML(h) {
+    const [icon, label, cls] = RATING[h.r] || RATING[0.5];
+    return `<li><button class="nrow" data-id="${esc(h.id)}">
+      <span><span class="nrow-meta"><span class="rate-ico ${cls}" title="${label}">${ico(icon, 15, 2.4)}</span>${esc(h.source)} · ${agoText(h.published)}</span><span class="nrow-title">${esc(h.title)}</span></span>
+      ${h.image ? `<img src="${esc(httpsImg(h.image))}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span></span>'}
+    </button></li>`;
+  },
+  render() {
+    const sub = $('#nw-sub');
+    const pool = News.pool().length;
+    if (!News.configured()) sub.textContent = 'Vyber si okruhy a appka ti bude vyberať správy dňa.';
+    else if (News.data) sub.textContent = `Aktualizované ${agoText(News.data.generated)} · ${pool ? `nové v tvojich okruhoch: ${pool}` : 'všetko máš prečítané'}`;
+    else sub.textContent = News.loading ? 'Načítavam novinky…' : News.error === 'missing' ? 'Zber správ na GitHube zatiaľ nebežal.' : 'Novinky sa nepodarilo načítať.';
+    $('#nw-more').textContent = News.configured() ? 'Ďalšie novinky' : 'Nastaviť novinky';
+    $('#nw-topics').innerHTML = News.configured()
+      ? (News.prefs.topics || []).map((t) => `<span class="chip"><i style="background:${TOPICS[t][1]}"></i>${TOPICS[t][0]}</span>`).join('') + '<button class="link-btn" id="nw-edit">Upraviť okruhy</button>'
+      : '';
+    const edit = $('#nw-edit');
+    if (edit) edit.addEventListener('click', () => App.show('nastavenia'));
+    const liked = News.history.filter((h) => h.r === 1).slice(0, 30);
+    const recent = News.history.slice(0, 40);
+    $('#nw-liked').innerHTML = liked.length ? `<ul class="nlist panel">${liked.map((h) => this.rowHTML(h)).join('')}</ul>` : '<p class="panel panel-note">Správy, ktoré swipneš doprava, sa ti uložia sem, aby si sa k nim mohol neskôr vrátiť.</p>';
+    $('#nw-history').innerHTML = recent.length ? `<ul class="nlist panel">${recent.map((h) => this.rowHTML(h)).join('')}</ul>` : '<p class="panel panel-note">Zatiaľ si neprezrel žiadne novinky.</p>';
+    $$('#view-novinky .nrow').forEach((b) => b.addEventListener('click', () => {
+      const h = News.history.find((x) => x.id === b.dataset.id);
+      if (h) Deck.detail(h, { fromDeck: false });
+    }));
+  }
+};
+
+/* ---------- Záložka Nastavenia ---------- */
+const SettingsView = {
+  resetArmed: false,
+  render() {
+    const P = News.prefs;
+    const sel = P.topics || [];
+    $('#st-topics').innerHTML = topicChipsHTML(sel);
+    $$('#st-topics .tchip').forEach((b) => b.addEventListener('click', () => {
+      const t = b.dataset.topic;
+      const list = Array.isArray(P.topics) ? P.topics.slice() : [];
+      const i = list.indexOf(t);
+      if (i >= 0) list.splice(i, 1); else list.push(t);
+      P.topics = list; News.savePrefs();
+      b.setAttribute('aria-pressed', i < 0);
+    }));
+    const hint = () => { $('#st-count-hint').textContent = P.count ? `Po každom spustení ti appka ukáže ${P.count} ${plural(P.count, 'správu', 'správy', 'správ')}.` : 'Po spustení sa novinky neukážu. Nájdeš ich v záložke Novinky.'; };
+    $('#st-count-box').innerHTML = stepperHTML(P.count);
+    bindStepper($('#st-count-box'), () => P.count, (v) => { P.count = v; if (!Array.isArray(P.topics)) P.topics = DEFAULT_TOPICS.slice(); News.savePrefs(); hint(); });
+    hint();
+    $('#st-langs').innerHTML = Object.entries(LANGS).map(([k, l]) => `<button type="button" class="tchip" data-lang="${k}" aria-pressed="${P.langs.includes(k)}">${l}</button>`).join('');
+    $$('#st-langs .tchip').forEach((b) => b.addEventListener('click', () => {
+      const k = b.dataset.lang, i = P.langs.indexOf(k);
+      if (i >= 0 && P.langs.length === 1) { toast('Aspoň jeden jazyk musí ostať zapnutý.'); return; }
+      if (i >= 0) P.langs.splice(i, 1); else P.langs.push(k);
+      News.savePrefs();
+      b.setAttribute('aria-pressed', i < 0);
+    }));
+    this.renderLearned();
+    this.renderSources();
+  },
+  renderLearned() {
+    const box = $('#st-learned');
+    const n = News.model.ratings || 0;
+    const keys = News.learned();
+    const pos = keys.filter((k) => News.model.w[k] > 0).slice(0, 7);
+    const neg = keys.filter((k) => News.model.w[k] < 0).slice(-5).reverse();
+    const max = Math.max(0.3, ...[...pos, ...neg].map((k) => Math.abs(News.model.w[k])));
+    const row = (k) => {
+      const w = News.model.w[k], pct = (Math.abs(w) / max) * 50;
+      return `<li><span>${esc(News.label(k))}</span><span class="lbar" role="img" aria-label="${w > 0 ? 'páči sa ti' : 'nezaujíma ťa'}"><i class="${w > 0 ? 'pos' : 'neg'}" style="width:${pct.toFixed(1)}%"></i></span></li>`;
+    };
+    let html = `<div class="set-row"><div><b>Ohodnotené správy: ${n}</b><p>${n < 15 ? 'Appka sa ešte len učí. Čím viac swipov, tým lepší výber.' : 'Podľa týchto hodnotení appka vyberá správy na ďalšie dni.'}</p></div></div>`;
+    if (pos.length || neg.length) {
+      html += `<div class="set-row col"><ul class="learn">${[...pos, ...neg].map(row).join('')}</ul><div class="learn-legend"><span>nezaujíma</span><span>páči sa</span></div></div>`;
+    }
+    html += `<div class="set-row"><div><b>Začať odznova</b><p>Appka zabudne, čo sa o tebe naučila. Okruhy ostanú.</p></div><button class="btn btn-danger" id="st-reset" ${n ? '' : 'disabled'}>Zabudnúť</button></div>`;
+    box.innerHTML = html;
+    const btn = $('#st-reset');
+    btn.addEventListener('click', () => {
+      if (!btn.classList.contains('armed')) { btn.classList.add('armed'); btn.textContent = 'Naozaj zabudnúť?'; return; }
+      News.reset();
+      toast('Appka zabudla naučené preferencie.');
+      this.renderLearned();
+    });
+  },
+  renderSources() {
+    const d = $('#st-sources');
+    const feeds = (News.data && News.data.feeds) || [];
+    const ok = feeds.filter((f) => f.ok).length;
+    d.innerHTML = `<summary>${feeds.length ? `Funguje ${ok} z ${feeds.length} zdrojov · aktualizované ${agoText(News.data.generated)}` : 'Zoznam zdrojov sa zobrazí po načítaní noviniek'}</summary>
+      <ul class="src-list">${feeds.map((f) => `<li title="${esc(f.error || '')}"><span class="dot ${f.ok ? 'ok' : 'bad'}"></span>${esc(f.name)}${f.id !== norm(f.name) ? ` <span style="color:var(--ink-2);font-size:12px">${esc(f.id)}</span>` : ''}<small>${f.ok ? f.count : 'nefunguje'}</small></li>`).join('')}</ul>`;
+  }
+};
+
+/* ============================================================
    Vysúvacie okno a oznámenia
    ============================================================ */
 const Sheet = {
@@ -1847,7 +2780,7 @@ function toast(msg, actionLabel, action) {
    ============================================================ */
 const App = {
   tab: 'pocasie',
-  tabs: ['pocasie', 'narodeniny', 'kalendar'],
+  tabs: ['pocasie', 'novinky', 'narodeniny', 'kalendar', 'nastavenia'],
   show(tab) {
     if (!this.tabs.includes(tab)) tab = 'pocasie';
     this.tab = tab;
@@ -1860,19 +2793,26 @@ const App = {
     if (tab === 'pocasie') Wx.render();
     if (tab === 'narodeniny') Bd.render();
     if (tab === 'kalendar') KalView.render();
+    if (tab === 'novinky') NewsView.render();
+    if (tab === 'nastavenia') SettingsView.render();
     if (location.hash.slice(1) !== tab) history.replaceState(null, '', '#' + tab);
     window.scrollTo({ top: 0 });
   },
   init() {
     fillIcons();
+    News.init();
     Bd.init();
     Wx.init();
     KalView.init();
+    Deck.init();
+    NewsView.init();
     Splash.init();
     $$('.tab').forEach((b) => b.addEventListener('click', () => this.show(b.dataset.tab)));
     window.addEventListener('hashchange', () => this.show(location.hash.slice(1)));
-    this.show(location.hash.slice(1) || store.get('tab', 'pocasie'));
+    // Appka sa vždy otvára na domovskej obrazovke (Počasie)
+    this.show(location.hash.slice(1) || 'pocasie');
     Wx.refreshAll();
+    News.load().then(() => NewsHome.refresh());
 
     // Návrat do appky po dlhšej pauze = nové "otvorenie"
     let hiddenAt = 0;
@@ -1882,6 +2822,7 @@ const App = {
       if (away > 10 * 60 * 1000) {
         Splash.show();
         Wx.refreshAll();
+        News.load().then(() => NewsHome.refresh());
         if (this.tab !== 'pocasie') this.show(this.tab);
       }
       hiddenAt = 0;
