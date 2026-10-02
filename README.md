@@ -11,8 +11,11 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   Ukáže sa aj vtedy, keď sa do appky vrátiš po viac ako 10 minútach.
 - **Úlohy**: to-do list s gamifikáciou. Každá úloha má atribút (Telo, Myseľ, Práca, Vzťahy)
   a náročnosť (drobnosť 5 XP, ľahká 10, stredná 25, ťažká 60, epická 150). Splnenie ťuknutím
-  na krúžok alebo swipom doprava, hláška „+25 XP · Telo“ má na 6 s tlačidlo Späť. Z XP rastie
-  celkový level (postup z levelu L na L+1 stojí 100·L XP). Deň začína o 4:00.
+  zaškrtávacím políčkom (splnená úloha zošedne a ostane na mieste), hláška „+25 XP · Telo“ má na 6 s
+  tlačidlo Späť. Z XP rastie celkový level (postup z levelu L na L+1 stojí 100·L XP) a level každého
+  atribútu, každých 5 levelov je nový titul. Kartou dňa sa listuje: doprava zajtra a ďalšie dni,
+  doľava Postava so štatistikami (rovnováha atribútov za 14 dní, posledných 7 dní, rekordy, tituly).
+  Atribúty (názov, farba, ikona, najviac 6) sa upravujú v Nastaveniach. Deň začína o 4:00.
   Úloha môže byť **jednorazová** (s termínom alebo bez) alebo **opakovaná**: každý deň, vybrané dni
   v týždni, X× týždenne, každých N dní alebo raz mesačne, od zvoleného dátumu. Návrh celej
   gamifikácie a ďalšie fázy sú v [docs/gamifikacia.md](docs/gamifikacia.md).

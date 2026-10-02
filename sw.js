@@ -1,5 +1,5 @@
 /* Obzor – service worker: appka sa otvorí aj bez internetu (počasie sa ukáže z poslednej zálohy). */
-const CACHE = 'obzor-v4';
+const CACHE = 'obzor-v5';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

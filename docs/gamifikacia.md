@@ -73,7 +73,11 @@ Pri tempe okolo 120 XP denne (napr. gym, dve stredné úlohy a pár drobností) 
 | 10 | Technik | 4 500 | 5 týždňov |
 | 15 | Konštruktér | 10 500 | 3 mesiace |
 | 20 | Inžinier | 19 000 | 5 mesiacov |
+| 25 | Projektant *(doplnené)* | 30 000 | 8 mesiacov |
 | 30 | Hlavný inžinier | 43 500 | 1 rok |
+| 35 | Architekt *(doplnené)* | 59 500 | 1,4 roka |
+| 40 | Hlavný architekt *(doplnené)* | 78 000 | 1,8 roka |
+| 45 | Majster *(doplnené)* | 99 000 | 2,3 roka |
 | 50 | Legenda | 122 500 | asi 3 roky |
 
 **Levely atribútov** používajú polovičnú krivku, 25·L·(L−1), lebo XP sa delí medzi viac atribútov. Rastú tak o niečo pomalšie než celkový level.
@@ -93,7 +97,8 @@ Pribudne jedna záložka Úlohy s dvoma časťami, Dnes a Postava. Na existujúc
 
 - Hore pruh: level, XP do ďalšieho levelu a „dnes +85 XP“.
 - Poradie: hlavná úloha dňa, návyky na dnes, úlohy po termíne a s dnešným termínom, potom ostatné. Splnené dnes sú zbalené na konci.
-- Splnenie: ťuknutie na krúžok alebo swipe doprava, rovnako ako „páči sa mi“ pri novinkách.
+- Splnenie: zaškrtávacie políčko. Splnená úloha ostane na svojom mieste, len zošedne; opätovným ťuknutím sa vráti.
+- Listovanie kartou dňa: ťah **doprava** = ďalší deň (zajtra, pozajtra…), ťah **doľava** = späť, z dneška na Postavu a štatistiky. Rovnako fungujú šípky ‹ › a klávesy ← →.
 - Tlačidlo + otvorí výber: nová úloha, nový návyk alebo rýchly záznam.
 
 ### Záložka Úlohy → Postava
@@ -182,7 +187,7 @@ Najlepšie je stavať po štyroch fázach, aby si mal po prvej už použiteľný
 
 1. **Základ**: jednorazové úlohy, denník, XP podľa náročnosti, celkový level, záložka Úlohy → Dnes, hláška s tlačidlom Späť a pole `game` v zálohe. *(hotovo)*
    - Navyše hotové: opakované úlohy (všetky typy `repeat` vyššie) a plánovanie v Kalendári – mesačný prehľad s bodkami, úlohy vybraného dňa, pridanie úlohy na konkrétny deň a história splnení minulých dní.
-2. **Postava**: atribúty a ich levely, tituly, karta postavy s rovnováhou za 14 dní a rekordmi.
+2. **Postava**: atribúty a ich levely, tituly, karta postavy s rovnováhou za 14 dní a rekordmi. *(hotovo – stránka Postava je vľavo od dneška, atribúty sa upravujú v Nastaveniach)*
 3. **Návyky**: ~~opakované aktivity~~ (hotovo skôr), rýchly záznam, hlavná úloha dňa, klesajúci výnos a strop drobností.
 4. **Prepojenie s appkou**: karta na domovskej obrazovke, riadok na úvodnej obrazovke, história v Kalendári, animácia nového levelu a odomknutia.
 
