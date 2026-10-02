@@ -12,7 +12,9 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
 - **Úlohy**: to-do list s gamifikáciou. Každá úloha má atribút (Telo, Myseľ, Práca, Vzťahy)
   a náročnosť (drobnosť 5 XP, ľahká 10, stredná 25, ťažká 60, epická 150). Splnenie ťuknutím
   na krúžok alebo swipom doprava, hláška „+25 XP · Telo“ má na 6 s tlačidlo Späť. Z XP rastie
-  celkový level (postup z levelu L na L+1 stojí 100·L XP). Deň začína o 4:00. Návrh celej
+  celkový level (postup z levelu L na L+1 stojí 100·L XP). Deň začína o 4:00.
+  Úloha môže byť **jednorazová** (s termínom alebo bez) alebo **opakovaná**: každý deň, vybrané dni
+  v týždni, X× týždenne, každých N dní alebo raz mesačne, od zvoleného dátumu. Návrh celej
   gamifikácie a ďalšie fázy sú v [docs/gamifikacia.md](docs/gamifikacia.md).
 - **Novinky**: po úvodnej obrazovke príde balíček správ z okruhov, ktoré si vyberieš
   (technológie, vojna, ekonomika, politika…). Karta ukazuje titulok a stručné zhrnutie,
@@ -27,7 +29,8 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   zrážky, vlhkosť, viditeľnosť, tlak, kvalita ovzdušia a fáza Mesiaca.
   Dáta sú z [Open-Meteo](https://open-meteo.com/) (zadarmo, bez registrácie).
 - **Narodeniny**: pridávanie, úprava, mazanie; odpočet dní, vek, a kedy má človek meniny/svátek.
-- **Kalendár**: listovanie po dňoch, vyhľadanie „kedy má meniny…“, prehľad najbližších 14 dní.
+- **Kalendár**: mesačný prehľad (bodky = úlohy, splnené, narodeniny), list dňa s meninami, úlohy vybraného dňa
+  a pridanie úlohy na konkrétny deň, vyhľadanie „kedy má meniny…“, prehľad najbližších 14 dní aj s úlohami.
 - **Nastavenia**: okruhy noviniek, ich počet, jazyk zdrojov, čo sa appka naučila, stav zdrojov a záloha.
 
 ## Ako fungujú novinky

@@ -141,7 +141,14 @@ Všetko je v jednom kľúči `obzor.game`, cez existujúci `store.get('game')` a
 }
 ```
 
-- `diff` je poradie náročnosti 1–5 (drobnosť až epická). `repeat.type` môže byť `daily`, `weekdays` alebo `perWeek` s počtom.
+- `diff` je poradie náročnosti 1–5 (drobnosť až epická).
+- `repeat.type` opakovanej úlohy (návyku):
+  - `daily` – každý deň,
+  - `weekdays` s `days` – vybrané dni v týždni (1 = pondelok … 7 = nedeľa),
+  - `perWeek` s `count` – X× týždenne, bez pevných dní: ukazuje sa každý deň, kým v týždni (po – ne) nie je splnená `count`-krát,
+  - `interval` s `every` – každých N dní od dátumu `start`,
+  - `monthly` s `day` – raz mesačne v daný deň (v kratšom mesiaci posledný deň).
+- `start` – od ktorého dňa sa opakovaná úloha začína ukazovať (dá sa naplánovať do budúcnosti).
 - **Denník (`log`) je zdroj pravdy.** Záznam si nesie finálne XP aj názov a atribút, takže história vydrží aj zmazanie úlohy. Rýchly záznam má `ref: null`.
 - **Deň začína o 4:00** (`dayStartHour`), takže úloha splnená o jednej v noci patrí ešte k včerajšku. Platia podľa toho dnešné XP aj strop drobností.
 - **Veľkosť**: približne 1 500 záznamov za rok, čo je asi 150 kB. Limit `localStorage` (okolo 5 MB) vydrží roky a prepočet pri štarte trvá milisekundy.
@@ -174,8 +181,9 @@ Po dvoch týždňoch pozri svoje priemerné denné XP. Keď je ďaleko od 120, u
 Najlepšie je stavať po štyroch fázach, aby si mal po prvej už použiteľný to-do list s levelmi a zvyšok ladil podľa skúsenosti.
 
 1. **Základ**: jednorazové úlohy, denník, XP podľa náročnosti, celkový level, záložka Úlohy → Dnes, hláška s tlačidlom Späť a pole `game` v zálohe. *(hotovo)*
+   - Navyše hotové: opakované úlohy (všetky typy `repeat` vyššie) a plánovanie v Kalendári – mesačný prehľad s bodkami, úlohy vybraného dňa, pridanie úlohy na konkrétny deň a história splnení minulých dní.
 2. **Postava**: atribúty a ich levely, tituly, karta postavy s rovnováhou za 14 dní a rekordmi.
-3. **Návyky**: opakované aktivity, rýchly záznam, hlavná úloha dňa, klesajúci výnos a strop drobností.
+3. **Návyky**: ~~opakované aktivity~~ (hotovo skôr), rýchly záznam, hlavná úloha dňa, klesajúci výnos a strop drobností.
 4. **Prepojenie s appkou**: karta na domovskej obrazovke, riadok na úvodnej obrazovke, história v Kalendári, animácia nového levelu a odomknutia.
 
 Po každej fáze používaj appku aspoň týždeň a až potom pokračuj. Najviac sa naučíš z toho, ktoré čísla ti v praxi nesedia.

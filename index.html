@@ -756,6 +756,46 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
 .due-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .due-row input[type="date"] { width: auto; flex: 1 1 150px; }
 @media (max-width: 380px) { .diff-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* opakované úlohy a kalendár úloh */
+.tcheck.plan { border-style: dashed; color: var(--ac); }
+.tcheck.plan .ico { opacity: 1; transform: none; color: var(--ac); }
+.tcheck:disabled { cursor: default; }
+.trow-meta .rep { display: inline-flex; align-items: center; gap: 4px; }
+.kind-row .opt span { padding: 9px 14px; }
+.rep-box { display: grid; gap: 12px; padding: 12px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.rep-inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.dow-row { gap: 6px; }
+.dow-row .opt span { min-width: 40px; justify-content: center; padding: 8px 6px; }
+.month { max-width: 440px; margin: 8px auto 16px; padding: 8px 10px 10px; }
+.month-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 2px 8px; }
+.month-h b { font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 21px; }
+.month-h .btn { min-width: 40px; padding: 7px 10px; }
+.month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.mdow { text-align: center; font-size: 11px; font-weight: 700; color: var(--ink-2); padding: 2px 0 6px; letter-spacing: .04em; }
+.mday {
+  height: 44px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums;
+}
+.mday:hover { background: var(--surface-2); }
+.mday.out { opacity: .4; }
+.mday.red { color: var(--red); }
+.mday.today { box-shadow: inset 0 0 0 1.5px var(--accent); font-weight: 700; }
+.mday.sel { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.mdots { display: flex; gap: 3px; height: 5px; }
+.mdots i { width: 5px; height: 5px; border-radius: 50%; }
+.mdots .p { background: var(--accent); }
+.mdots .d { background: var(--good); }
+.mdots .b { background: var(--red); }
+.mday.sel .mdots i { background: currentColor; }
+.month-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; font-size: 11.5px; color: var(--ink-2); margin-top: 8px; }
+.month-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+#kal-tasks { max-width: 440px; margin: 0 auto; }
+.kal-tasks-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.xp-chip { font-size: 13px; font-weight: 700; color: var(--xp); }
+.kal-add { width: 100%; margin-top: 10px; }
+.up-extra.task { color: var(--ink); display: flex; gap: 5px; align-items: center; }
+
 
 @media (max-width: 400px) {
   .deck-title { font-size: 24px; }
@@ -849,12 +889,14 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
     <header class="page-h">
       <h1>Kalendár</h1>
     </header>
+    <section class="month panel" id="kal-month" aria-label="Mesiac"></section>
     <div class="kal-wrap" id="kal-page"></div>
     <div class="kal-nav">
       <button class="btn" id="kal-prev" aria-label="Predchádzajúci deň"></button>
       <button class="btn" id="kal-today">Dnes</button>
       <button class="btn" id="kal-next" aria-label="Nasledujúci deň"></button>
     </div>
+    <div id="kal-tasks"></div>
     <h2 class="section-h">Kedy má meniny?</h2>
     <label class="search" for="nd-q">
       <span id="nd-ico"></span>
@@ -1058,6 +1100,7 @@ const ICONS = {
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   tasks: '<path d="M3.5 7l1.6 1.6L8.3 5.4M3.5 13.5l1.6 1.6 3.2-3.2M11.5 7h9M11.5 13.5h9M11.5 19.5h9M4.5 19.5h3"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  repeat: '<path d="M16.5 3.5l3 3-3 3M4.5 11.5V10a3.5 3.5 0 0 1 3.5-3.5h11.5M7.5 20.5l-3-3 3-3M19.5 12.5V14a3.5 3.5 0 0 1-3.5 3.5H4.5"/>',
   note: '<path d="M5 4.5h14v10.5l-4.5 4.5H5zM14.5 19.5V15H19M8.5 9h7M8.5 12h4.5"/>',
   dumbbell: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
   book: '<path d="M5 5a2 2 0 0 1 2-2h12v14.5H7a2 2 0 0 0-2 2zM5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3.5M9 7.5h6"/>',
@@ -2067,9 +2110,48 @@ const Game = {
     return { xp, L, cur: xp - base, need: next - base, pct: (xp - base) / (next - base) };
   },
 
+  /* ---------- opakované úlohy (návyky) ---------- */
+  keyOf(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; },
+  addKey(k, n) { const d = this.keyDate(k); d.setDate(d.getDate() + n); return this.keyOf(d); },
+  doneOn(task, key) { return this.data.log.some((e) => e.ref === task.id && e.day === key); },
+  /** Počet splnení v týždni (pondelok – nedeľa), do ktorého patrí deň key */
+  weekCount(task, key) {
+    const mon = this.addKey(key, -((this.keyDate(key).getDay() || 7) - 1)), sun = this.addKey(mon, 6);
+    return this.data.log.filter((e) => e.ref === task.id && e.day >= mon && e.day <= sun).length;
+  },
+  /** Je opakovaná úloha podľa rozvrhu na rade v daný deň? („X× týždenne“ nemá pevné dni.) */
+  scheduled(task, key) {
+    if (task.kind !== 'habit' || task.archived) return false;
+    const start = task.start || task.created;
+    if (key < start) return false;
+    const r = task.repeat || { type: 'daily' }, d = this.keyDate(key);
+    switch (r.type) {
+      case 'daily': return true;
+      case 'weekdays': return (r.days || []).includes(d.getDay() || 7);
+      case 'interval': return daysBetween(this.keyDate(start), d) % Math.max(1, r.every || 1) === 0;
+      case 'monthly': return d.getDate() === Math.min(r.day || 1, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate());
+      default: return false;
+    }
+  },
+  /** Patrí opakovaná úloha do dnešného zoznamu? */
+  dueToday(task) {
+    const k = this.dayKey();
+    if (task.kind !== 'habit' || task.archived || this.doneOn(task, k) || k < (task.start || task.created)) return false;
+    if ((task.repeat || {}).type === 'perWeek') return this.weekCount(task, k) < (task.repeat.count || 1);
+    return this.scheduled(task, k);
+  },
+  nextDates(task, from, n = 3) {
+    const out = [];
+    for (let i = 0, k = from; i < 400 && out.length < n; i++, k = this.addKey(k, 1)) if (this.scheduled(task, k)) out.push(k);
+    return out;
+  },
+
   /* ---------- zmeny ---------- */
   addTask(t) {
-    const task = { id: this.uid('t'), kind: 'todo', title: t.title, attr: t.attr, diff: t.diff, due: t.due || null, note: t.note || '', created: this.dayKey(), done: null };
+    const base = { id: this.uid(t.kind === 'habit' ? 'h' : 't'), kind: t.kind === 'habit' ? 'habit' : 'todo', title: t.title, attr: t.attr, diff: t.diff, note: t.note || '', created: this.dayKey() };
+    const task = base.kind === 'habit'
+      ? { ...base, repeat: t.repeat, start: t.start || base.created, archived: false }
+      : { ...base, due: t.due || null, done: null };
     this.data.tasks.push(task);
     this.save();
     return task;
@@ -2078,7 +2160,7 @@ const Game = {
     const now = new Date();
     const entry = { id: this.uid('e'), ts: this.isoLocal(now), day: this.dayKey(now), ref: task.id, title: task.title, attr: task.attr, diff: task.diff, xp: this.xpFor(task.diff) };
     this.data.log.push(entry);
-    task.done = entry.day;
+    if (task.kind === 'todo') task.done = entry.day;
     this.save();
     return entry;
   },
@@ -2086,7 +2168,7 @@ const Game = {
   uncomplete(entry) {
     this.data.log = this.data.log.filter((e) => e.id !== entry.id);
     const task = this.data.tasks.find((t) => t.id === entry.ref);
-    if (task && !this.data.log.some((e) => e.ref === task.id)) task.done = null;
+    if (task && task.kind === 'todo' && !this.data.log.some((e) => e.ref === task.id)) task.done = null;
     this.save();
   },
   removeTask(task) {
@@ -2097,8 +2179,33 @@ const Game = {
   }
 };
 
+const DOW_SHORT = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']; // ISO: 1 = pondelok … 7 = nedeľa
+const REPEATS = [['daily', 'Každý deň'], ['weekdays', 'Vybrané dni'], ['perWeek', 'X× týždenne'], ['interval', 'Každých N dní'], ['monthly', 'Raz mesačne']];
+function repeatText(r) {
+  if (!r) return '';
+  switch (r.type) {
+    case 'daily': return 'každý deň';
+    case 'weekdays': {
+      const d = (r.days || []).slice().sort((a, b) => a - b);
+      if (d.length === 7) return 'každý deň';
+      if (d.join() === '1,2,3,4,5') return 'v pracovné dni';
+      if (d.join() === '6,7') return 'cez víkend';
+      return d.map((x) => DOW_SHORT[x - 1]).join(', ');
+    }
+    case 'perWeek': return `${r.count}× týždenne`;
+    case 'interval': return r.every <= 1 ? 'každý deň' : `${r.every >= 5 ? 'každých' : 'každé'} ${r.every} ${plural(r.every, 'deň', 'dni', 'dní')}`;
+    case 'monthly': return `každý mesiac, ${r.day}. deň`;
+  }
+  return '';
+}
+/** Prekreslí obrazovky, na ktorých sú úlohy */
+function refreshTaskViews() {
+  if (App.tab === 'ulohy') TasksView.render();
+  if (App.tab === 'kalendar') KalView.render();
+}
+
 const TasksView = {
-  justSwiped: false,
+  justSwiped: false, doneOpen: false,
 
   init() {
     $('#tk-add').innerHTML = ico('plus', 18, 2.2) + 'Pridať';
@@ -2124,70 +2231,107 @@ const TasksView = {
     if (n === 0) return ['dnes', 'today'];
     if (n === 1) return ['zajtra', ''];
     if (n < 7) return [DNI[d.getDay()], ''];
-    return [`${d.getDate()}. ${d.getMonth() + 1}.`, ''];
+    return [`${DNI_KR[d.getDay()]} ${d.getDate()}. ${d.getMonth() + 1}.`, ''];
   },
-  rowHTML({ id, title, attr, diff, due, note, xp, done, entryId }) {
-    const a = Game.attr(attr);
-    const meta = [`<span class="adot"><i style="background:${a.color}"></i>${esc(a.name)}</span>`, `<span>${DIFFS[clamp(diff, 1, 5) - 1][0]}</span>`];
-    if (due && !done) { const [txt, cls] = this.dueLabel(due); meta.push(`<span class="${cls}">${txt}</span>`); }
-    if (note) meta.push(`<span title="${esc(note)}" aria-label="Má poznámku">${ico('note', 13, 2)}</span>`);
-    return `<li class="trow${done ? ' done' : ''}" data-id="${esc(id)}"${entryId ? ` data-entry="${esc(entryId)}"` : ''}>
-      ${done ? '' : `<div class="trow-bg" aria-hidden="true">${ico('check', 18, 2.6)}Splniť</div>`}
+
+  /* ---------- riadky zoznamu ---------- */
+  todoItem(t) {
+    const meta = [];
+    if (t.due) { const [txt, cls] = this.dueLabel(t.due); meta.push(`<span class="${cls}">${txt}</span>`); }
+    return { taskId: t.id, title: t.title, attr: t.attr, diff: t.diff, xp: Game.xpFor(t.diff), note: t.note, meta, can: true };
+  },
+  habitItem(h, { plan = false, next = false, key } = {}) {
+    const r = h.repeat || {};
+    const meta = [`<span class="rep">${ico('repeat', 12, 2.2)}${repeatText(r)}</span>`];
+    if (r.type === 'perWeek') meta.push(`<span>${Game.weekCount(h, key || Game.dayKey())} / ${r.count} tento týždeň</span>`);
+    if (next) {
+      const nx = Game.nextDates(h, Game.addKey(Game.dayKey(), 1), 1)[0];
+      if (nx) meta.push(`<span>najbližšie ${this.dueLabel(nx)[0]}</span>`);
+      else if (r.type === 'perWeek') {
+        const k = Game.dayKey(), sunday = Game.keyDate(k).getDay() === 0;
+        meta.push(`<span>${Game.weekCount(h, k) < r.count && !sunday ? 'znova zajtra' : 'znova od pondelka'}</span>`);
+      }
+    }
+    return { taskId: h.id, title: h.title, attr: h.attr, diff: h.diff, xp: Game.xpFor(h.diff), note: h.note, meta, can: !plan, plan };
+  },
+  entryItem(e, undo) {
+    return { taskId: e.ref || '', entryId: e.id, title: e.title, attr: e.attr, diff: e.diff, xp: e.xp, done: true, undo };
+  },
+  rowHTML(it) {
+    const a = Game.attr(it.attr);
+    const meta = [`<span class="adot"><i style="background:${a.color}"></i>${esc(a.name)}</span>`, `<span>${DIFFS[clamp(it.diff, 1, 5) - 1][0]}</span>`, ...(it.meta || [])];
+    if (it.note) meta.push(`<span title="${esc(it.note)}" aria-label="Má poznámku">${ico('note', 13, 2)}</span>`);
+    const check = it.plan
+      ? `<span class="tcheck plan" style="--ac:${a.color}" title="Opakovaná úloha, v tento deň ešte nie je na rade">${ico('repeat', 15, 2.2)}</span>`
+      : `<button class="tcheck" style="--ac:${a.color}" ${it.done && !it.undo ? 'disabled' : ''} aria-label="${it.done ? 'Vrátiť ako nesplnenú' : 'Splniť'}: ${esc(it.title)}">${ico('check', 18, 3)}</button>`;
+    return `<li class="trow${it.done ? ' done' : ''}${it.plan ? ' plan' : ''}" data-id="${esc(it.taskId || '')}"${it.entryId ? ` data-entry="${esc(it.entryId)}"` : ''}${it.can ? ' data-can="1"' : ''}>
+      ${it.can ? `<div class="trow-bg" aria-hidden="true">${ico('check', 18, 2.6)}Splniť</div>` : ''}
       <div class="trow-main">
-        <button class="tcheck" style="--ac:${a.color}" aria-label="${done ? 'Vrátiť ako nesplnenú' : 'Splniť'}: ${esc(title)}">${ico('check', 18, 3)}</button>
-        <button class="trow-body"><span class="trow-title">${esc(title)}</span><span class="trow-meta">${meta.join('')}</span></button>
-        <span class="trow-xp">+${xp}</span>
+        ${check}
+        <button class="trow-body"><span class="trow-title">${esc(it.title)}</span><span class="trow-meta">${meta.join('')}</span></button>
+        <span class="trow-xp">+${it.xp}</span>
       </div>
     </li>`;
   },
+  listHTML(items) { return `<ul class="tlist panel">${items.map((it) => this.rowHTML(it)).join('')}</ul>`; },
 
   renderList() {
     const box = $('#tk-content');
     const today = Game.dayKey();
-    const open = Game.data.tasks.filter((t) => t.kind === 'todo' && !t.done);
+    const tasks = Game.data.tasks;
+    const todos = tasks.filter((t) => t.kind === 'todo' && !t.done);
+    const habits = tasks.filter((t) => t.kind === 'habit' && !t.archived);
+    const habitsToday = habits.filter((h) => Game.dueToday(h));
+    const habitsLater = habits.filter((h) => !habitsToday.includes(h));
+    const forToday = todos.filter((t) => t.due && t.due <= today).sort((a, b) => a.due.localeCompare(b.due) || b.diff - a.diff);
+    const noDue = todos.filter((t) => !t.due).sort((a, b) => a.created.localeCompare(b.created));
+    const planned = todos.filter((t) => t.due && t.due > today).sort((a, b) => a.due.localeCompare(b.due));
     const doneToday = Game.data.log.filter((e) => e.day === today).slice().reverse();
-    const forToday = open.filter((t) => t.due && t.due <= today).sort((a, b) => a.due.localeCompare(b.due) || b.diff - a.diff);
-    const rest = open.filter((t) => !t.due || t.due > today)
-      .sort((a, b) => (a.due && b.due ? a.due.localeCompare(b.due) : a.due ? -1 : b.due ? 1 : a.created.localeCompare(b.created)));
 
-    if (!open.length && !doneToday.length) {
+    if (!todos.length && !habits.length && !doneToday.length) {
       box.innerHTML = `<div class="panel tk-empty">${ico('tasks', 40, 1.5)}<h2>Zatiaľ žiadne úlohy</h2>
-        <p>Pridaj si, čo chceš urobiť. Za každú splnenú úlohu dostaneš XP podľa náročnosti a tvoja postava rastie.</p>
+        <p>Pridaj si, čo chceš urobiť, jednorazovo alebo opakovane. Za každú splnenú úlohu dostaneš XP podľa náročnosti a tvoja postava rastie.</p>
         <div class="xp-scale">${DIFFS.map(([n], i) => `<span>${n} <b>${GAME.XP_BY_DIFF[i]} XP</b></span>`).join('')}</div>
         <button class="btn btn-primary" id="tk-add-first">${ico('plus', 18, 2.2)}Pridať prvú úlohu</button></div>`;
       $('#tk-add-first').addEventListener('click', () => this.openForm());
       return;
     }
-    const row = (t) => this.rowHTML({ ...t, xp: Game.xpFor(t.diff), done: false });
     let html = '';
-    if (forToday.length) html += `<h2 class="section-h">Na dnes</h2><ul class="tlist panel">${forToday.map(row).join('')}</ul>`;
-    if (rest.length) html += `<h2 class="section-h">${forToday.length ? 'Ostatné' : 'Úlohy'}</h2><ul class="tlist panel">${rest.map(row).join('')}</ul>`;
-    if (!forToday.length && !rest.length) html += '<p class="panel panel-note">Všetky úlohy máš splnené. Pridaj ďalšiu tlačidlom Pridať.</p>';
+    const nowItems = [...habitsToday.map((h) => this.habitItem(h)), ...forToday.map((t) => this.todoItem(t))];
+    if (nowItems.length) html += `<h2 class="section-h">Na dnes</h2>${this.listHTML(nowItems)}`;
+    if (noDue.length) html += `<h2 class="section-h">Bez termínu</h2>${this.listHTML(noDue.map((t) => this.todoItem(t)))}`;
+    if (planned.length) html += `<h2 class="section-h">Naplánované</h2>${this.listHTML(planned.map((t) => this.todoItem(t)))}`;
+    if (habitsLater.length) html += `<h2 class="section-h">Opakované</h2>${this.listHTML(habitsLater.map((h) => this.habitItem(h, { plan: true, next: true })))}`;
+    if (!nowItems.length && !noDue.length && !planned.length && !habitsLater.length) html += '<p class="panel panel-note">Všetko máš splnené. Ďalšiu úlohu pridáš tlačidlom Pridať.</p>';
     if (doneToday.length) {
       html += `<details class="tdone"${this.doneOpen ? ' open' : ''}><summary>${ico('right', 14, 2.4)}Splnené dnes (${doneToday.length}) · +${fmtXp(Game.dayXp())} XP</summary>
-        <ul class="tlist panel">${doneToday.map((e) => this.rowHTML({ id: e.ref || e.id, title: e.title, attr: e.attr, diff: e.diff, xp: e.xp, done: true, entryId: e.id })).join('')}</ul></details>`;
+        ${this.listHTML(doneToday.map((e) => this.entryItem(e, true)))}</details>`;
     }
     box.innerHTML = html;
     const det = $('details.tdone', box);
     if (det) det.addEventListener('toggle', () => { this.doneOpen = det.open; });
+    this.bindRows(box);
+  },
 
+  /** Ovládanie riadkov – rovnaké v záložke Úlohy aj v Kalendári */
+  bindRows(box) {
     $$('.trow', box).forEach((li) => {
-      const done = li.classList.contains('done');
       const task = Game.data.tasks.find((t) => t.id === li.dataset.id);
-      $('.tcheck', li).addEventListener('click', () => {
-        if (done) {
+      const chk = $('button.tcheck', li);
+      if (chk) chk.addEventListener('click', () => {
+        if (li.classList.contains('done')) {
           const entry = Game.data.log.find((e) => e.id === li.dataset.entry);
           if (!entry) return;
           Game.uncomplete(entry);
-          this.render();
+          refreshTaskViews();
           toast(`Vrátené medzi nesplnené: ${entry.title}`);
-        } else if (task) this.complete(task, li);
+        } else if (task && li.dataset.can) this.complete(task);
       });
       $('.trow-body', li).addEventListener('click', () => {
         if (this.justSwiped) return;
         if (task) this.openForm(task);
       });
-      if (!done && task) this.bindSwipe(li, task);
+      if (li.dataset.can && task) this.bindSwipe(li, task);
     });
   },
 
@@ -2223,7 +2367,7 @@ const TasksView = {
       setTimeout(() => { this.justSwiped = false; }, 300);
       if (dx > 90) {
         main.style.transform = 'translateX(110%)';
-        setTimeout(() => this.complete(task, li), 180);
+        setTimeout(() => this.complete(task), 180);
       } else {
         main.style.transform = '';
         li.classList.remove('arm');
@@ -2234,27 +2378,44 @@ const TasksView = {
   },
 
   complete(task) {
-    if (task.done) return;
+    if (task.kind === 'todo' ? task.done : Game.doneOn(task, Game.dayKey())) return;
     const before = Game.progress().L;
     const entry = Game.complete(task);
     const after = Game.progress().L;
-    this.render();
+    refreshTaskViews();
     const a = Game.attr(entry.attr);
     toast(`+${entry.xp} XP · ${a.name}${after > before ? ` · Level ${after}!` : ''}`, 'Späť', () => {
       Game.uncomplete(entry);
-      this.render();
+      refreshTaskViews();
     }, GAME.UNDO_MS);
   },
 
-  openForm(task = null) {
+  /* ---------- formulár ---------- */
+  /** opts.date = deň z Kalendára, na ktorý sa úloha pridáva */
+  openForm(task = null, opts = {}) {
     const t = task || {};
+    const isHabit = t.kind === 'habit';
     const lastAttr = (Game.data.tasks[Game.data.tasks.length - 1] || {}).attr;
     const attrSel = t.attr || lastAttr || Game.data.attrs[0].id;
     const diffSel = t.diff || 3;
-    const today = Game.dayKey(), tomorrow = Game.keyOffset(1);
+    const today = Game.dayKey(), tomorrow = Game.addKey(today, 1);
+    const startKey = t.start || opts.date || today;
+    const r = t.repeat || {};
+    const startDow = Game.keyDate(startKey).getDay() || 7;
+    const st = {
+      type: r.type || 'daily',
+      days: r.days ? r.days.slice() : [startDow],
+      count: r.count || 3,
+      every: r.every || 2,
+      day: r.day || Game.keyDate(startKey).getDate()
+    };
     Sheet.open(`
-      <div class="sheet-h"><h2 id="tk-title-h">${task ? 'Upraviť úlohu' : 'Nová úloha'}</h2><div class="actions"><button class="btn" data-close aria-label="Zavrieť">${ico('close', 18, 2)}</button></div></div>
+      <div class="sheet-h"><h2 id="tk-title-h">${task ? (isHabit ? 'Upraviť opakovanú úlohu' : 'Upraviť úlohu') : 'Nová úloha'}</h2><div class="actions"><button class="btn" data-close aria-label="Zavrieť">${ico('close', 18, 2)}</button></div></div>
       <form class="form" id="tk-form" novalidate>
+        ${task ? '' : `<div class="opt-row kind-row" role="radiogroup" aria-label="Druh úlohy">
+          <label class="opt"><input type="radio" name="tk-kind" value="todo" checked><span>${ico('check', 15, 2.6)}Jednorazová</span></label>
+          <label class="opt"><input type="radio" name="tk-kind" value="habit"><span>${ico('repeat', 15, 2.2)}Opakovaná</span></label>
+        </div>`}
         <label class="field"><span>Úloha</span><input id="tk-title" maxlength="100" autocomplete="off" placeholder="napr. Kapitola 3 semestrálnej práce" value="${esc(t.title || '')}"></label>
         <fieldset class="field"><legend>Atribút</legend><div class="opt-row">
           ${Game.data.attrs.map((a) => `<label class="opt"><input type="radio" name="tk-attr" value="${esc(a.id)}" ${a.id === attrSel ? 'checked' : ''}><span><i style="background:${a.color}"></i>${esc(a.name)}</span></label>`).join('')}
@@ -2262,12 +2423,28 @@ const TasksView = {
         <fieldset class="field"><legend>Náročnosť</legend><div class="diff-grid">
           ${DIFFS.map(([n], i) => `<label class="opt"><input type="radio" name="tk-diff" value="${i + 1}" ${i + 1 === diffSel ? 'checked' : ''}><span>${n}<b>${GAME.XP_BY_DIFF[i]}</b></span></label>`).join('')}
         </div><p class="diff-hint" id="tk-diff-hint"></p></fieldset>
-        <div class="field"><span>Termín <em>(nepovinný)</em></span><div class="due-row">
+
+        <div class="field" id="tk-once" ${isHabit ? 'hidden' : ''}><span>Termín <em>(nepovinný)</em></span><div class="due-row">
           <button type="button" class="btn" data-due="${today}">Dnes</button>
           <button type="button" class="btn" data-due="${tomorrow}">Zajtra</button>
           <button type="button" class="btn" data-due="">Bez termínu</button>
-          <input type="date" id="tk-due" value="${esc(t.due || '')}" aria-label="Dátum termínu">
+          <input type="date" id="tk-due" value="${esc(t.due || (!task && opts.date) || '')}" aria-label="Dátum termínu">
         </div></div>
+
+        <div class="rep-box" id="tk-rep" ${isHabit ? '' : 'hidden'}>
+          <fieldset class="field"><legend>Ako často</legend><div class="opt-row">
+            ${REPEATS.map(([v, l]) => `<label class="opt"><input type="radio" name="tk-rtype" value="${v}" ${v === st.type ? 'checked' : ''}><span>${l}</span></label>`).join('')}
+          </div></fieldset>
+          <div class="rep-sub" data-for="weekdays"><div class="opt-row dow-row" role="group" aria-label="Dni v týždni">
+            ${DOW_SHORT.map((n, i) => `<label class="opt"><input type="checkbox" name="tk-dow" value="${i + 1}" ${st.days.includes(i + 1) ? 'checked' : ''}><span>${n}</span></label>`).join('')}
+          </div></div>
+          <div class="rep-sub rep-inline" data-for="perWeek"><span>Koľkokrát za týždeň</span><span id="tk-count">${stepperHTML(st.count, 1, 6, 'Koľkokrát za týždeň')}</span></div>
+          <div class="rep-sub rep-inline" data-for="interval"><span>Každých</span><span id="tk-every">${stepperHTML(st.every, 2, 60, 'Počet dní')}</span><span>dní</span></div>
+          <div class="rep-sub" data-for="monthly"><label class="field"><span>Deň v mesiaci</span><select id="tk-mday">${Array.from({ length: 31 }, (_, i) => `<option value="${i + 1}" ${i + 1 === st.day ? 'selected' : ''}>${i + 1}.</option>`).join('')}</select></label></div>
+          <label class="field"><span>Začať od</span><input type="date" id="tk-start" value="${esc(startKey)}"></label>
+          <p class="diff-hint" id="tk-rep-hint" aria-live="polite"></p>
+        </div>
+
         <label class="field"><span>Poznámka <em>(nepovinná)</em></span><input id="tk-note" maxlength="200" autocomplete="off" value="${esc(t.note || '')}"></label>
         <p class="form-err" id="tk-err" hidden></p>
         <div class="form-actions">
@@ -2278,12 +2455,46 @@ const TasksView = {
         </div>
       </form>`, { label: 'tk-title-h' });
 
-    const hint = () => {
+    const kindNow = () => (task ? (isHabit ? 'habit' : 'todo') : $('input[name="tk-kind"]:checked').value);
+    const readRepeat = () => {
+      const type = $('input[name="tk-rtype"]:checked').value;
+      if (type === 'weekdays') return { type, days: $$('input[name="tk-dow"]:checked').map((c) => +c.value) };
+      if (type === 'perWeek') return { type, count: st.count };
+      if (type === 'interval') return { type, every: st.every };
+      if (type === 'monthly') return { type, day: +$('#tk-mday').value };
+      return { type: 'daily' };
+    };
+    const repHint = () => {
+      const rep = readRepeat();
+      $$('.rep-sub').forEach((el) => { el.hidden = el.dataset.for !== rep.type; });
+      const start = $('#tk-start').value || today;
+      let txt;
+      if (rep.type === 'perWeek') txt = `Ukáže sa každý deň, kým ju v danom týždni nesplníš ${rep.count}×.`;
+      else if (rep.type === 'daily') txt = 'Ukáže sa každý deň.';
+      else if (rep.type === 'weekdays' && !rep.days.length) txt = 'Vyber aspoň jeden deň.';
+      else {
+        const next = Game.nextDates({ kind: 'habit', repeat: rep, start, created: start }, start < today ? today : start, 3);
+        txt = next.length ? 'Najbližšie: ' + next.map((k) => { const d = Game.keyDate(k); return `${DNI_KR[d.getDay()]} ${d.getDate()}. ${d.getMonth() + 1}.`; }).join(', ') : '';
+      }
+      $('#tk-rep-hint').textContent = txt;
+    };
+    const kindSwitch = () => {
+      const habit = kindNow() === 'habit';
+      $('#tk-once').hidden = habit;
+      $('#tk-rep').hidden = !habit;
+      if (habit) repHint();
+    };
+    const diffHint = () => {
       const v = +($('input[name="tk-diff"]:checked') || {}).value || 3;
       $('#tk-diff-hint').textContent = `${DIFFS[v - 1][0]}: ${DIFFS[v - 1][1]} · ${GAME.XP_BY_DIFF[v - 1]} XP`;
     };
-    hint();
-    $$('input[name="tk-diff"]').forEach((r) => r.addEventListener('change', hint));
+    diffHint();
+    kindSwitch();
+    $$('input[name="tk-diff"]').forEach((x) => x.addEventListener('change', diffHint));
+    $$('input[name="tk-kind"]').forEach((x) => x.addEventListener('change', kindSwitch));
+    $$('#tk-rep input, #tk-rep select').forEach((x) => x.addEventListener('change', repHint));
+    bindStepper($('#tk-count'), () => st.count, (v) => { st.count = v; repHint(); }, 1, 6);
+    bindStepper($('#tk-every'), () => st.every, (v) => { st.every = v; repHint(); }, 2, 60);
     $$('[data-due]').forEach((b) => b.addEventListener('click', () => { $('#tk-due').value = b.dataset.due; }));
     $('#tk-form').addEventListener('input', () => { $('#tk-err').hidden = true; });
     if (!task) setTimeout(() => $('#tk-title').focus(), 60);
@@ -2292,25 +2503,32 @@ const TasksView = {
     if (del) del.addEventListener('click', () => {
       if (!del.classList.contains('armed')) { del.classList.add('armed'); del.textContent = 'Naozaj zmazať?'; return; }
       const i = Game.removeTask(task);
-      Sheet.close(); this.render();
-      toast(`Zmazané: ${task.title}`, 'Späť', () => { Game.data.tasks.splice(i, 0, task); Game.save(); this.render(); }, GAME.UNDO_MS);
+      Sheet.close(); refreshTaskViews();
+      toast(`Zmazané: ${task.title}`, 'Späť', () => { Game.data.tasks.splice(i, 0, task); Game.save(); refreshTaskViews(); }, GAME.UNDO_MS);
     });
 
     $('#tk-form').addEventListener('submit', (e) => {
       e.preventDefault();
+      const err = $('#tk-err');
+      const fail = (msg) => { err.textContent = msg; err.hidden = false; };
       const title = $('#tk-title').value.trim().replace(/\s+/g, ' ');
-      if (!title) { const err = $('#tk-err'); err.textContent = 'Napíš, čo chceš urobiť.'; err.hidden = false; $('#tk-title').focus(); return; }
-      const vals = {
-        title,
-        attr: $('input[name="tk-attr"]:checked').value,
-        diff: +$('input[name="tk-diff"]:checked').value,
-        due: $('#tk-due').value || null,
-        note: $('#tk-note').value.trim()
-      };
-      if (task) { Object.assign(task, vals); Game.save(); }
-      else Game.addTask(vals);
-      Sheet.close(); this.render();
-      toast(task ? 'Zmeny sú uložené.' : `Pridané: ${title}`);
+      if (!title) { fail('Napíš, čo chceš urobiť.'); $('#tk-title').focus(); return; }
+      const kind = kindNow();
+      const vals = { kind, title, attr: $('input[name="tk-attr"]:checked').value, diff: +$('input[name="tk-diff"]:checked').value, note: $('#tk-note').value.trim() };
+      if (kind === 'habit') {
+        vals.repeat = readRepeat();
+        vals.start = $('#tk-start').value || today;
+        if (vals.repeat.type === 'weekdays' && !vals.repeat.days.length) { fail('Vyber aspoň jeden deň v týždni.'); return; }
+      } else {
+        vals.due = $('#tk-due').value || null;
+      }
+      if (task) {
+        delete vals.kind;
+        Object.assign(task, vals);
+        Game.save();
+      } else Game.addTask(vals);
+      Sheet.close(); refreshTaskViews();
+      toast(task ? 'Zmeny sú uložené.' : kind === 'habit' ? `Pridané: ${title} (${repeatText(vals.repeat)})` : `Pridané: ${title}`);
     });
   }
 };
@@ -2451,21 +2669,98 @@ const Splash = {
 
 /* ---------- Záložka Kalendár ---------- */
 const KalView = {
-  offset: 0,
+  sel: null, month: null, onToday: true,
   init() {
+    this.sel = today();
+    this.month = new Date(this.sel.getFullYear(), this.sel.getMonth(), 1);
     $('#kal-prev').innerHTML = ico('left', 18, 2.2);
     $('#kal-next').innerHTML = ico('right', 18, 2.2);
     $('#nd-ico').innerHTML = ico('search', 18);
-    $('#kal-prev').addEventListener('click', () => { this.offset--; this.renderPage(); });
-    $('#kal-next').addEventListener('click', () => { this.offset++; this.renderPage(); });
-    $('#kal-today').addEventListener('click', () => { this.offset = 0; this.renderPage(); });
+    $('#kal-prev').addEventListener('click', () => this.select(addDays(this.sel, -1)));
+    $('#kal-next').addEventListener('click', () => this.select(addDays(this.sel, 1)));
+    $('#kal-today').addEventListener('click', () => this.select(today()));
     $('#nd-q').addEventListener('input', (e) => this.renderSearch(e.target.value));
   },
-  render() { this.renderPage(); this.renderUpcoming(); this.renderSearch($('#nd-q').value); },
-  renderPage() {
-    $('#kal-page').innerHTML = calPageHTML(addDays(today(), this.offset));
-    $('#kal-today').disabled = this.offset === 0;
+  select(d) {
+    this.sel = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    this.onToday = this.sel.getTime() === today().getTime();
+    this.month = new Date(d.getFullYear(), d.getMonth(), 1);
+    this.renderPage();
   },
+  render() {
+    // appka mohla ostať otvorená cez polnoc: „dnes“ sa posunie na nový deň
+    if (this.onToday && this.sel.getTime() !== today().getTime()) { this.sel = today(); this.month = new Date(this.sel.getFullYear(), this.sel.getMonth(), 1); }
+    this.renderPage(); this.renderUpcoming(); this.renderSearch($('#nd-q').value);
+  },
+  renderPage() {
+    $('#kal-page').innerHTML = calPageHTML(this.sel);
+    $('#kal-today').disabled = this.sel.getTime() === today().getTime();
+    this.renderMonth();
+    this.renderTasks();
+  },
+
+  /** Opakované úlohy s pevnými dňami (každodenné a „X× týždenne“ by boli všade) */
+  datedHabits() { return Game.data.tasks.filter((t) => t.kind === 'habit' && !t.archived && t.repeat && !['daily', 'perWeek'].includes(t.repeat.type)); },
+
+  renderMonth() {
+    const y = this.month.getFullYear(), m = this.month.getMonth();
+    const first = new Date(y, m, 1), lead = (first.getDay() || 7) - 1;
+    const cells = Math.ceil((lead + new Date(y, m + 1, 0).getDate()) / 7) * 7;
+    const T = Game.dayKey(), todayK = Game.keyOf(today()), selK = Game.keyOf(this.sel);
+    const due = {}, done = {};
+    Game.data.tasks.forEach((t) => { if (t.kind === 'todo' && !t.done && t.due) due[t.due] = (due[t.due] || 0) + 1; });
+    Game.data.log.forEach((e) => { done[e.day] = (done[e.day] || 0) + 1; });
+    const habits = this.datedHabits();
+    let html = '';
+    for (let i = 0; i < cells; i++) {
+      const d = addDays(first, i - lead), K = Game.keyOf(d), info = Kal.forDate(d);
+      const planned = (due[K] || 0) + (K >= T ? habits.filter((h) => Game.scheduled(h, K)).length : 0);
+      const bd = Bd.on(d).length;
+      const cls = ['mday', d.getMonth() !== m ? 'out' : '', d.getDay() === 0 || info.skHol ? 'red' : '', K === todayK ? 'today' : '', K === selK ? 'sel' : ''].filter(Boolean).join(' ');
+      const label = `${DNI[d.getDay()]} ${d.getDate()}. ${MESIACE_GEN[d.getMonth()]}${planned ? `, ${planned} ${plural(planned, 'úloha', 'úlohy', 'úloh')}` : ''}${done[K] ? `, splnené: ${done[K]}` : ''}${bd ? ', narodeniny' : ''}`;
+      html += `<button class="${cls}" data-k="${K}" aria-label="${label}"${K === selK ? ' aria-current="date"' : ''}>${d.getDate()}<span class="mdots">${planned ? '<i class="p"></i>' : ''}${done[K] ? '<i class="d"></i>' : ''}${bd ? '<i class="b"></i>' : ''}</span></button>`;
+    }
+    const box = $('#kal-month');
+    box.innerHTML = `<div class="month-h"><button class="btn" id="mo-prev" aria-label="Predchádzajúci mesiac">${ico('left', 16, 2.2)}</button><b>${MESIACE[m][0].toUpperCase() + MESIACE[m].slice(1)} ${y}</b><button class="btn" id="mo-next" aria-label="Nasledujúci mesiac">${ico('right', 16, 2.2)}</button></div>
+      <div class="month-grid">${DOW_SHORT.map((n) => `<span class="mdow">${n}</span>`).join('')}${html}</div>
+      <div class="month-legend"><span><i style="background:var(--accent)"></i>úlohy</span><span><i style="background:var(--good)"></i>splnené</span><span><i style="background:var(--red)"></i>narodeniny</span></div>`;
+    $('#mo-prev').addEventListener('click', () => { this.month = new Date(y, m - 1, 1); this.renderMonth(); });
+    $('#mo-next').addEventListener('click', () => { this.month = new Date(y, m + 1, 1); this.renderMonth(); });
+    $$('.mday', box).forEach((b) => b.addEventListener('click', () => this.select(Game.keyDate(b.dataset.k))));
+  },
+
+  /** Úlohy pre deň K: dnes – čo je na rade, budúcnosť – naplánované, minulosť – čo si splnil */
+  dayItems(K) {
+    const T = Game.dayKey(), tasks = Game.data.tasks, items = [];
+    if (K === T) {
+      tasks.filter((h) => h.kind === 'habit' && Game.dueToday(h)).forEach((h) => items.push(TasksView.habitItem(h)));
+      tasks.filter((t) => t.kind === 'todo' && !t.done && t.due && t.due <= K).forEach((t) => items.push(TasksView.todoItem(t)));
+    } else if (K > T) {
+      tasks.filter((h) => h.kind === 'habit' && Game.scheduled(h, K)).forEach((h) => items.push(TasksView.habitItem(h, { plan: true, key: K })));
+      tasks.filter((t) => t.kind === 'todo' && !t.done && t.due === K).forEach((t) => items.push(TasksView.todoItem(t)));
+    } else {
+      tasks.filter((t) => t.kind === 'todo' && !t.done && t.due === K).forEach((t) => items.push(TasksView.todoItem(t)));
+    }
+    Game.data.log.filter((e) => e.day === K).forEach((e) => items.push(TasksView.entryItem(e, K === T)));
+    return items;
+  },
+  renderTasks() {
+    const K = Game.keyOf(this.sel), T = Game.dayKey(), d = this.sel;
+    const isToday = K === Game.keyOf(today());
+    const items = this.dayItems(K);
+    const xp = Game.dayXp(K);
+    const label = isToday ? 'Úlohy na dnes' : `Úlohy · ${DNI[d.getDay()]} ${d.getDate()}. ${MESIACE_GEN[d.getMonth()]}`;
+    let html = `<div class="kal-tasks-h"><h2 class="section-h">${label}</h2>${xp ? `<span class="xp-chip">+${fmtXp(xp)} XP</span>` : ''}</div>`;
+    html += items.length ? TasksView.listHTML(items)
+      : `<p class="panel panel-note">${K < T ? 'V tento deň nie je zapísaná žiadna splnená úloha.' : 'Na tento deň zatiaľ nemáš žiadnu úlohu.'}</p>`;
+    if (K >= T) html += `<button class="btn kal-add" id="kal-add-task">${ico('plus', 17, 2.2)}Pridať úlohu na ${isToday ? 'dnes' : `${d.getDate()}. ${MESIACE_GEN[d.getMonth()]}`}</button>`;
+    const box = $('#kal-tasks');
+    box.innerHTML = html;
+    TasksView.bindRows(box);
+    const add = $('#kal-add-task');
+    if (add) add.addEventListener('click', () => TasksView.openForm(null, { date: K }));
+  },
+
   renderSearch(q) {
     const ul = $('#nd-results');
     if (norm(q).length < 2) { ul.innerHTML = ''; return; }
@@ -2476,15 +2771,21 @@ const KalView = {
   },
   renderUpcoming() {
     const t = today();
+    const habits = this.datedHabits();
     let html = '';
     for (let i = 1; i <= 14; i++) {
-      const d = addDays(t, i), info = Kal.forDate(d);
+      const d = addDays(t, i), info = Kal.forDate(d), K = Game.keyOf(d);
       const red = d.getDay() === 0 || !!info.skHol;
       const bd = Bd.on(d);
+      const tasks = [
+        ...Game.data.tasks.filter((x) => x.kind === 'todo' && !x.done && x.due === K).map((x) => x.title),
+        ...habits.filter((h) => Game.scheduled(h, K)).map((h) => h.title)
+      ];
       const extra = [];
       if (info.skHol) extra.push(`<div class="up-extra red">${esc(info.skHol)}</div>`);
       if (bd.length) extra.push(`<div class="up-extra red">Narodeniny: ${bd.map((p) => esc(p.name)).join(', ')}</div>`);
-      html += `<li><div class="up-date${red ? ' red' : ''}"><b>${d.getDate()}</b><small>${DNI_KR[d.getDay()]} ${d.getMonth() + 1}.</small></div>
+      if (tasks.length) extra.push(`<div class="up-extra task">${ico('tasks', 13, 2)}${esc(tasks.join(', '))}</div>`);
+      html += `<li data-k="${K}"><div class="up-date${red ? ' red' : ''}"><b>${d.getDate()}</b><small>${DNI_KR[d.getDay()]} ${d.getMonth() + 1}.</small></div>
         <div><div class="up-names">${esc(info.sk || '—')}${info.cz && info.cz !== info.sk ? ` <small>· CZ ${esc(info.cz)}</small>` : ''}</div>${extra.join('')}</div></li>`;
     }
     $('#kal-upcoming').innerHTML = html;
@@ -2761,8 +3062,8 @@ function topicChipsHTML(selected) {
   return Object.entries(TOPICS).map(([id, [label, c]]) =>
     `<button type="button" class="tchip" data-topic="${id}" aria-pressed="${selected.includes(id)}" style="--tc:${c}"><i></i>${label}</button>`).join('');
 }
-function stepperHTML(value, min = 0, max = 20) {
-  return `<div class="stepper" role="group" aria-label="Počet noviniek po spustení">
+function stepperHTML(value, min = 0, max = 20, label = 'Počet noviniek po spustení') {
+  return `<div class="stepper" role="group" aria-label="${label}">
     <button type="button" data-step="-1" aria-label="Menej" ${value <= min ? 'disabled' : ''}>−</button>
     <output aria-live="polite">${value}</output>
     <button type="button" data-step="1" aria-label="Viac" ${value >= max ? 'disabled' : ''}>+</button></div>`;
