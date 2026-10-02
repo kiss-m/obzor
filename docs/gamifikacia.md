@@ -98,7 +98,7 @@ Pribudne jedna záložka Úlohy s dvoma časťami, Dnes a Postava. Na existujúc
 - Hore pruh: level, XP do ďalšieho levelu a „dnes +85 XP“.
 - Poradie: hlavná úloha dňa, návyky na dnes, úlohy po termíne a s dnešným termínom, potom ostatné. Splnené dnes sú zbalené na konci.
 - Splnenie: zaškrtávacie políčko. Splnená úloha ostane na svojom mieste, len zošedne; opätovným ťuknutím sa vráti.
-- Listovanie kartou dňa: ťah **doprava** = ďalší deň (zajtra, pozajtra…), ťah **doľava** = späť, z dneška na Postavu a štatistiky. Rovnako fungujú šípky ‹ › a klávesy ← →.
+- Listovanie kartou dňa: ťah **doľava** = ďalší deň (zajtra, pozajtra…), ťah **doprava** = späť, z dneška na Postavu a štatistiky. Rovnako fungujú šípky ‹ › a klávesy ← →.
 - Tlačidlo + otvorí výber: nová úloha, nový návyk alebo rýchly záznam.
 
 ### Záložka Úlohy → Postava
@@ -192,6 +192,11 @@ Najlepšie je stavať po štyroch fázach, aby si mal po prvej už použiteľný
    - Rýchly záznam: tlačidlo **Záznam** v Úlohách alebo **+ → Rýchly záznam**; názov je nepovinný (bez neho sa použije názov atribútu), nedávne záznamy sa dajú zopakovať jedným ťuknutím a tlačidlá náročnosti ukazujú XP už po uplatnení pravidiel.
    - Hlavná úloha dňa: výzva navrchu dňa, výber zo zoznamu nesplnených úloh; po splnení sa už nedá zmeniť.
    - Záznam v denníku si okrem finálneho `xp` nesie aj `base` a príznaky `main`, `nth` (koľký raz v ten deň) a `capped` (strop drobností); rýchly záznam má `kind: "quick"`.
-4. **Prepojenie s appkou**: karta na domovskej obrazovke, riadok na úvodnej obrazovke, história v Kalendári, animácia nového levelu a odomknutia.
+4. **Prepojenie s appkou**: karta na domovskej obrazovke, riadok na úvodnej obrazovke, história v Kalendári, animácia nového levelu a odomknutia. *(hotovo)*
+   - Domov: karta s levelom, titulom, dnešným XP a hlavnou úlohou dňa s tlačidlom Splniť (alebo Vybrať).
+   - Úvodná obrazovka: riadok „Level N · titul“ a hlavná úloha dňa, ak ešte nie je splnená.
+   - Kalendár: ťuknutím na splnenú úlohu v detaile dňa sa otvorí záznam (XP a prečo toľko) a dá sa zmazať; Späť ho vráti.
+   - Nový level: celoobrazovková chvíľa (`LEVELUP_MS`, pri novom titule alebo odomknutí `LEVELUP_LONG_MS`), vibrácia na Androide. Level atribútu: výraznejšia hláška.
+   - Odomknutia (`GAME.UNLOCKS`, ukladajú sa do `unlocked`): level 5 oranžová téma, 10 zelená, 15 fialová, 20 zlatá karta postavy, 25 tyrkysová, 30 karmínová, 35 nočná karta, 40 polnočná téma, 45 hviezdna karta, 50 legendárna zlatá téma. Vyberajú sa v Nastaveniach → Vzhľad a ukladajú do `look: { theme, card }`.
 
 Po každej fáze používaj appku aspoň týždeň a až potom pokračuj. Najviac sa naučíš z toho, ktoré čísla ti v praxi nesedia.

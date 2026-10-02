@@ -790,6 +790,70 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
 .month-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
 #kal-tasks { max-width: 440px; margin: 0 auto; }
 
+
+/* fáza 4: karta postavy na domovskej obrazovke */
+.wx-game { cursor: pointer; display: grid; gap: 10px; }
+.wg-row { display: flex; align-items: center; gap: 12px; }
+.wg-badge { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 12px; background: rgba(255, 255, 255, .16); font-family: var(--font-display); font-weight: 900; font-stretch: 70%; font-size: 24px; font-variant-numeric: tabular-nums; }
+.wg-txt { flex: 1; min-width: 0; }
+.wg-txt b { display: block; font-size: 15px; font-weight: 600; }
+.wg-txt span { font-size: 13px; color: rgba(255, 255, 255, .82); }
+.wg-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .18); overflow: hidden; }
+.wg-track i { display: block; height: 100%; border-radius: 3px; background: #ffd166; transition: width 600ms cubic-bezier(.2, .8, .2, 1); }
+.wg-main { display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .16); }
+.wg-mt { flex: 1; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 14px; }
+.wg-mt .ico { color: #ffd166; }
+.wg-mt b { overflow-wrap: anywhere; }
+.wg-mt small { font-size: 12.5px; color: rgba(255, 255, 255, .8); }
+.wg-main.done { opacity: .72; }
+.wg-btn { flex: none; border: 0; border-radius: 12px; padding: 8px 13px; background: #fff; color: #10263d; font-weight: 700; font-size: 14px; }
+.wg-btn.ghost { background: rgba(255, 255, 255, .2); color: #fff; }
+
+/* oslava nového levelu */
+.lvlup { position: fixed; inset: 0; z-index: 99; display: grid; place-items: center; padding: 24px 16px; background: color-mix(in srgb, var(--paper) 86%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; transition: opacity 250ms; cursor: pointer; }
+.lvlup.in { opacity: 1; }
+.lvlup.out { opacity: 0; }
+.lvlup-card { position: relative; overflow: hidden; width: min(320px, 100%); padding: 30px 26px 20px; text-align: center; border-radius: 28px; border: 2px solid var(--xp); background: var(--surface); box-shadow: var(--shadow); transform: scale(.82); transition: transform 420ms cubic-bezier(.2, 1.5, .4, 1); }
+.lvlup.in .lvlup-card { transform: none; }
+.lvlup-rays { position: absolute; inset: -60%; background: repeating-conic-gradient(color-mix(in srgb, var(--xp) 15%, transparent) 0deg 9deg, transparent 9deg 18deg); animation: spin 9s linear infinite; }
+.lvlup-card > :not(.lvlup-rays) { position: relative; }
+.lvlup-card small { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.lvlup-n { font-family: var(--font-display); font-weight: 900; font-stretch: 62%; font-size: 124px; line-height: .95; color: var(--xp); font-variant-numeric: tabular-nums; }
+.lvlup-t { font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 25px; line-height: 1.15; }
+.lvlup-u { display: flex; gap: 7px; align-items: flex-start; justify-content: center; margin: 12px auto 0; max-width: 30ch; font-size: 14px; text-align: left; }
+.lvlup-u .ico { color: var(--xp); margin-top: 1px; }
+.lvlup-hint { margin: 14px 0 0; font-size: 12px; color: var(--ink-2); }
+.toast.toast-strong { border: 2px solid var(--xp); font-weight: 700; font-size: 15px; }
+
+/* úvodná obrazovka: level a hlavná úloha */
+.cal-game { text-align: center; margin-top: 8px; font: 700 12px/1 var(--font-display); font-stretch: 88%; letter-spacing: .14em; text-transform: uppercase; color: var(--cal-ink-2); }
+.cal-bday.cal-main { background: rgba(201, 138, 0, .12); }
+.cal-bday.cal-main .ico { color: #b07800; }
+
+/* história: detail záznamu */
+.entry-box { display: grid; gap: 4px; }
+.entry-t { font-size: 18px; overflow-wrap: anywhere; }
+.entry-m { font-size: 13.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.entry-m .adot { display: inline-flex; align-items: center; gap: 5px; }
+.entry-m .adot i { width: 8px; height: 8px; border-radius: 50%; }
+.entry-xp { font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 30px; color: var(--xp); margin-top: 4px; }
+.entry-box small { color: var(--ink-2); font-size: 13px; }
+
+/* vzhľad: zamknuté voľby, štýly karty postavy */
+.look-chip:disabled { opacity: .45; cursor: not-allowed; }
+body[data-card="karta-zlata"] .char { border: 2px solid #c9a227; background: linear-gradient(155deg, color-mix(in srgb, #f2cf6b 24%, var(--surface)) 0%, var(--surface) 60%); }
+body[data-card="karta-zlata"] .char-badge { border-color: #c9a227; }
+body[data-card="karta-nocna"] .char, body[data-card="karta-hviezdna"] .char {
+  --ink: #e9eef6; --ink-2: #a8b5c6; --surface: #131c2e; --surface-2: rgba(255, 255, 255, .1); --line: rgba(255, 255, 255, .14);
+  color: var(--ink); border-color: #26324a; background: linear-gradient(160deg, #1b2740, #0d1422);
+}
+body[data-card="karta-hviezdna"] .char {
+  background:
+    radial-gradient(1.6px 1.6px at 12% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 72% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 88% 40%, #ffe9a8 50%, transparent 51%), radial-gradient(1px 1px at 34% 62%, #fff 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 58% 86%, #cfe2ff 50%, transparent 51%), radial-gradient(1px 1px at 8% 78%, #fff 50%, transparent 51%),
+    linear-gradient(160deg, #2a1d52, #0b1024);
+}
 /* narodeniny v Kalendári */
 .bd-list li { display: flex; align-items: stretch; }
 .bd-list li .bd-row { flex: 1; min-width: 0; }
@@ -947,6 +1011,7 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
   .days summary { grid-template-columns: 2.8em 2.9em 2.2em minmax(0, 1fr) 2.2em; gap: 6px; }
 }
 </style>
+<style id="look-style"></style>
 </head>
 <body class="mode-wx">
 
@@ -1071,6 +1136,8 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
         <div class="topic-grid" id="st-langs"></div>
       </div>
     </div>
+    <h2 class="section-h">Vzhľad</h2>
+    <div class="panel set-group" id="st-look"></div>
     <h2 class="section-h">Postava – atribúty</h2>
     <div class="panel set-group" id="st-attrs"></div>
     <h2 class="section-h">Čo sa appka o tebe naučila</h2>
@@ -1099,6 +1166,7 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
   </div>
 </nav>
 
+<div id="lvlup" class="lvlup" role="dialog" aria-label="Nový level" aria-live="assertive" hidden></div>
 <div id="sheet-root"></div>
 <div id="toast-root" aria-live="polite"></div>
 
@@ -1634,6 +1702,7 @@ const Wx = {
     const retry = $('#wx-retry');
     if (retry) retry.addEventListener('click', () => this.refreshAll(true));
     NewsHome.bind();
+    GameHome.bind();
     this.bindCloudChart(c.data);
   },
 
@@ -1664,8 +1733,9 @@ const Wx = {
       <p class="hero-hl">Max. ${T(dl.temperature_2m_max[0])}° · Min. ${T(dl.temperature_2m_min[0])}°</p>
     </section>`;
 
-    // Novinky
+    // Novinky a postava
     html += NewsHome.html();
+    html += GameHome.html();
 
     // Hodinová predpoveď
     html += `<section class="wx-card"><p class="summary">${esc(this.summary(d, i0))}</p><div class="hours" aria-label="Predpoveď na 24 hodín">${this.hoursHTML(d, i0)}</div></section>`;
@@ -2226,6 +2296,20 @@ const GAME = {
   BALANCE_MIN: 0.10,                // pripomenúť atribút, ktorý má menej ako 10 % XP
   BALANCE_MIN_ENTRIES: 5,           // … ale až keď je za to obdobie aspoň 5 splnení
   MAX_ATTRS: 6,                     // viac atribútov by uberalo na prehľadnosti
+  LEVELUP_MS: 1600,                 // oslava nového levelu (ťuknutím zmizne skôr)
+  LEVELUP_LONG_MS: 2800,            // … pri novom titule alebo odomknutí, aby sa dalo prečítať
+  UNLOCKS: [                        // odomknutia pri tituloch (každých 5 levelov): farebná téma alebo štýl karty postavy
+    { lv: 5, id: 'tema-oranzova', type: 'theme', name: 'Oranžová téma', accent: ['#b35400', '#f0a35e'] },
+    { lv: 10, id: 'tema-zelena', type: 'theme', name: 'Zelená téma', accent: ['#1a7a43', '#5fd08e'] },
+    { lv: 15, id: 'tema-fialova', type: 'theme', name: 'Fialová téma', accent: ['#7b4fb3', '#b494f2'] },
+    { lv: 20, id: 'karta-zlata', type: 'card', name: 'Zlatá karta postavy' },
+    { lv: 25, id: 'tema-tyrkysova', type: 'theme', name: 'Tyrkysová téma', accent: ['#127a7a', '#55cccc'] },
+    { lv: 30, id: 'tema-karminova', type: 'theme', name: 'Karmínová téma', accent: ['#b0305f', '#f07aa6'] },
+    { lv: 35, id: 'karta-nocna', type: 'card', name: 'Nočná karta postavy' },
+    { lv: 40, id: 'tema-polnocna', type: 'theme', name: 'Polnočná téma', accent: ['#3346a8', '#97a6ff'] },
+    { lv: 45, id: 'karta-hviezdna', type: 'card', name: 'Hviezdna karta postavy' },
+    { lv: 50, id: 'tema-legenda', type: 'theme', name: 'Legendárna zlatá téma', accent: ['#8a6400', '#f2c14e'] }
+  ],
   TITLES: [                         // titul platí od daného levelu (každých 5 levelov nový)
     [1, 'Nováčik'], [5, 'Učeň'], [10, 'Technik'], [15, 'Konštruktér'], [20, 'Inžinier'], [25, 'Projektant'],
     [30, 'Hlavný inžinier'], [35, 'Architekt'], [40, 'Hlavný architekt'], [45, 'Majster'], [50, 'Legenda']
@@ -2257,7 +2341,8 @@ const Game = {
       tasks: Array.isArray(d.tasks) ? d.tasks : [],
       mainTask: d.mainTask && typeof d.mainTask === 'object' ? d.mainTask : {},
       log: Array.isArray(d.log) ? d.log : [],
-      unlocked: Array.isArray(d.unlocked) ? d.unlocked : []
+      unlocked: Array.isArray(d.unlocked) ? d.unlocked : [],
+      look: d.look && typeof d.look === 'object' ? d.look : { theme: '', card: '' }
     };
   },
   save() { store.set('game', this.data); },
@@ -2439,6 +2524,25 @@ const Game = {
     const best = (o) => Object.entries(o).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0] || null;
     return { bestDay: best(byDay), bestWeek: best(byWeek), done: this.data.log.length, activeDays: Object.keys(byDay).length };
   },
+  /** Zapíše odomknutia, na ktoré už level stačí; vráti tie nové */
+  collectUnlocks() {
+    const L = this.progress().L, have = new Set(this.data.unlocked), fresh = [];
+    for (const u of GAME.UNLOCKS) if (L >= u.lv && !have.has(u.id)) { this.data.unlocked.push(u.id); fresh.push(u); }
+    if (fresh.length) this.save();
+    return fresh;
+  },
+  isUnlocked(id) {
+    const u = GAME.UNLOCKS.find((x) => x.id === id);
+    return !!u && (this.data.unlocked.includes(id) || this.progress().L >= u.lv);
+  },
+  /** Vrátenie zmazaného záznamu (tlačidlo Späť v histórii) */
+  restoreEntry(e) {
+    this.data.log.push(e);
+    this.data.log.sort((a, b) => String(a.ts || a.day).localeCompare(String(b.ts || b.day)));
+    const t = this.data.tasks.find((x) => x.id === e.ref);
+    if (t && t.kind === 'todo') t.done = e.day;
+    this.save();
+  },
   /** Atribút sa dá zmazať, len ak ho nepoužíva žiadna úloha ani záznam v denníku. */
   attrUsage(id) {
     return { tasks: this.data.tasks.filter((t) => t.attr === id).length, log: this.data.log.filter((e) => e.attr === id).length };
@@ -2475,6 +2579,7 @@ function repeatText(r) {
 function refreshTaskViews() {
   if (App.tab === 'ulohy') TasksView.render();
   if (App.tab === 'kalendar') KalView.render();
+  if (App.tab === 'pocasie') GameHome.refresh();
 }
 
 const TasksView = {
@@ -2522,17 +2627,17 @@ const TasksView = {
     else if (this.page === 0) this.renderList();
     else this.renderDay(this.page);
   },
-  /** Prechod na stranu np: karta odletí na stranu ťahu a objaví sa ďalšia */
+  /** Prechod na stranu np: karta odletí na stranu ťahu (dopredu doľava, späť doprava) a objaví sa ďalšia */
   go(np) {
     np = clamp(np, -1, 365);
     if (np === this.page || this.animating) return;
-    const dir = np > this.page ? 1 : -1; // dopredu (zajtra) odletí doprava, späť doľava
+    const dir = np > this.page ? 1 : -1; // dopredu (zajtra) odletí doľava, späť doprava
     const el = $('#tk-content');
     const swap = () => { this.page = np; this.renderNav(); this.renderPage(); };
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { swap(); el.style.transform = ''; el.style.opacity = ''; return; }
     this.animating = true;
     el.style.transition = 'transform 190ms ease-in, opacity 190ms ease-in';
-    el.style.transform = `translateX(${dir * 70}%) rotate(${dir * 5}deg)`;
+    el.style.transform = `translateX(${-dir * 70}%) rotate(${-dir * 5}deg)`;
     el.style.opacity = '0';
     setTimeout(() => {
       swap();
@@ -2547,7 +2652,7 @@ const TasksView = {
       setTimeout(() => { this.animating = false; el.style.transition = ''; }, 250);
     }, 190);
   },
-  /** Ťah kartou dňa: doprava = ďalší deň, doľava = späť (z dneška na postavu a štatistiky) */
+  /** Ťah kartou dňa: doľava = ďalší deň, doprava = späť (z dneška na postavu a štatistiky) */
   bindPager() {
     const view = $('#view-ulohy'), el = $('#tk-content');
     let sx = 0, sy = 0, dx = 0, pid = null, active = false;
@@ -2567,7 +2672,7 @@ const TasksView = {
         } else if (Math.abs(my) > 12) { pid = null; return; } else return;
       }
       dx = mx;
-      const edge = this.page <= -1 && dx < 0;
+      const edge = this.page <= -1 && dx > 0;
       const x = edge ? dx * 0.25 : dx;
       el.style.transform = `translateX(${x}px) rotate(${x / 60}deg)`;
       el.style.opacity = String(1 - Math.min(0.5, Math.abs(x) / 700));
@@ -2579,7 +2684,7 @@ const TasksView = {
       active = false;
       this.justSwiped = true;
       setTimeout(() => { this.justSwiped = false; }, 300);
-      const go = dx > 70 ? this.page + 1 : dx < -70 && this.page > -1 ? this.page - 1 : null;
+      const go = dx < -70 ? this.page + 1 : dx > 70 && this.page > -1 ? this.page - 1 : null;
       if (go !== null) {
         if (!store.get('tasksSwipeHint', false)) store.set('tasksSwipeHint', true);
         this.go(go);
@@ -2821,7 +2926,7 @@ const TasksView = {
     if (noDue.length) html += `<h2 class="section-h">Bez termínu</h2>${this.listHTML(noDue.map(item))}`;
     if (planned.length) html += `<h2 class="section-h">Naplánované</h2>${this.listHTML(planned.map(item))}`;
     if (habitsLater.length) html += `<h2 class="section-h">Opakované</h2>${this.listHTML(habitsLater.map((h) => this.habitItem(h, { plan: true, next: true })))}`;
-    if (!store.get('tasksSwipeHint', false)) html += `<p class="pg-hint">${ico('right', 13, 2.4)}Potiahni kartu doprava a uvidíš úlohy na zajtra, doľava postavu a štatistiky.</p>`;
+    if (!store.get('tasksSwipeHint', false)) html += `<p class="pg-hint">${ico('right', 13, 2.4)}Potiahni kartu doľava a uvidíš úlohy na zajtra, doprava postavu a štatistiky.</p>`;
     box.innerHTML = html;
     this.bindRows(box);
     const pick = $('#tk-main-pick') || $('#tk-main-change');
@@ -2847,7 +2952,9 @@ const TasksView = {
       });
       $('.trow-body', li).addEventListener('click', () => {
         if (this.justSwiped) return;
-        if (task) this.openForm(task);
+        const entry = li.classList.contains('done') && Game.data.log.find((e) => e.id === li.dataset.entry);
+        if (entry) this.entrySheet(entry);
+        else if (task) this.openForm(task);
       });
     });
   },
@@ -2861,7 +2968,9 @@ const TasksView = {
   /** Hláška po splnení: XP, prečo toľko, nový level/titul/level atribútu a tlačidlo Späť */
   celebrate(entry, before, attrBefore) {
     const after = Game.progress().L, attrAfter = Game.attrProgress(entry.attr).L;
+    const unlocks = after > before ? Game.collectUnlocks() : [];
     refreshTaskViews();
+    try { if (navigator.vibrate) navigator.vibrate(after > before ? [40, 60, 120] : 15); } catch {}
     const a = Game.attr(entry.attr);
     let msg = `+${entry.xp} XP · ${a.name}`;
     const why = [];
@@ -2876,7 +2985,37 @@ const TasksView = {
     toast(msg, 'Späť', () => {
       Game.uncomplete(entry);
       refreshTaskViews();
-    }, GAME.UNDO_MS);
+    }, GAME.UNDO_MS, after <= before && attrAfter > attrBefore ? 'toast-strong' : '');
+    if (after > before) LevelUp.show(after, Game.title(after) !== Game.title(before) ? Game.title(after) : '', unlocks);
+  },
+
+  /** História: detail záznamu v denníku s možnosťou zmazať omylom zapísaný záznam */
+  entrySheet(e) {
+    const a = Game.attr(e.attr), task = Game.data.tasks.find((x) => x.id === e.ref);
+    const d = Game.keyDate(e.day);
+    const why = [`základ ${e.base != null ? e.base : Game.xpFor(e.diff)} XP (${DIFFS[clamp(e.diff, 1, 5) - 1][0].toLowerCase()})`];
+    if (e.main) why.push(`hlavná úloha dňa +${Math.round(GAME.MAIN_BONUS * 100)} %`);
+    if (e.nth > 1) why.push(`${e.nth}. raz v ten deň`);
+    if (e.capped) why.push('strop drobností');
+    Sheet.open(`
+      <div class="sheet-h"><h2 id="en-h">Záznam v denníku</h2><div class="actions"><button class="btn" data-close aria-label="Zavrieť">${ico('close', 18, 2)}</button></div></div>
+      <div class="panel pad entry-box">
+        <b class="entry-t">${esc(e.title)}</b>
+        <div class="entry-m"><span class="adot"><i style="background:${a.color}"></i>${esc(a.name)}</span> · ${DNI[d.getDay()]} ${d.getDate()}. ${MESIACE_GEN[d.getMonth()]}${e.ts ? ` o ${String(e.ts).slice(11, 16).replace(/^0/, '')}` : ''}${e.kind === 'quick' ? ' · rýchly záznam' : ''}</div>
+        <div class="entry-xp">+${fmtXp(e.xp)} XP</div>
+        <small>${esc(why.join(' · '))}</small>
+      </div>
+      <p class="form-hint" style="margin-top:12px">Záznam zmaž, len ak si ho zapísal omylom. XP a level sa prepočítajú.</p>
+      <div class="form-actions">${task ? '<button type="button" class="btn" id="en-task">Upraviť úlohu</button>' : ''}<span class="spacer"></span><button type="button" class="btn btn-danger" id="en-del">Zmazať záznam</button></div>`, { label: 'en-h' });
+    const task_ = $('#en-task');
+    if (task_) task_.addEventListener('click', () => { Sheet.close(); setTimeout(() => this.openForm(task), 30); });
+    const del = $('#en-del');
+    del.addEventListener('click', () => {
+      if (!del.classList.contains('armed')) { del.classList.add('armed'); del.textContent = 'Naozaj zmazať?'; return; }
+      Game.uncomplete(e);
+      Sheet.close(); refreshTaskViews();
+      toast(`Záznam je zmazaný (−${fmtXp(e.xp)} XP).`, 'Späť', () => { Game.restoreEntry(e); refreshTaskViews(); }, GAME.UNDO_MS);
+    });
   },
 
   /* ---------- tlačidlo + : čo chceš pridať ---------- */
@@ -3129,6 +3268,90 @@ const TasksView = {
   }
 };
 
+/* ---------- Fáza 4: vzhľad, oslava levelu, karta na domovskej obrazovke ---------- */
+/** Odomknutá farebná téma a štýl karty postavy */
+const Look = {
+  apply() {
+    const look = Game.data.look || {};
+    const th = GAME.UNLOCKS.find((u) => u.type === 'theme' && u.id === look.theme && Game.isUnlocked(u.id));
+    $('#look-style').textContent = th ? `:root{--accent:${th.accent[0]}}@media (prefers-color-scheme: dark){:root{--accent:${th.accent[1]}}}` : '';
+    const card = GAME.UNLOCKS.find((u) => u.type === 'card' && u.id === look.card && Game.isUnlocked(u.id));
+    document.body.dataset.card = card ? card.id : '';
+  }
+};
+
+/** Krátka celoobrazovková chvíľa pri novom leveli (ťuknutím zmizne) */
+const LevelUp = {
+  timer: 0,
+  init() { $('#lvlup').addEventListener('click', () => this.hide()); },
+  show(L, newTitle, unlocks) {
+    const el = $('#lvlup');
+    el.innerHTML = `<div class="lvlup-card"><div class="lvlup-rays" aria-hidden="true"></div>
+      <small>Nový level</small><div class="lvlup-n">${L}</div>
+      <div class="lvlup-t">${newTitle ? `Nový titul: ${esc(newTitle)}` : esc(Game.title(L))}</div>
+      ${unlocks.length ? `<p class="lvlup-u">${ico('star', 16, 2.2)}<span>Odomknuté: ${esc(unlocks.map((u) => u.name).join(', '))}. Zapneš v Nastaveniach → Vzhľad.</span></p>` : ''}
+      <p class="lvlup-hint">Ťukni pre pokračovanie</p></div>`;
+    el.hidden = false;
+    el.classList.remove('out');
+    void el.offsetWidth;
+    el.classList.add('in');
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.hide(), newTitle || unlocks.length ? GAME.LEVELUP_LONG_MS : GAME.LEVELUP_MS);
+  },
+  hide() {
+    const el = $('#lvlup');
+    if (el.hidden) return;
+    clearTimeout(this.timer);
+    el.classList.add('out');
+    setTimeout(() => { el.hidden = true; el.classList.remove('in', 'out'); }, 250);
+  }
+};
+
+/** Karta postavy na domovskej obrazovke (Počasie) */
+const GameHome = {
+  html() {
+    const g = Game.data;
+    if (!g.tasks.length && !g.log.length) {
+      return `<section class="wx-card wx-game" id="wx-game" role="button" tabindex="0" aria-label="Úlohy a postava"><div class="wg-row"><span class="wg-badge">${ico('tasks', 20, 2)}</span><span class="wg-txt"><b>Úlohy a postava</b><span>Pridaj si úlohy. Za splnené dostaneš XP a postava porastie.</span></span><button type="button" class="wg-btn">Otvoriť</button></div></section>`;
+    }
+    const p = Game.progress(), today = Game.dayKey();
+    const mid = Game.mainId();
+    const main = mid ? g.tasks.find((t) => t.id === mid) : null;
+    let mainHTML = '';
+    if (main && !Game.doneOn(main, today)) {
+      mainHTML = `<div class="wg-main"><span class="wg-mt">${ico('star', 14, 2.4)}<b>${esc(main.title)}</b><small>+${Game.previewXp(main)} XP</small></span><button type="button" class="wg-btn" data-act="done">Splniť</button></div>`;
+    } else if (main) {
+      mainHTML = `<div class="wg-main done"><span class="wg-mt">${ico('check', 14, 2.6)}<b>${esc(main.title)}</b><small>hlavná úloha splnená</small></span></div>`;
+    } else if (g.tasks.some((t) => (t.kind === 'habit' ? Game.dueToday(t) : !t.done))) {
+      mainHTML = `<div class="wg-main"><span class="wg-mt">${ico('star', 14, 2.4)}<small>Hlavná úloha dňa nie je vybraná</small></span><button type="button" class="wg-btn ghost" data-act="pick">Vybrať</button></div>`;
+    }
+    return `<section class="wx-card wx-game" id="wx-game" role="button" tabindex="0" aria-label="Level ${p.L}, ${esc(Game.title(p.L))}. Otvoriť úlohy.">
+      <div class="wg-row"><span class="wg-badge">${p.L}</span><span class="wg-txt"><b>Level ${p.L} · ${esc(Game.title(p.L))}</b><span>dnes +${fmtXp(Game.dayXp())} XP · do levelu ${p.L + 1} chýba ${fmtXp(p.need - p.cur)} XP</span></span></div>
+      <div class="wg-track"><i style="width:${(clamp(p.pct, 0, 1) * 100).toFixed(1)}%"></i></div>
+      ${mainHTML}
+    </section>`;
+  },
+  bind() {
+    const card = $('#wx-game');
+    if (!card) return;
+    card.addEventListener('click', (e) => {
+      const act = (e.target.closest('[data-act]') || {}).dataset;
+      if (act && act.act === 'done') {
+        const main = Game.data.tasks.find((t) => t.id === Game.mainId());
+        if (main) TasksView.complete(main);
+        return;
+      }
+      App.show('ulohy');
+      if (act && act.act === 'pick') TasksView.pickMain();
+    });
+    card.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === card) { e.preventDefault(); App.show('ulohy'); } });
+  },
+  refresh() {
+    const c = $('#wx-game');
+    if (c) { c.outerHTML = this.html(); this.bind(); }
+  }
+};
+
 /* ---------- Záloha ---------- */
 const Backup = {
   export() {
@@ -3166,6 +3389,7 @@ const Backup = {
       if (data.game && typeof data.game === 'object' && Array.isArray(data.game.log)) {
         Game.data = Game.normalize(data.game);
         Game.save();
+        Look.apply();
       }
       Bd.render();
       if (App.tab === 'nastavenia') SettingsView.render();
@@ -3215,6 +3439,15 @@ function calPageHTML(date, { progress = false, withBirthdays = true } = {}) {
     }
   }
 
+  // Úvodná obrazovka: riadok s levelom a hlavná úloha dňa
+  let gameLine = '';
+  if (progress && (Game.data.tasks.length || Game.data.log.length)) {
+    const L = Game.progress().L;
+    gameLine = `<div class="cal-game">Level ${L} · ${esc(Game.title(L))}</div>`;
+    const mid = Game.mainId(), mt = mid && Game.data.tasks.find((t) => t.id === mid);
+    if (mt && !Game.doneOn(mt, Game.dayKey())) bdays = `<div class="cal-bday cal-main">${ico('star', 20, 1.8)}<div>Hlavná úloha dňa: <b>${esc(mt.title)}</b></div></div>` + bdays;
+  }
+
   const names = (s) => s ? `<dd>${esc(s)}</dd>` : '<dd class="none">bez mena</dd>';
   return `<div class="cal-block"><article class="cal-page" aria-label="${date.getDate()}. ${MESIACE_GEN[date.getMonth()]} ${y}, ${DNI[date.getDay()]}">
     <div class="cal-bind"><span></span><span></span></div>
@@ -3222,6 +3455,7 @@ function calPageHTML(date, { progress = false, withBirthdays = true } = {}) {
     <div class="cal-head"><span>${MESIACE[date.getMonth()]}</span><span>${y}</span></div>
     <div class="cal-day${red ? ' cal-red' : ''}">${date.getDate()}</div>
     <div class="cal-dow${red ? ' cal-red' : ''}">${DNI[date.getDay()]}</div>
+    ${gameLine}
     ${hol ? `<div class="cal-hol">${hol}</div>` : ''}
     <dl class="cal-names">
       <div><dt>Meniny SK</dt>${names(info.sk)}</div>
@@ -4049,7 +4283,26 @@ const SettingsView = {
     this.renderLearned();
     this.renderSources();
     this.renderAttrs();
+    this.renderLook();
   },
+  /* ---------- vzhľad: odomknuté témy a štýly karty ---------- */
+  renderLook() {
+    const box = $('#st-look'), L = Game.progress().L, look = Game.data.look;
+    const themes = [{ id: '', name: 'Modrá (základná)', accent: ['#1c6cc0'] }, ...GAME.UNLOCKS.filter((u) => u.type === 'theme')];
+    const cards = [{ id: '', name: 'Klasická' }, ...GAME.UNLOCKS.filter((u) => u.type === 'card')];
+    const chip = (u, cur, kind) => {
+      const ok = !u.id || Game.isUnlocked(u.id);
+      return `<button type="button" class="tchip look-chip" data-kind="${kind}" data-id="${u.id}" aria-pressed="${(cur || '') === u.id}" ${ok ? '' : 'disabled'}${u.accent ? ` style="--tc:${u.accent[0]}"` : ''}>${u.accent ? '<i></i>' : ''}${esc(u.name)}${ok ? '' : ` · level ${u.lv}`}</button>`;
+    };
+    box.innerHTML = `<div class="set-row col"><div><b>Farebná téma</b><p>Novú tému alebo štýl karty odomkneš s každým novým titulom (každých 5 levelov). Teraz máš level ${L}.</p></div>
+        <div class="topic-grid">${themes.map((u) => chip(u, look.theme, 'theme')).join('')}</div></div>
+      <div class="set-row col"><div><b>Karta postavy</b></div><div class="topic-grid">${cards.map((u) => chip(u, look.card, 'card')).join('')}</div></div>`;
+    $$('.look-chip', box).forEach((b) => b.addEventListener('click', () => {
+      Game.data.look[b.dataset.kind] = b.dataset.id;
+      Game.save(); Look.apply(); this.renderLook();
+    }));
+  },
+
   /* ---------- atribúty postavy ---------- */
   renderAttrs() {
     const box = $('#st-attrs');
@@ -4175,10 +4428,10 @@ const Sheet = {
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#sheet-root').firstChild) Sheet.close(); });
 
 let toastTimer = 0;
-function toast(msg, actionLabel, action, ms) {
+function toast(msg, actionLabel, action, ms, cls = '') {
   const root = $('#toast-root');
   clearTimeout(toastTimer);
-  root.innerHTML = `<div class="toast"><span>${esc(msg)}</span>${actionLabel ? `<button>${esc(actionLabel)}</button>` : ''}</div>`;
+  root.innerHTML = `<div class="toast ${cls}"><span>${esc(msg)}</span>${actionLabel ? `<button>${esc(actionLabel)}</button>` : ''}</div>`;
   const b = $('button', root);
   if (b) b.addEventListener('click', () => { root.innerHTML = ''; action(); });
   toastTimer = setTimeout(() => { root.innerHTML = ''; }, ms || (actionLabel ? 6000 : 3000));
@@ -4211,6 +4464,9 @@ const App = {
   init() {
     fillIcons();
     Game.init();
+    Game.collectUnlocks();
+    Look.apply();
+    LevelUp.init();
     TasksView.init();
     News.init();
     Bd.init();

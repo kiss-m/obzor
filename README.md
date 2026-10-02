@@ -13,8 +13,10 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   a náročnosť (drobnosť 5 XP, ľahká 10, stredná 25, ťažká 60, epická 150). Splnenie ťuknutím
   zaškrtávacím políčkom (splnená úloha zošedne a ostane na mieste), hláška „+25 XP · Telo“ má na 6 s
   tlačidlo Späť. Z XP rastie celkový level (postup z levelu L na L+1 stojí 100·L XP) a level každého
-  atribútu, každých 5 levelov je nový titul. Kartou dňa sa listuje: doprava zajtra a ďalšie dni,
-  doľava Postava so štatistikami (rovnováha atribútov za 14 dní, posledných 7 dní, rekordy, tituly).
+  atribútu, každých 5 levelov je nový titul s odomknutím (farebná téma appky alebo štýl karty postavy,
+  Nastavenia → Vzhľad) a krátkou oslavou. Kartou dňa sa listuje: doľava zajtra a ďalšie dni,
+  doprava Postava so štatistikami (rovnováha atribútov za 14 dní, posledných 7 dní, rekordy, tituly).
+  Level a hlavná úloha dňa sú aj na domovskej a úvodnej obrazovke, história splnení je v Kalendári.
   Atribúty (názov, farba, ikona, najviac 6) sa upravujú v Nastaveniach. Deň začína o 4:00.
   **Hlavná úloha dňa** dá +50 % XP, **rýchly záznam** zapíše aktivitu mimo zoznamu dvoma ťuknutiami.
   Tá istá vec v jeden deň dá 100 % / 50 % / 0 % XP a drobnosti s ľahkými úlohami spolu najviac 60 XP denne.
