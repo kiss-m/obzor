@@ -16,6 +16,8 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   atribútu, každých 5 levelov je nový titul. Kartou dňa sa listuje: doprava zajtra a ďalšie dni,
   doľava Postava so štatistikami (rovnováha atribútov za 14 dní, posledných 7 dní, rekordy, tituly).
   Atribúty (názov, farba, ikona, najviac 6) sa upravujú v Nastaveniach. Deň začína o 4:00.
+  **Hlavná úloha dňa** dá +50 % XP, **rýchly záznam** zapíše aktivitu mimo zoznamu dvoma ťuknutiami.
+  Tá istá vec v jeden deň dá 100 % / 50 % / 0 % XP a drobnosti s ľahkými úlohami spolu najviac 60 XP denne.
   Úloha môže byť **jednorazová** (s termínom alebo bez) alebo **opakovaná**: každý deň, vybrané dni
   v týždni, X× týždenne, každých N dní alebo raz mesačne, od zvoleného dátumu. Návrh celej
   gamifikácie a ďalšie fázy sú v [docs/gamifikacia.md](docs/gamifikacia.md).
@@ -31,9 +33,10 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   oblačnosť (graf na 24 h + nízka / stredná / vysoká), pocitová teplota, vietor, UV index,
   zrážky, vlhkosť, viditeľnosť, tlak, kvalita ovzdušia a fáza Mesiaca.
   Dáta sú z [Open-Meteo](https://open-meteo.com/) (zadarmo, bez registrácie).
-- **Narodeniny**: pridávanie, úprava, mazanie; odpočet dní, vek, a kedy má človek meniny/svátek.
-- **Kalendár**: mesačný prehľad (bodky = úlohy, splnené, narodeniny), list dňa s meninami, úlohy vybraného dňa
-  a pridanie úlohy na konkrétny deň, vyhľadanie „kedy má meniny…“, prehľad najbližších 14 dní aj s úlohami.
+- **Kalendár**: mesačný prehľad (bodky = úlohy, splnené, narodeniny), list dňa s meninami, narodeniny a úlohy
+  vybraného dňa, pridanie úlohy alebo narodenín na konkrétny deň, vyhľadanie „kedy má meniny…“ a prehľad
+  najbližších 14 dní. Súčasťou Kalendára sú aj **narodeniny**: zoznam s odpočtom dní, vekom a meninami;
+  ťuknutím na človeka sa kalendár presunie na jeho narodeniny.
 - **Nastavenia**: okruhy noviniek, ich počet, jazyk zdrojov, čo sa appka naučila, stav zdrojov a záloha.
 
 ## Ako fungujú novinky

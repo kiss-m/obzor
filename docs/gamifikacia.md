@@ -188,7 +188,10 @@ Najlepšie je stavať po štyroch fázach, aby si mal po prvej už použiteľný
 1. **Základ**: jednorazové úlohy, denník, XP podľa náročnosti, celkový level, záložka Úlohy → Dnes, hláška s tlačidlom Späť a pole `game` v zálohe. *(hotovo)*
    - Navyše hotové: opakované úlohy (všetky typy `repeat` vyššie) a plánovanie v Kalendári – mesačný prehľad s bodkami, úlohy vybraného dňa, pridanie úlohy na konkrétny deň a história splnení minulých dní.
 2. **Postava**: atribúty a ich levely, tituly, karta postavy s rovnováhou za 14 dní a rekordmi. *(hotovo – stránka Postava je vľavo od dneška, atribúty sa upravujú v Nastaveniach)*
-3. **Návyky**: ~~opakované aktivity~~ (hotovo skôr), rýchly záznam, hlavná úloha dňa, klesajúci výnos a strop drobností.
+3. **Návyky**: opakované aktivity, rýchly záznam, hlavná úloha dňa, klesajúci výnos a strop drobností. *(hotovo)*
+   - Rýchly záznam: tlačidlo **Záznam** v Úlohách alebo **+ → Rýchly záznam**; názov je nepovinný (bez neho sa použije názov atribútu), nedávne záznamy sa dajú zopakovať jedným ťuknutím a tlačidlá náročnosti ukazujú XP už po uplatnení pravidiel.
+   - Hlavná úloha dňa: výzva navrchu dňa, výber zo zoznamu nesplnených úloh; po splnení sa už nedá zmeniť.
+   - Záznam v denníku si okrem finálneho `xp` nesie aj `base` a príznaky `main`, `nth` (koľký raz v ten deň) a `capped` (strop drobností); rýchly záznam má `kind: "quick"`.
 4. **Prepojenie s appkou**: karta na domovskej obrazovke, riadok na úvodnej obrazovke, história v Kalendári, animácia nového levelu a odomknutia.
 
 Po každej fáze používaj appku aspoň týždeň a až potom pokračuj. Najviac sa naučíš z toho, ktoré čísla ti v praxi nesedia.
