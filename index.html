@@ -3259,6 +3259,9 @@ const Splash = {
   init() {
     $('#splash').addEventListener('click', () => this.hide());
     document.addEventListener('keydown', (e) => { if (!$('#splash').hidden && (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ')) this.hide(); });
+    // Úvod a novinky len pri skutočnom spustení appky. Ak Android appku v pozadí uspal
+    // a teraz ju len obnovuje (document.wasDiscarded), z pohľadu používateľa stále bežala.
+    if (document.wasDiscarded) { $('#splash').hidden = true; return; }
     this.show();
   }
 };
@@ -4223,13 +4226,13 @@ const App = {
     Wx.refreshAll();
     News.load().then(() => NewsHome.refresh());
 
-    // Návrat do appky po dlhšej pauze = nové "otvorenie"
+    // Návrat z pozadia: úvod ani novinky sa neukážu (tie sú len pri spustení appky),
+    // po dlhšej pauze sa len obnoví počasie, novinky a dnešný deň.
     let hiddenAt = 0;
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { hiddenAt = Date.now(); return; }
       const away = hiddenAt ? Date.now() - hiddenAt : 0;
       if (away > 10 * 60 * 1000) {
-        Splash.show();
         Wx.refreshAll();
         News.load().then(() => NewsHome.refresh());
         if (this.tab !== 'pocasie') this.show(this.tab);

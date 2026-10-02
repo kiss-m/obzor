@@ -8,7 +8,7 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
 
 - **Úvodná obrazovka (4 s)** pri každom otvorení: dátum, deň, rok, kto má meniny na Slovensku a svátek v Česku,
   štátne sviatky, narodeniny a meniny ľudí z tvojho zoznamu. Ťuknutím sa dá preskočiť.
-  Ukáže sa aj vtedy, keď sa do appky vrátiš po viac ako 10 minútach.
+  Ukáže sa len pri spustení appky (po úplnom zatvorení), nie pri návrate z pozadia.
 - **Úlohy**: to-do list s gamifikáciou. Každá úloha má atribút (Telo, Myseľ, Práca, Vzťahy)
   a náročnosť (drobnosť 5 XP, ľahká 10, stredná 25, ťažká 60, epická 150). Splnenie ťuknutím
   zaškrtávacím políčkom (splnená úloha zošedne a ostane na mieste), hláška „+25 XP · Telo“ má na 6 s
