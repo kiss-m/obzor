@@ -31,6 +31,7 @@
   --red: #c42f28;
   --red-soft: rgba(196, 47, 40, .09);
   --good: #1e8a4c;
+  --xp: #c98a00;
   --bar-bg: rgba(248, 250, 252, .88);
   --bar-line: rgba(19, 33, 48, .1);
   --shadow: 0 1px 2px rgba(19, 33, 48, .06), 0 10px 28px rgba(19, 33, 48, .08);
@@ -61,6 +62,7 @@
     --red: #ff6d62;
     --red-soft: rgba(255, 109, 98, .12);
     --good: #4cc17f;
+    --xp: #f0b43c;
     --bar-bg: rgba(13, 19, 26, .88);
     --bar-line: rgba(255, 255, 255, .08);
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .35);
@@ -111,6 +113,9 @@ h1, h2, h3 { text-wrap: balance; }
   color: var(--ink-2); font-size: 11px; font-weight: 500; letter-spacing: .01em;
 }
 .tab[aria-current="page"] { color: var(--accent); }
+.tab-label { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 420px) { .tab { font-size: 10px; letter-spacing: -.01em; padding-inline: 0; } }
+@media (max-width: 370px) { .tab { font-size: 9.5px; letter-spacing: -.02em; } }
 body.mode-wx .tabbar { background: rgba(8, 20, 36, .42); border-top-color: rgba(255, 255, 255, .12); }
 body.mode-wx .tab { color: rgba(255, 255, 255, .6); }
 body.mode-wx .tab[aria-current="page"] { color: #fff; }
@@ -670,6 +675,88 @@ details.panel summary { padding: 14px 16px; cursor: pointer; font-weight: 600; }
   .splash.run .cal-progress i { animation-duration: var(--splash-ms, 4000ms) !important; }
   .splash.tearing .cal-page { transform: none; }
 }
+
+/* ---------- Úlohy (gamifikácia, fáza 1) ---------- */
+.lvl { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 16px; margin-bottom: 6px; }
+.lvl-badge { display: grid; justify-items: center; line-height: 1; min-width: 46px; }
+.lvl-badge small { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); }
+.lvl-badge b { font-family: var(--font-display); font-weight: 900; font-stretch: 70%; font-size: 40px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.lvl-mid { min-width: 0; }
+.lvl-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--ink-2); margin-bottom: 7px; }
+.lvl-row .num { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.lvl-track { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.lvl-track i { display: block; height: 100%; border-radius: 5px; background: var(--xp); min-width: 4px; transition: width 600ms cubic-bezier(.2, .8, .2, 1); }
+.lvl-today { text-align: right; line-height: 1.1; }
+.lvl-today small { display: block; font-size: 11px; color: var(--ink-2); }
+.lvl-today b { font-size: 17px; font-weight: 700; color: var(--xp); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tlist { list-style: none; margin: 0; padding: 0; }
+.trow { position: relative; overflow: hidden; }
+.trow + .trow { border-top: 1px solid var(--line); }
+.tlist .trow:first-child, .tlist .trow:first-child .trow-main { border-radius: var(--r) var(--r) 0 0; }
+.tlist .trow:last-child, .tlist .trow:last-child .trow-main { border-radius: 0 0 var(--r) var(--r); }
+.tlist .trow:only-child, .tlist .trow:only-child .trow-main { border-radius: var(--r); }
+.trow-bg {
+  position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding-left: 18px;
+  background: var(--good); color: #fff; font-weight: 700; font-size: 14px; opacity: .55; transition: opacity 150ms;
+}
+.trow.arm .trow-bg { opacity: 1; }
+.trow-main {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  padding: 11px 14px 11px 12px; background: var(--surface); touch-action: pan-y; transition: transform 220ms ease;
+}
+.tcheck {
+  width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ac); background: transparent; color: #fff;
+  display: grid; place-items: center; padding: 0; flex: none;
+}
+.tcheck .ico { opacity: 0; transform: scale(.6); transition: opacity 150ms, transform 150ms; }
+.tcheck:hover .ico { opacity: .45; transform: none; color: var(--ac); }
+.trow.done .tcheck { background: var(--ac); }
+.trow.done .tcheck .ico { opacity: 1; transform: none; color: #fff; }
+.trow-body { border: 0; background: none; padding: 0; text-align: left; min-width: 0; color: var(--ink); }
+.trow-title { display: block; font-weight: 600; font-size: 15.5px; line-height: 1.3; overflow-wrap: anywhere; }
+.trow.done .trow-title { color: var(--ink-2); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--ink-2) 60%, transparent); }
+.trow-meta { display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: center; margin-top: 3px; font-size: 12.5px; color: var(--ink-2); }
+.trow-meta .adot { display: inline-flex; align-items: center; gap: 5px; }
+.trow-meta .adot i { width: 8px; height: 8px; border-radius: 50%; }
+.trow-meta .over { color: var(--red); font-weight: 600; }
+.trow-meta .today { color: var(--accent); font-weight: 600; }
+.trow-xp { font-size: 13px; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.trow.done .trow-xp { color: var(--xp); }
+details.tdone { margin-top: 22px; }
+details.tdone summary { cursor: pointer; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-2); padding: 4px 0 10px; list-style: none; display: flex; align-items: center; gap: 6px; }
+details.tdone summary::-webkit-details-marker { display: none; }
+details.tdone summary .ico { transition: transform 160ms; }
+details.tdone[open] summary .ico { transform: rotate(90deg); }
+
+.tk-empty { padding: 22px 18px 20px; text-align: center; }
+.tk-empty h2 { margin: 6px 0 6px; font-size: 19px; }
+.tk-empty p { margin: 0 auto 14px; max-width: 40ch; color: var(--ink-2); font-size: 14.5px; }
+.xp-scale { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0 0 16px; }
+.xp-scale span { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+.xp-scale b { color: var(--xp); font-variant-numeric: tabular-nums; }
+
+/* formulár úlohy */
+.field fieldset, fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
+fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 0; margin-bottom: 6px; }
+.opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt { position: relative; }
+.opt input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.opt span {
+  display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 14px;
+}
+.opt span i { width: 9px; height: 9px; border-radius: 50%; }
+.opt input:checked + span { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, var(--surface)); box-shadow: inset 0 0 0 1px var(--accent); }
+.opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.diff-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.diff-grid .opt span { flex-direction: column; gap: 2px; width: 100%; padding: 8px 4px; text-align: center; font-size: 12.5px; line-height: 1.15; }
+.diff-grid .opt b { font-size: 15px; color: var(--xp); font-variant-numeric: tabular-nums; }
+.diff-hint { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-2); min-height: 1.2em; }
+.due-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.due-row input[type="date"] { width: auto; flex: 1 1 150px; }
+@media (max-width: 380px) { .diff-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
 @media (max-width: 400px) {
   .deck-title { font-size: 24px; }
 }
@@ -718,6 +805,22 @@ details.panel summary { padding: 14px 16px; cursor: pointer; font-weight: 600; }
       <button class="icon-btn" id="wx-refresh" aria-label="Obnoviť počasie" title="Obnoviť"></button>
     </header>
     <div class="wx-body" id="wx-body"></div>
+  </section>
+
+  <section id="view-ulohy" class="view" aria-label="Úlohy" hidden>
+    <header class="page-h">
+      <h1>Úlohy</h1>
+      <button class="btn btn-primary" id="tk-add"></button>
+    </header>
+    <section class="lvl panel" id="tk-level" aria-label="Postava">
+      <div class="lvl-badge"><small>Level</small><b id="lv-n">1</b></div>
+      <div class="lvl-mid">
+        <div class="lvl-row"><span id="lv-next">do levelu 2</span><span class="num" id="lv-nums">0 / 100 XP</span></div>
+        <div class="lvl-track" role="progressbar" aria-label="XP do ďalšieho levelu" aria-valuemin="0" aria-valuemax="100" id="lv-track"><i id="lv-fill" style="width:0%"></i></div>
+      </div>
+      <div class="lvl-today"><small>dnes</small><b id="lv-today">+0 XP</b></div>
+    </section>
+    <div id="tk-content"></div>
   </section>
 
   <section id="view-novinky" class="view" aria-label="Novinky" hidden>
@@ -787,7 +890,7 @@ details.panel summary { padding: 14px 16px; cursor: pointer; font-weight: 600; }
     <details class="panel" id="st-sources"></details>
     <h2 class="section-h">Záloha</h2>
     <div class="backup">
-      <p>Narodeniny, miesta aj to, čo sa appka naučila o tvojich záujmoch, sú uložené len v tomto zariadení. Zálohu si stiahni do súboru a obnov ju napríklad v novom telefóne.</p>
+      <p>Úlohy a postava, narodeniny, miesta aj to, čo sa appka naučila o tvojich záujmoch, sú uložené len v tomto zariadení. Zálohu si stiahni do súboru a obnov ju napríklad v novom telefóne.</p>
       <button class="btn" id="bk-export">Stiahnuť zálohu</button>
       <button class="btn" id="bk-import">Obnoviť zo zálohy</button>
       <input type="file" id="bk-file" accept="application/json,.json" hidden>
@@ -799,11 +902,12 @@ details.panel summary { padding: 14px 16px; cursor: pointer; font-weight: 600; }
 
 <nav class="tabbar" aria-label="Hlavná navigácia">
   <div class="tabbar-inner">
-    <button class="tab" data-tab="pocasie"><span data-ico="cloudsun"></span>Počasie</button>
-    <button class="tab" data-tab="novinky"><span data-ico="news"></span>Novinky</button>
-    <button class="tab" data-tab="narodeniny"><span data-ico="cake"></span>Narodeniny</button>
-    <button class="tab" data-tab="kalendar"><span data-ico="calendar"></span>Kalendár</button>
-    <button class="tab" data-tab="nastavenia"><span data-ico="gear"></span>Nastavenia</button>
+    <button class="tab" data-tab="pocasie"><span data-ico="cloudsun"></span><span class="tab-label">Počasie</span></button>
+    <button class="tab" data-tab="ulohy"><span data-ico="tasks"></span><span class="tab-label">Úlohy</span></button>
+    <button class="tab" data-tab="novinky"><span data-ico="news"></span><span class="tab-label">Novinky</span></button>
+    <button class="tab" data-tab="narodeniny"><span data-ico="cake"></span><span class="tab-label">Narodeniny</span></button>
+    <button class="tab" data-tab="kalendar"><span data-ico="calendar"></span><span class="tab-label">Kalendár</span></button>
+    <button class="tab" data-tab="nastavenia"><span data-ico="gear"></span><span class="tab-label">Nastavenia</span></button>
   </div>
 </nav>
 
@@ -952,6 +1056,12 @@ const ICONS = {
   pin: '<path d="M19.5 4.5L4.5 11l6.7 1.8L13 19.5z"/>',
   news: '<path d="M5 4.5h11.5v14a2 2 0 0 0 2 2H6.5A1.5 1.5 0 0 1 5 19z"/><path d="M16.5 8.5H19a1 1 0 0 1 1 1v9a2 2 0 0 1-4 0M8 8h5.5M8 11.5h5.5M8 15h3.5"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  tasks: '<path d="M3.5 7l1.6 1.6L8.3 5.4M3.5 13.5l1.6 1.6 3.2-3.2M11.5 7h9M11.5 13.5h9M11.5 19.5h9M4.5 19.5h3"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  note: '<path d="M5 4.5h14v10.5l-4.5 4.5H5zM14.5 19.5V15H19M8.5 9h7M8.5 12h4.5"/>',
+  dumbbell: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+  book: '<path d="M5 5a2 2 0 0 1 2-2h12v14.5H7a2 2 0 0 0-2 2zM5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3.5M9 7.5h6"/>',
+  briefcase: '<rect x="3.5" y="7" width="17" height="12.5" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3.5 12.5h17"/>',
   heart: '<path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.6 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/>',
   minus: '<path d="M6 12h12"/>',
   external: '<path d="M14 4.5h5.5V10M19.5 4.5L11 13M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
@@ -1891,10 +2001,324 @@ const Bd = {
   }
 };
 
+/* ============================================================
+   Úlohy a postava (gamifikácia) – fáza 1
+   Návrh: docs/gamifikacia.md. Zdrojom pravdy je denník splnení (log);
+   XP a level sa z neho vždy iba počítajú.
+   ============================================================ */
+const GAME = {
+  XP_BY_DIFF: [5, 10, 25, 60, 150], // drobnosť, ľahká, stredná, ťažká, epická
+  LEVEL_STEP: 100,                  // postup z levelu L na L+1 stojí LEVEL_STEP·L XP
+  UNDO_MS: 6000,                    // ako dlho je v hláške tlačidlo Späť
+  DAY_START_HOUR: 4                 // deň začína o 4:00 (predvolené pre game.dayStartHour)
+};
+const DIFFS = [
+  ['Drobnosť', 'do 10 min'], ['Ľahká', '15–30 min'], ['Stredná', 'okolo 1 h'],
+  ['Ťažká', '2–3 h alebo nepríjemná vec'], ['Epická', 'väčší míľnik, napr. dokončený projekt']
+];
+const DEFAULT_ATTRS = [
+  { id: 'telo', name: 'Telo', color: '#1e8a4c', icon: 'dumbbell' },
+  { id: 'mysel', name: 'Myseľ', color: '#1c6cc0', icon: 'book' },
+  { id: 'praca', name: 'Práca', color: '#c0620f', icon: 'briefcase' },
+  { id: 'vztahy', name: 'Vzťahy', color: '#b83a6e', icon: 'heart' }
+];
+const fmtXp = (n) => Math.round(n).toLocaleString('sk-SK');
+
+const Game = {
+  data: null,
+  init() { this.data = this.normalize(store.get('game', null)); },
+  normalize(g) {
+    const d = g && typeof g === 'object' ? g : {};
+    return {
+      v: 1,
+      dayStartHour: Number.isFinite(d.dayStartHour) ? d.dayStartHour : GAME.DAY_START_HOUR,
+      attrs: Array.isArray(d.attrs) && d.attrs.length ? d.attrs : DEFAULT_ATTRS.map((a) => ({ ...a })),
+      tasks: Array.isArray(d.tasks) ? d.tasks : [],
+      mainTask: d.mainTask && typeof d.mainTask === 'object' ? d.mainTask : {},
+      log: Array.isArray(d.log) ? d.log : [],
+      unlocked: Array.isArray(d.unlocked) ? d.unlocked : []
+    };
+  },
+  save() { store.set('game', this.data); },
+  uid(prefix) { return prefix + '_' + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 5); },
+
+  /** Kľúč dňa "RRRR-MM-DD"; deň začína o dayStartHour, takže 1:00 v noci patrí ešte k včerajšku. */
+  dayKey(date = new Date()) {
+    const d = new Date(date.getTime() - this.data.dayStartHour * 3600e3);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  },
+  keyDate(k) { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); },
+  keyOffset(n) { const d = this.keyDate(this.dayKey()); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; },
+  isoLocal(d = new Date()) {
+    const off = -d.getTimezoneOffset(), sign = off >= 0 ? '+' : '-', a = Math.abs(off);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${pad(Math.floor(a / 60))}:${pad(a % 60)}`;
+  },
+  attr(id) { return this.data.attrs.find((a) => a.id === id) || { id, name: id, color: '#5b6573', icon: 'check' }; },
+  xpFor(diff) { return GAME.XP_BY_DIFF[clamp(diff | 0, 1, GAME.XP_BY_DIFF.length) - 1]; },
+
+  /* ---------- čísla z denníka ---------- */
+  totalXp() { return this.data.log.reduce((s, e) => s + (+e.xp || 0), 0); },
+  dayXp(key = this.dayKey()) { return this.data.log.filter((e) => e.day === key).reduce((s, e) => s + (+e.xp || 0), 0); },
+  /** Celkové XP potrebné na level L: LEVEL_STEP · L · (L − 1) / 2 (pri 100 je to 50·L·(L−1)) */
+  levelXp(L) { return (GAME.LEVEL_STEP * L * (L - 1)) / 2; },
+  level(xp) { let L = 1; while (this.levelXp(L + 1) <= xp) L++; return L; },
+  progress() {
+    const xp = this.totalXp(), L = this.level(xp), base = this.levelXp(L), next = this.levelXp(L + 1);
+    return { xp, L, cur: xp - base, need: next - base, pct: (xp - base) / (next - base) };
+  },
+
+  /* ---------- zmeny ---------- */
+  addTask(t) {
+    const task = { id: this.uid('t'), kind: 'todo', title: t.title, attr: t.attr, diff: t.diff, due: t.due || null, note: t.note || '', created: this.dayKey(), done: null };
+    this.data.tasks.push(task);
+    this.save();
+    return task;
+  },
+  complete(task) {
+    const now = new Date();
+    const entry = { id: this.uid('e'), ts: this.isoLocal(now), day: this.dayKey(now), ref: task.id, title: task.title, attr: task.attr, diff: task.diff, xp: this.xpFor(task.diff) };
+    this.data.log.push(entry);
+    task.done = entry.day;
+    this.save();
+    return entry;
+  },
+  /** Vrátenie omylom splnenej úlohy – jediný prípad, keď XP ubudne. */
+  uncomplete(entry) {
+    this.data.log = this.data.log.filter((e) => e.id !== entry.id);
+    const task = this.data.tasks.find((t) => t.id === entry.ref);
+    if (task && !this.data.log.some((e) => e.ref === task.id)) task.done = null;
+    this.save();
+  },
+  removeTask(task) {
+    const i = this.data.tasks.indexOf(task);
+    if (i >= 0) this.data.tasks.splice(i, 1);
+    this.save();
+    return i;
+  }
+};
+
+const TasksView = {
+  justSwiped: false,
+
+  init() {
+    $('#tk-add').innerHTML = ico('plus', 18, 2.2) + 'Pridať';
+    $('#tk-add').addEventListener('click', () => this.openForm());
+  },
+  render() { this.renderBar(); this.renderList(); },
+
+  /** Pruh levelu – mení sa len šírka, aby sa XP plynulo posunulo. */
+  renderBar() {
+    const p = Game.progress();
+    $('#lv-n').textContent = p.L;
+    $('#lv-next').textContent = `do levelu ${p.L + 1}`;
+    $('#lv-nums').textContent = `${fmtXp(p.cur)} / ${fmtXp(p.need)} XP`;
+    $('#lv-fill').style.width = (clamp(p.pct, 0, 1) * 100).toFixed(1) + '%';
+    $('#lv-track').setAttribute('aria-valuenow', Math.round(p.pct * 100));
+    $('#lv-today').textContent = `+${fmtXp(Game.dayXp())} XP`;
+  },
+
+  dueLabel(due) {
+    const n = daysBetween(Game.keyDate(Game.dayKey()), Game.keyDate(due));
+    const d = Game.keyDate(due);
+    if (n < 0) return [`po termíne (${d.getDate()}. ${d.getMonth() + 1}.)`, 'over'];
+    if (n === 0) return ['dnes', 'today'];
+    if (n === 1) return ['zajtra', ''];
+    if (n < 7) return [DNI[d.getDay()], ''];
+    return [`${d.getDate()}. ${d.getMonth() + 1}.`, ''];
+  },
+  rowHTML({ id, title, attr, diff, due, note, xp, done, entryId }) {
+    const a = Game.attr(attr);
+    const meta = [`<span class="adot"><i style="background:${a.color}"></i>${esc(a.name)}</span>`, `<span>${DIFFS[clamp(diff, 1, 5) - 1][0]}</span>`];
+    if (due && !done) { const [txt, cls] = this.dueLabel(due); meta.push(`<span class="${cls}">${txt}</span>`); }
+    if (note) meta.push(`<span title="${esc(note)}" aria-label="Má poznámku">${ico('note', 13, 2)}</span>`);
+    return `<li class="trow${done ? ' done' : ''}" data-id="${esc(id)}"${entryId ? ` data-entry="${esc(entryId)}"` : ''}>
+      ${done ? '' : `<div class="trow-bg" aria-hidden="true">${ico('check', 18, 2.6)}Splniť</div>`}
+      <div class="trow-main">
+        <button class="tcheck" style="--ac:${a.color}" aria-label="${done ? 'Vrátiť ako nesplnenú' : 'Splniť'}: ${esc(title)}">${ico('check', 18, 3)}</button>
+        <button class="trow-body"><span class="trow-title">${esc(title)}</span><span class="trow-meta">${meta.join('')}</span></button>
+        <span class="trow-xp">+${xp}</span>
+      </div>
+    </li>`;
+  },
+
+  renderList() {
+    const box = $('#tk-content');
+    const today = Game.dayKey();
+    const open = Game.data.tasks.filter((t) => t.kind === 'todo' && !t.done);
+    const doneToday = Game.data.log.filter((e) => e.day === today).slice().reverse();
+    const forToday = open.filter((t) => t.due && t.due <= today).sort((a, b) => a.due.localeCompare(b.due) || b.diff - a.diff);
+    const rest = open.filter((t) => !t.due || t.due > today)
+      .sort((a, b) => (a.due && b.due ? a.due.localeCompare(b.due) : a.due ? -1 : b.due ? 1 : a.created.localeCompare(b.created)));
+
+    if (!open.length && !doneToday.length) {
+      box.innerHTML = `<div class="panel tk-empty">${ico('tasks', 40, 1.5)}<h2>Zatiaľ žiadne úlohy</h2>
+        <p>Pridaj si, čo chceš urobiť. Za každú splnenú úlohu dostaneš XP podľa náročnosti a tvoja postava rastie.</p>
+        <div class="xp-scale">${DIFFS.map(([n], i) => `<span>${n} <b>${GAME.XP_BY_DIFF[i]} XP</b></span>`).join('')}</div>
+        <button class="btn btn-primary" id="tk-add-first">${ico('plus', 18, 2.2)}Pridať prvú úlohu</button></div>`;
+      $('#tk-add-first').addEventListener('click', () => this.openForm());
+      return;
+    }
+    const row = (t) => this.rowHTML({ ...t, xp: Game.xpFor(t.diff), done: false });
+    let html = '';
+    if (forToday.length) html += `<h2 class="section-h">Na dnes</h2><ul class="tlist panel">${forToday.map(row).join('')}</ul>`;
+    if (rest.length) html += `<h2 class="section-h">${forToday.length ? 'Ostatné' : 'Úlohy'}</h2><ul class="tlist panel">${rest.map(row).join('')}</ul>`;
+    if (!forToday.length && !rest.length) html += '<p class="panel panel-note">Všetky úlohy máš splnené. Pridaj ďalšiu tlačidlom Pridať.</p>';
+    if (doneToday.length) {
+      html += `<details class="tdone"${this.doneOpen ? ' open' : ''}><summary>${ico('right', 14, 2.4)}Splnené dnes (${doneToday.length}) · +${fmtXp(Game.dayXp())} XP</summary>
+        <ul class="tlist panel">${doneToday.map((e) => this.rowHTML({ id: e.ref || e.id, title: e.title, attr: e.attr, diff: e.diff, xp: e.xp, done: true, entryId: e.id })).join('')}</ul></details>`;
+    }
+    box.innerHTML = html;
+    const det = $('details.tdone', box);
+    if (det) det.addEventListener('toggle', () => { this.doneOpen = det.open; });
+
+    $$('.trow', box).forEach((li) => {
+      const done = li.classList.contains('done');
+      const task = Game.data.tasks.find((t) => t.id === li.dataset.id);
+      $('.tcheck', li).addEventListener('click', () => {
+        if (done) {
+          const entry = Game.data.log.find((e) => e.id === li.dataset.entry);
+          if (!entry) return;
+          Game.uncomplete(entry);
+          this.render();
+          toast(`Vrátené medzi nesplnené: ${entry.title}`);
+        } else if (task) this.complete(task, li);
+      });
+      $('.trow-body', li).addEventListener('click', () => {
+        if (this.justSwiped) return;
+        if (task) this.openForm(task);
+      });
+      if (!done && task) this.bindSwipe(li, task);
+    });
+  },
+
+  /** Swipe doprava = splniť (ako „páči sa mi“ pri novinkách) */
+  bindSwipe(li, task) {
+    const main = $('.trow-main', li);
+    let sx = 0, sy = 0, dx = 0, pid = null, active = false;
+    main.addEventListener('pointerdown', (e) => {
+      if ((e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('.tcheck')) return;
+      pid = e.pointerId; sx = e.clientX; sy = e.clientY; dx = 0; active = false;
+    });
+    main.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== pid) return;
+      const mx = e.clientX - sx, my = e.clientY - sy;
+      if (!active) {
+        if (mx > 10 && mx > Math.abs(my) * 1.5) {
+          active = true;
+          try { main.setPointerCapture(pid); } catch {}
+          main.style.transition = 'none';
+        } else if (Math.abs(my) > 10 || mx < -10) { pid = null; return; } else return;
+      }
+      dx = Math.max(0, mx);
+      main.style.transform = `translateX(${dx}px)`;
+      li.classList.toggle('arm', dx > 90);
+    });
+    const end = (e) => {
+      if (e.pointerId !== pid) return;
+      pid = null;
+      if (!active) return;
+      active = false;
+      main.style.transition = '';
+      this.justSwiped = true;
+      setTimeout(() => { this.justSwiped = false; }, 300);
+      if (dx > 90) {
+        main.style.transform = 'translateX(110%)';
+        setTimeout(() => this.complete(task, li), 180);
+      } else {
+        main.style.transform = '';
+        li.classList.remove('arm');
+      }
+    };
+    main.addEventListener('pointerup', end);
+    main.addEventListener('pointercancel', (e) => { if (e.pointerId === pid) { pid = null; active = false; main.style.transition = ''; main.style.transform = ''; li.classList.remove('arm'); } });
+  },
+
+  complete(task) {
+    if (task.done) return;
+    const before = Game.progress().L;
+    const entry = Game.complete(task);
+    const after = Game.progress().L;
+    this.render();
+    const a = Game.attr(entry.attr);
+    toast(`+${entry.xp} XP · ${a.name}${after > before ? ` · Level ${after}!` : ''}`, 'Späť', () => {
+      Game.uncomplete(entry);
+      this.render();
+    }, GAME.UNDO_MS);
+  },
+
+  openForm(task = null) {
+    const t = task || {};
+    const lastAttr = (Game.data.tasks[Game.data.tasks.length - 1] || {}).attr;
+    const attrSel = t.attr || lastAttr || Game.data.attrs[0].id;
+    const diffSel = t.diff || 3;
+    const today = Game.dayKey(), tomorrow = Game.keyOffset(1);
+    Sheet.open(`
+      <div class="sheet-h"><h2 id="tk-title-h">${task ? 'Upraviť úlohu' : 'Nová úloha'}</h2><div class="actions"><button class="btn" data-close aria-label="Zavrieť">${ico('close', 18, 2)}</button></div></div>
+      <form class="form" id="tk-form" novalidate>
+        <label class="field"><span>Úloha</span><input id="tk-title" maxlength="100" autocomplete="off" placeholder="napr. Kapitola 3 semestrálnej práce" value="${esc(t.title || '')}"></label>
+        <fieldset class="field"><legend>Atribút</legend><div class="opt-row">
+          ${Game.data.attrs.map((a) => `<label class="opt"><input type="radio" name="tk-attr" value="${esc(a.id)}" ${a.id === attrSel ? 'checked' : ''}><span><i style="background:${a.color}"></i>${esc(a.name)}</span></label>`).join('')}
+        </div></fieldset>
+        <fieldset class="field"><legend>Náročnosť</legend><div class="diff-grid">
+          ${DIFFS.map(([n], i) => `<label class="opt"><input type="radio" name="tk-diff" value="${i + 1}" ${i + 1 === diffSel ? 'checked' : ''}><span>${n}<b>${GAME.XP_BY_DIFF[i]}</b></span></label>`).join('')}
+        </div><p class="diff-hint" id="tk-diff-hint"></p></fieldset>
+        <div class="field"><span>Termín <em>(nepovinný)</em></span><div class="due-row">
+          <button type="button" class="btn" data-due="${today}">Dnes</button>
+          <button type="button" class="btn" data-due="${tomorrow}">Zajtra</button>
+          <button type="button" class="btn" data-due="">Bez termínu</button>
+          <input type="date" id="tk-due" value="${esc(t.due || '')}" aria-label="Dátum termínu">
+        </div></div>
+        <label class="field"><span>Poznámka <em>(nepovinná)</em></span><input id="tk-note" maxlength="200" autocomplete="off" value="${esc(t.note || '')}"></label>
+        <p class="form-err" id="tk-err" hidden></p>
+        <div class="form-actions">
+          ${task ? '<button type="button" class="btn btn-danger" id="tk-del">Zmazať</button>' : ''}
+          <span class="spacer"></span>
+          <button type="button" class="btn" data-close>Zrušiť</button>
+          <button type="submit" class="btn btn-primary">${task ? 'Uložiť' : 'Pridať úlohu'}</button>
+        </div>
+      </form>`, { label: 'tk-title-h' });
+
+    const hint = () => {
+      const v = +($('input[name="tk-diff"]:checked') || {}).value || 3;
+      $('#tk-diff-hint').textContent = `${DIFFS[v - 1][0]}: ${DIFFS[v - 1][1]} · ${GAME.XP_BY_DIFF[v - 1]} XP`;
+    };
+    hint();
+    $$('input[name="tk-diff"]').forEach((r) => r.addEventListener('change', hint));
+    $$('[data-due]').forEach((b) => b.addEventListener('click', () => { $('#tk-due').value = b.dataset.due; }));
+    $('#tk-form').addEventListener('input', () => { $('#tk-err').hidden = true; });
+    if (!task) setTimeout(() => $('#tk-title').focus(), 60);
+
+    const del = $('#tk-del');
+    if (del) del.addEventListener('click', () => {
+      if (!del.classList.contains('armed')) { del.classList.add('armed'); del.textContent = 'Naozaj zmazať?'; return; }
+      const i = Game.removeTask(task);
+      Sheet.close(); this.render();
+      toast(`Zmazané: ${task.title}`, 'Späť', () => { Game.data.tasks.splice(i, 0, task); Game.save(); this.render(); }, GAME.UNDO_MS);
+    });
+
+    $('#tk-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = $('#tk-title').value.trim().replace(/\s+/g, ' ');
+      if (!title) { const err = $('#tk-err'); err.textContent = 'Napíš, čo chceš urobiť.'; err.hidden = false; $('#tk-title').focus(); return; }
+      const vals = {
+        title,
+        attr: $('input[name="tk-attr"]:checked').value,
+        diff: +$('input[name="tk-diff"]:checked').value,
+        due: $('#tk-due').value || null,
+        note: $('#tk-note').value.trim()
+      };
+      if (task) { Object.assign(task, vals); Game.save(); }
+      else Game.addTask(vals);
+      Sheet.close(); this.render();
+      toast(task ? 'Zmeny sú uložené.' : `Pridané: ${title}`);
+    });
+  }
+};
+
 /* ---------- Záloha ---------- */
 const Backup = {
   export() {
-    const data = { app: 'obzor', version: 2, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places, news: { prefs: News.prefs, model: News.model, seen: News.seen, history: News.history } };
+    const data = { app: 'obzor', version: 3, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places, news: { prefs: News.prefs, model: News.model, seen: News.seen, history: News.history }, game: Game.data };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1924,9 +2348,16 @@ const Backup = {
         if (Array.isArray(data.news.history)) News.history = data.news.history;
         News.savePrefs(); News.saveModel();
       }
+      // Postava (od verzie 3). Staršie zálohy bez nej nechajú súčasné úlohy a XP bez zmeny.
+      if (data.game && typeof data.game === 'object' && Array.isArray(data.game.log)) {
+        Game.data = Game.normalize(data.game);
+        Game.save();
+      }
       Bd.render();
       if (App.tab === 'nastavenia') SettingsView.render();
-      toast(`Obnovené: ${Bd.list.length} ${plural(Bd.list.length, 'narodeniny', 'narodeniny', 'narodenín')}, ${Wx.places.length} ${plural(Wx.places.length, 'miesto', 'miesta', 'miest')}.`);
+      if (App.tab === 'ulohy') TasksView.render();
+      const nt = Game.data.tasks.length;
+      toast(`Obnovené: ${Bd.list.length} ${plural(Bd.list.length, 'narodeniny', 'narodeniny', 'narodenín')}, ${Wx.places.length} ${plural(Wx.places.length, 'miesto', 'miesta', 'miest')}, ${nt} ${plural(nt, 'úloha', 'úlohy', 'úloh')}.`);
     } catch {
       toast('Tento súbor nie je záloha z appky Obzor.');
     } finally {
@@ -2766,13 +3197,13 @@ const Sheet = {
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#sheet-root').firstChild) Sheet.close(); });
 
 let toastTimer = 0;
-function toast(msg, actionLabel, action) {
+function toast(msg, actionLabel, action, ms) {
   const root = $('#toast-root');
   clearTimeout(toastTimer);
   root.innerHTML = `<div class="toast"><span>${esc(msg)}</span>${actionLabel ? `<button>${esc(actionLabel)}</button>` : ''}</div>`;
   const b = $('button', root);
   if (b) b.addEventListener('click', () => { root.innerHTML = ''; action(); });
-  toastTimer = setTimeout(() => { root.innerHTML = ''; }, actionLabel ? 6000 : 3000);
+  toastTimer = setTimeout(() => { root.innerHTML = ''; }, ms || (actionLabel ? 6000 : 3000));
 }
 
 /* ============================================================
@@ -2780,7 +3211,7 @@ function toast(msg, actionLabel, action) {
    ============================================================ */
 const App = {
   tab: 'pocasie',
-  tabs: ['pocasie', 'novinky', 'narodeniny', 'kalendar', 'nastavenia'],
+  tabs: ['pocasie', 'ulohy', 'novinky', 'narodeniny', 'kalendar', 'nastavenia'],
   show(tab) {
     if (!this.tabs.includes(tab)) tab = 'pocasie';
     this.tab = tab;
@@ -2795,11 +3226,14 @@ const App = {
     if (tab === 'kalendar') KalView.render();
     if (tab === 'novinky') NewsView.render();
     if (tab === 'nastavenia') SettingsView.render();
+    if (tab === 'ulohy') TasksView.render();
     if (location.hash.slice(1) !== tab) history.replaceState(null, '', '#' + tab);
     window.scrollTo({ top: 0 });
   },
   init() {
     fillIcons();
+    Game.init();
+    TasksView.init();
     News.init();
     Bd.init();
     Wx.init();
@@ -2826,6 +3260,7 @@ const App = {
         if (this.tab !== 'pocasie') this.show(this.tab);
       }
       hiddenAt = 0;
+      if (this.tab === 'ulohy') TasksView.render();
     });
 
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
