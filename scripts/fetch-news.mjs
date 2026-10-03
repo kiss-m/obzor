@@ -49,16 +49,24 @@ function content(raw) {
   if (raw == null) return '';
   return raw.includes('<![CDATA[') ? unCdata(raw) : decodeEntities(raw);
 }
-export function stripHtml(html) {
-  return decodeEntities(String(html)
-    .replace(/<(script|style|figure|figcaption)[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<br\s*\/?>/gi, ' ')
-    .replace(/<\/(p|div|li|h\d)>/gi, '\u2029')
-    .replace(/<[^>]+>/g, ' '))
-    // A paragraph without final punctuation (e.g. a standfirst) still ends a sentence
-    .replace(/([^\s.!?…:;\u2029])[ \t\r\n\u00a0]*\u2029/g, '$1. ')
-    .replace(/[ \s]+/g, ' ')
-    .trim();
+export function stripHtml(html, paragraphs = false) {
+  let s = String(html).replace(/<(script|style|figure|figcaption)[\s\S]*?<\/\1>/gi, ' ');
+  if (paragraphs) {
+    // Perex: a block end, a <br> or (in plain text) a line break also ends a sentence,
+    // so a standfirst and the body or bullet points do not run together.
+    const blocks = /<\/(p|div|li|h\d)>/i.test(s);
+    s = s.replace(/<\/(p|div|li|h\d)>/gi, '\u2029').replace(/<br\s*\/?>/gi, '\u2028');
+    if (!blocks) s = s.replace(/\r?\n/g, '\u2028');
+  } else {
+    s = s.replace(/<br\s*\/?>/gi, ' ').replace(/<\/(p|div|li|h\d)>/gi, ' ');
+  }
+  s = decodeEntities(s.replace(/<[^>]+>/g, ' '));
+  if (paragraphs) {
+    s = s
+      .replace(/([^\s.!?…:;\u2028\u2029])[^\S\u2028\u2029]*\u2029/g, '$1. ')
+      .replace(/([^\s.!?…:;,\u2028\u2029])[^\S\u2028\u2029]*\u2028\s*(?=[\p{Lu}„"“])/gu, '$1. ');
+  }
+  return s.replace(/\s+/g, ' ').trim();
 }
 export const norm = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const tokens = (s) => norm(s).split(/[^a-z0-9]+/).filter(Boolean);
@@ -188,7 +196,7 @@ export function parseFeed(xml, feed) {
       }
       related = related.slice(0, 6);
     } else {
-      summary = cleanSummary(stripHtml(descHtml || fullHtml), title);
+      summary = cleanSummary(stripHtml(descHtml || fullHtml, true), title);
     }
 
     items.push({
