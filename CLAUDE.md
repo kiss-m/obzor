@@ -1,7 +1,8 @@
-# Obzor – project memory
+# DNES – project memory
 
 Personal phone app of Matej (Slovak speaker, based in Brno). Installable PWA, deployed as a static site (GitHub Pages / Netlify).
 Repo: `kiss-m/obzor`. Baseline when this file was written: commit `e606bf3` (2026-10-02).
+The app was renamed from **Obzor** to **DNES** (user-visible name: `<title>`, `apple-mobile-web-app-title`, manifest `name`/`short_name`, toasts, backup file name `dnes-zaloha-…`). Internal identifiers keep `obzor` on purpose and must not be renamed without a migration: the `obzor.` localStorage prefix, backup `app: 'obzor'`, history state `obzorBack`, the repo, the GitHub Pages URL and the news URL.
 
 ## How to work with me
 
@@ -28,7 +29,7 @@ Repo: `kiss-m/obzor`. Baseline when this file was written: commit `e606bf3` (202
 | File | Purpose |
 |---|---|
 | `index.html` | Entire app (~4500 lines): styles, name-day/holiday data, all logic. Sections separated by `/* ===== ... ===== */` banner comments. |
-| `sw.js` | Service worker, cache name `obzor-v8`. Same-origin: network-first, cache fallback. Google Fonts: cache-first. **Bump `CACHE` when `SHELL` changes.** |
+| `sw.js` | Service worker, cache name `dnes-v9`. Same-origin: network-first, cache fallback. Google Fonts: cache-first. **Bump `CACHE` when `SHELL` changes.** |
 | `manifest.webmanifest`, `icons/` | PWA install (standalone, portrait, theme `#1d4f82`). |
 | `scripts/fetch-news.mjs` | RSS collector (Node 22, no deps). Run: `node scripts/fetch-news.mjs out.json [prev.json]`. Offline test: `NEWS_FIXTURES=<dir with <id>.xml>`. |
 | `scripts/feeds.json` | ~50 RSS sources: `id`, `name`, `lang` (sk/cs/en), `url`, optional `hint` (topics for the whole feed). Add/remove sources here. |
@@ -106,6 +107,7 @@ Month grid (dots = tasks / done / birthdays), day detail (name days, birthdays, 
 - 2026-10-03: Tab bar reordered to Novinky · Počasie · Úlohy (center) · Kalendár · Nastavenia. The news card and the character/main-task card were removed from the weather tab (Matej wants weather only there); level and main task stay on the splash and in Úlohy, more news in the Novinky tab.
 - 2026-10-03: Weather stays on Open-Meteo, with a model choice in Settings and ČHMÚ Aladin as default (Matej found the current temperature inaccurate with best_match/ICON-D2). Rejected: YR.no directly (MET Norway forbids browser requests in production, needs a proxy; for CZ/SK it serves ECMWF 9 km anyway, which is offered as a model) and Google Weather API (needs Google Cloud billing and a key that would be public).
 - 2026-10-03: Back button asks before leaving (Matej's request). Confirmation is a second Back press, not an "Opustiť" button, because an installed PWA cannot close itself from script.
+- 2026-10-03: App renamed from Obzor to DNES (Matej's request). Only the visible name changed; storage keys, backup format, repo and URLs stay `obzor` so data, backups and the installed app keep working.
 
 ---
 

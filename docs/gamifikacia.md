@@ -1,4 +1,4 @@
-# Obzor – gamifikácia: Postava, XP a levely
+# DNES – gamifikácia: Postava, XP a levely
 
 3. 10. 2026 · @Matej
 
@@ -11,7 +11,7 @@ Zásady návrhu:
 - **Odmeňovať úsilie, nie klikanie.** XP závisí od náročnosti úlohy a opakovanie tej istej veci v jeden deň má klesajúci výnos.
 - **Netrestať.** XP sa nikdy neodpočítava (okrem vrátenia omylom splnenej úlohy). Deň bez aktivity nestojí nič, postava v ten deň len nerastie.
 - **Všetko sa dá prepočítať.** Zdrojom pravdy je denník splnení. Celkový level aj levely atribútov sa z neho iba počítajú, takže zmena pravidiel nepokazí históriu.
-- **Lokálne a bez účtov**, rovnako ako zvyšok Obzoru: dáta v `localStorage`, súčasť existujúcej zálohy.
+- **Lokálne a bez účtov**, rovnako ako zvyšok appky: dáta v `localStorage`, súčasť existujúcej zálohy.
 
 ## Úlohy a aktivity
 
@@ -158,7 +158,7 @@ Všetko je v jednom kľúči `obzor.game`, cez existujúci `store.get('game')` a
 - **Deň začína o 4:00** (`dayStartHour`), takže úloha splnená o jednej v noci patrí ešte k včerajšku. Platia podľa toho dnešné XP aj strop drobností.
 - **Veľkosť**: približne 1 500 záznamov za rok, čo je asi 150 kB. Limit `localStorage` (okolo 5 MB) vydrží roky a prepočet pri štarte trvá milisekundy.
 
-**Záloha**: `Backup.export()` dostane pole `game` a verziu 3. `Backup.import()` ho obnoví, ak v súbore je; staršie zálohy bez neho nechajú súčasné dáta postavy bez zmeny. Postava je, ako všetko v Obzore, len v jednom zariadení; prenos medzi mobilom a počítačom ide cez zálohu.
+**Záloha**: `Backup.export()` dostane pole `game` a verziu 3. `Backup.import()` ho obnoví, ak v súbore je; staršie zálohy bez neho nechajú súčasné dáta postavy bez zmeny. Postava je, ako všetko v appke, len v jednom zariadení; prenos medzi mobilom a počítačom ide cez zálohu.
 
 ## Parametre na ladenie
 

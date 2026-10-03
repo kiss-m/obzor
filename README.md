@@ -1,4 +1,6 @@
-# Obzor
+# DNES
+
+*(Pôvodne Obzor. Repozitár, adresa appky a interné kľúče dát sa volajú ďalej `obzor`.)*
 
 Osobná appka: úlohy s postavou, ktorá rastie (XP a levely), novinky dňa vybrané podľa tvojich záujmov,
 počasie pre vybrané miesta, meniny (SK) a svátky (CZ) a narodeniny blízkych.

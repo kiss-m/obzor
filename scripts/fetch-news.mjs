@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Obzor – zber noviniek.
+ * DNES – zber noviniek.
  * Stiahne RSS zdroje zo scripts/feeds.json, roztriedi správy do okruhov, určí ich štýl,
  * spojí rovnaké správy z viacerých médií a zapíše news.json, ktorý číta appka.
  * Spúšťa ho GitHub Actions (.github/workflows/news.yml) každých 30 minút.

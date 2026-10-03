@@ -1,7 +1,7 @@
 {
-  "name": "Obzor",
-  "short_name": "Obzor",
-  "description": "Počasie pre tvoje miesta, meniny, sviatky a narodeniny.",
+  "name": "DNES",
+  "short_name": "DNES",
+  "description": "Tvoj deň: počasie, novinky, úlohy, meniny a narodeniny.",
   "lang": "sk",
   "start_url": "./",
   "scope": "./",

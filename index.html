@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Obzor</title>
+<title>DNES</title>
 <meta name="description" content="Počasie pre tvoje miesta, meniny, sviatky a narodeniny.">
 <meta name="theme-color" content="#1d4f82">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Obzor">
+<meta name="apple-mobile-web-app-title" content="DNES">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -3331,12 +3331,13 @@ const LevelUp = {
 /* ---------- Záloha ---------- */
 const Backup = {
   export() {
+    // `app: 'obzor'` is the app's former name; kept so backups stay compatible across versions
     const data = { app: 'obzor', version: 4, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places, weather: { model: wxModel() }, news: { prefs: News.prefs, model: News.model, seen: News.seen, history: News.history }, game: Game.data };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     const t = today();
-    a.download = `obzor-zaloha-${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}.json`;
+    a.download = `dnes-zaloha-${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}.json`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     toast('Záloha je stiahnutá.');
@@ -3375,7 +3376,7 @@ const Backup = {
       const nt = Game.data.tasks.length;
       toast(`Obnovené: ${Bd.list.length} ${plural(Bd.list.length, 'narodeniny', 'narodeniny', 'narodenín')}, ${Wx.places.length} ${plural(Wx.places.length, 'miesto', 'miesta', 'miest')}, ${nt} ${plural(nt, 'úloha', 'úlohy', 'úloh')}.`);
     } catch {
-      toast('Tento súbor nie je záloha z appky Obzor.');
+      toast('Tento súbor nie je záloha z appky DNES.');
     } finally {
       $('#bk-file').value = '';
     }
