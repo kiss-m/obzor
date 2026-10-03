@@ -7,7 +7,8 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
 ## Čo vie
 
 - **Menu** dole: Novinky, Počasie, Úlohy (v strede), Kalendár, Nastavenia. Domovská obrazovka je Počasie
-  a ukazuje iba počasie.
+  a ukazuje iba počasie. Tlačidlo **Späť** najprv zavrie otvorené okno (detail správy, novinky, formulár),
+  potom sa appka opýta, či ju chceš opustiť. Odídeš ďalším stlačením Späť.
 - **Úvodná obrazovka (4 s)** pri každom otvorení: dátum, deň, rok, kto má meniny na Slovensku a svátek v Česku,
   štátne sviatky, narodeniny a meniny ľudí z tvojho zoznamu. Ťuknutím sa dá preskočiť.
   Ukáže sa len pri spustení appky (po úplnom zatvorení), nie pri návrate z pozadia.

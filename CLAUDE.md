@@ -37,12 +37,13 @@ Repo: `kiss-m/obzor`. Baseline when this file was written: commit `e606bf3` (202
 | `README.md` | User-facing description (Slovak) and deploy instructions. |
 
 ### Modules in `index.html` (in file order)
-`store` (localStorage wrapper, keys prefixed `obzor.`) → helpers (`$`, `$$`, `esc`, `plural`, `fmtNum`, `today`, `addDays`, `norm`, `isoWeek`, `ico()` + `ICONS`) → `MENINY_SK`, `SVATKY_CZ`, `SVIATKY_SK`, `SVATKY_STATNI_CZ` (name days, in a separate earlier `<script>`, one array row = one month) → `Kal` (calendar logic, Easter) → weather helpers (`wxKind`, `wxIcon`, `skyFor`, `moonPhase`, …) → `Wx` (weather) + `Places` → `Bd` (birthdays) → `GAME` constants, `Game` (data/logic), `TasksView`, `Look`, `LevelUp`, `Backup` → `Splash` (intro screen) → `KalView` → `News` (data, preference model), `Deck` (swipe cards), `NewsView` → `SettingsView` → `Sheet`, `toast()` → `App` (tabs, init, lifecycle).
+`store` (localStorage wrapper, keys prefixed `obzor.`) → helpers (`$`, `$$`, `esc`, `plural`, `fmtNum`, `today`, `addDays`, `norm`, `isoWeek`, `ico()` + `ICONS`) → `MENINY_SK`, `SVATKY_CZ`, `SVIATKY_SK`, `SVATKY_STATNI_CZ` (name days, in a separate earlier `<script>`, one array row = one month) → `Kal` (calendar logic, Easter) → weather helpers (`wxKind`, `wxIcon`, `skyFor`, `moonPhase`, …) → `Wx` (weather) + `Places` → `Bd` (birthdays) → `GAME` constants, `Game` (data/logic), `TasksView`, `Look`, `LevelUp`, `Backup` → `Splash` (intro screen) → `KalView` → `News` (data, preference model), `Deck` (swipe cards), `NewsView` → `SettingsView` → `Sheet`, `toast()` → `BackGuard` (Back button) → `App` (tabs, init, lifecycle).
 
 ### Views / navigation
 Tab bar order, left to right (same order in `App.tabs`): `novinky` · `pocasie` (home, weather) · `ulohy` (center) · `kalendar` · `nastavenia`. Each is a `<section id="view-…">`, tab buttons in `.tabbar`, routing via URL hash.
 **New feature = new `<section id="view-…">` + new `.tabbar` button + entry in `App.tabs` + render hook in `App.show()` + init call in `App.init()`.**
 App always opens on Pocasie; `Splash` (4 s intro: date, SK name day, CZ svátek, holidays, birthdays, level + main task) shows only on cold start, not on return from background. After the splash comes the news swipe deck (`Deck`).
+**Back button (`BackGuard`):** on each tap/key press (user activation, Chrome skips history entries pushed without it) up to 3 entries `{obzorBack: n}` are pushed over the app's own entry. Back closes one overlay per press (sheet, level-up, news deck, splash); with nothing to close it jumps to the app's entry and shows the "Opustiť appku?" sheet; one more Back leaves (a web app cannot close itself). Keep `history.state` when replacing the URL (`App.show` does `replaceState(history.state, …)`), never `pushState` elsewhere.
 
 ### localStorage keys (all prefixed `obzor.`)
 `game` (tasks, log, attrs, mainTask, unlocked, look, dayStartHour; schema v1) · `birthdays` · `places` · `sel` (selected place) · `wxModel` (forecast model id) · `tab` · `wx.<placeId>` (weather cache) · `news.prefs` (`topics`, `count` default 5, `langs` default sk+cs) · `news.model` (learned weights: `b`, `w`, `n`, `words`, `sources`, `ratings`) · `news.seen` (10-day TTL) · `news.history` (max 300) · `news.data` (cached news.json) · `news.tipShown` · `tasksSwipeHint`.
@@ -103,6 +104,7 @@ Month grid (dots = tasks / done / birthdays), day detail (name days, birthdays, 
 - News learning stays fully on-device; the server only publishes the shared `news.json`.
 - 2026-10-03: Tab bar reordered to Novinky · Počasie · Úlohy (center) · Kalendár · Nastavenia. The news card and the character/main-task card were removed from the weather tab (Matej wants weather only there); level and main task stay on the splash and in Úlohy, more news in the Novinky tab.
 - 2026-10-03: Weather stays on Open-Meteo, with a model choice in Settings and ČHMÚ Aladin as default (Matej found the current temperature inaccurate with best_match/ICON-D2). Rejected: YR.no directly (MET Norway forbids browser requests in production, needs a proxy; for CZ/SK it serves ECMWF 9 km anyway, which is offered as a model) and Google Weather API (needs Google Cloud billing and a key that would be public).
+- 2026-10-03: Back button asks before leaving (Matej's request). Confirmation is a second Back press, not an "Opustiť" button, because an installed PWA cannot close itself from script.
 
 ---
 

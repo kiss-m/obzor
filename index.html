@@ -491,6 +491,7 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
 .form-err { margin: 0; color: var(--red); font-size: 14px; font-weight: 500; }
 .form-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 4px; }
 .form-actions .spacer { flex: 1; }
+.exit-txt { margin: 0 0 16px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
 .form-hint { margin: 0; font-size: 13px; color: var(--ink-2); }
 
 .toast {
@@ -4397,6 +4398,52 @@ function toast(msg, actionLabel, action, ms, cls = '') {
   toastTimer = setTimeout(() => { root.innerHTML = ''; }, ms || (actionLabel ? 6000 : 3000));
 }
 
+/* ---------- Back button: ask before leaving the app ---------- */
+// The system Back button walks the browser history. Extra entries sit on top of the app's own one:
+// Back first closes an open sheet or the news cards (one per press, e.g. article detail, then the cards),
+// on the app's own entry it asks whether to leave,
+// and one more Back really leaves (a web app cannot close itself from a button).
+// Chrome skips entries added without a user gesture, so they are (re)added only on a tap or key press.
+const BackGuard = {
+  DEPTH: 3, asking: false,
+  init() {
+    const onInput = () => { if (!this.asking) this.arm(); };
+    for (const t of ['pointerdown', 'pointerup', 'keydown']) window.addEventListener(t, onInput, { capture: true, passive: true });
+    window.addEventListener('popstate', (e) => this.onBack(e.state));
+  },
+  level(state = history.state) { return (state && state.obzorBack) || 0; },
+  arm() {
+    if (navigator.userActivation && !navigator.userActivation.isActive) return;
+    for (let i = this.level() + 1; i <= this.DEPTH; i++) history.pushState({ obzorBack: i }, '', location.href);
+  },
+  closeOverlay() {
+    if ($('#sheet-root').firstChild) { Sheet.close(); return true; }
+    if (!$('#lvlup').hidden) { LevelUp.hide(); return true; }
+    if (Deck.isOpen()) { Deck.close(); return true; }
+    const splash = $('#splash');
+    if (!splash.hidden && !splash.classList.contains('tearing')) { Splash.hide(); return true; }
+    return false;
+  },
+  onBack(state) {
+    // An entry keeps the address it had when it was added; keep showing the current tab.
+    if (location.hash.slice(1) !== App.tab) history.replaceState(state, '', '#' + App.tab);
+    if (this.level(state) > 0) {
+      if (!this.closeOverlay()) history.go(-this.level(state)); // nothing to close: jump to the app's own entry and ask there
+      return;
+    }
+    this.closeOverlay();
+    this.ask();
+  },
+  ask() {
+    this.asking = true;
+    $('#toast-root').innerHTML = '';
+    Sheet.open(`<div class="sheet-h"><h2 id="exit-title">Opustiť appku?</h2></div>
+      <p class="exit-txt">Ak naozaj chceš odísť, stlač ešte raz Späť.</p>
+      <div class="form-actions"><button class="btn btn-primary" data-close>Zostať v appke</button></div>`,
+    { label: 'exit-title', onClose: () => { this.asking = false; this.arm(); } });
+  }
+};
+
 /* ============================================================
    Aplikácia – záložky, spustenie
    ============================================================ */
@@ -4418,7 +4465,7 @@ const App = {
     if (tab === 'novinky') NewsView.render();
     if (tab === 'nastavenia') SettingsView.render();
     if (tab === 'ulohy') { TasksView.page = 0; TasksView.render(); }
-    if (location.hash.slice(1) !== tab) history.replaceState(null, '', '#' + tab);
+    if (location.hash.slice(1) !== tab) history.replaceState(history.state, '', '#' + tab);
     window.scrollTo({ top: 0 });
   },
   init() {
@@ -4435,8 +4482,9 @@ const App = {
     Deck.init();
     NewsView.init();
     Splash.init();
+    BackGuard.init();
     $$('.tab').forEach((b) => b.addEventListener('click', () => this.show(b.dataset.tab)));
-    window.addEventListener('hashchange', () => this.show(location.hash.slice(1)));
+    window.addEventListener('hashchange', () => { if (location.hash.slice(1) !== this.tab) this.show(location.hash.slice(1)); });
     // Appka sa vždy otvára na domovskej obrazovke (Počasie)
     this.show(location.hash.slice(1) || 'pocasie');
     Wx.refreshAll();
