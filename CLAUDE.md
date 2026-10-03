@@ -37,10 +37,10 @@ Repo: `kiss-m/obzor`. Baseline when this file was written: commit `e606bf3` (202
 | `README.md` | User-facing description (Slovak) and deploy instructions. |
 
 ### Modules in `index.html` (in file order)
-`store` (localStorage wrapper, keys prefixed `obzor.`) → helpers (`$`, `$$`, `esc`, `plural`, `fmtNum`, `today`, `addDays`, `norm`, `isoWeek`, `ico()` + `ICONS`) → `MENINY_SK`, `SVATKY_CZ`, `SVIATKY_SK`, `SVATKY_STATNI_CZ` (name days, in a separate earlier `<script>`, one array row = one month) → `Kal` (calendar logic, Easter) → weather helpers (`wxKind`, `wxIcon`, `skyFor`, `moonPhase`, …) → `Wx` (weather) + `Places` → `Bd` (birthdays) → `GAME` constants, `Game` (data/logic), `TasksView`, `Look`, `LevelUp`, `GameHome`, `Backup` → `Splash` (intro screen) → `KalView` → `News` (data, preference model), `Deck` (swipe cards), `NewsHome`, `NewsView` → `SettingsView` → `Sheet`, `toast()` → `App` (tabs, init, lifecycle).
+`store` (localStorage wrapper, keys prefixed `obzor.`) → helpers (`$`, `$$`, `esc`, `plural`, `fmtNum`, `today`, `addDays`, `norm`, `isoWeek`, `ico()` + `ICONS`) → `MENINY_SK`, `SVATKY_CZ`, `SVIATKY_SK`, `SVATKY_STATNI_CZ` (name days, in a separate earlier `<script>`, one array row = one month) → `Kal` (calendar logic, Easter) → weather helpers (`wxKind`, `wxIcon`, `skyFor`, `moonPhase`, …) → `Wx` (weather) + `Places` → `Bd` (birthdays) → `GAME` constants, `Game` (data/logic), `TasksView`, `Look`, `LevelUp`, `Backup` → `Splash` (intro screen) → `KalView` → `News` (data, preference model), `Deck` (swipe cards), `NewsView` → `SettingsView` → `Sheet`, `toast()` → `App` (tabs, init, lifecycle).
 
 ### Views / navigation
-Tabs (in `App.tabs`): `pocasie` (home, weather) · `ulohy` · `novinky` · `kalendar` · `nastavenia`. Each is a `<section id="view-…">`, tab buttons in `.tabbar`, routing via URL hash.
+Tab bar order, left to right (same order in `App.tabs`): `novinky` · `pocasie` (home, weather) · `ulohy` (center) · `kalendar` · `nastavenia`. Each is a `<section id="view-…">`, tab buttons in `.tabbar`, routing via URL hash.
 **New feature = new `<section id="view-…">` + new `.tabbar` button + entry in `App.tabs` + render hook in `App.show()` + init call in `App.init()`.**
 App always opens on Pocasie; `Splash` (4 s intro: date, SK name day, CZ svátek, holidays, birthdays, level + main task) shows only on cold start, not on return from background. After the splash comes the news swipe deck (`Deck`).
 
@@ -56,7 +56,7 @@ Open-Meteo forecast / geocoding / air-quality, BigDataCloud reverse geocoding (f
 ## Feature summary and key rules
 
 ### Weather (`Wx`, `Places`)
-Any number of places (search + "my location"), swipe between them. Current temp, 24 h hourly with sunrise/sunset, 10-day forecast, cloud cover (24 h chart + low/mid/high), feels-like, wind, UV, precipitation, humidity, visibility, pressure, air quality, moon phase. Sky is drawn full-screen on the home tab (`body.mode-wx`).
+Any number of places (search + "my location"), swipe between them. Current temp, 24 h hourly with sunrise/sunset, 10-day forecast, cloud cover (24 h chart + low/mid/high), feels-like, wind, UV, precipitation, humidity, visibility, pressure, air quality, moon phase. Sky is drawn full-screen on the home tab (`body.mode-wx`). The weather tab shows weather only: no news or character cards.
 
 ### Calendar & birthdays (`KalView`, `Bd`, `Kal`)
 Month grid (dots = tasks / done / birthdays), day detail (name days, birthdays, tasks, completion history), "when is the name day of …" search, next 14 days, add task or birthday for a specific day. Birthdays list shows countdown, age and name day; tapping jumps the calendar. Name-day data can be corrected by hand in `MENINY_SK` / `SVATKY_CZ`.
@@ -71,9 +71,9 @@ Month grid (dots = tasks / done / birthdays), day detail (name days, birthdays, 
 - **All tunable numbers live in the `GAME` object.** Changing them affects only new completions (log stores computed XP).
 - Phases 1–4 of the design are all done (base, character, habits, app integration).
 
-### News (`News`, `Deck`, `NewsHome`, `NewsView`, `scripts/`)
+### News (`News`, `Deck`, `NewsView`, `scripts/`)
 - Server side: GitHub Action collects ~50 RSS feeds every 30 min, classifies into 12 topics (`TOPICS`: slovensko, svet, politika, vojna, ekonomika, technologie, veda, zdravie, klima, sport, kultura, krimi), detects style (analysis, live, explainer, short/medium/long…), merges the same event across outlets, keeps 30 h / max 1400 items.
-- Client side: user picks topics (defaults: technologie, vojna, ekonomika, politika) and source languages. Swipe deck after the splash: **right = like (1), left = dislike (0), down = neutral (0.5), tap = detail + link to the article**. Count configurable (default 5), the rest on the home screen and in the Novinky tab.
+- Client side: user picks topics (defaults: technologie, vojna, ekonomika, politika) and source languages. Swipe deck after the splash: **right = like (1), left = dislike (0), down = neutral (0.5), tap = detail + link to the article**. Count configurable (default 5), the rest in the Novinky tab ("Ďalšie novinky").
 - Ranking uses an **on-device online logistic regression** (`News.features`, `News.words`): learns topics, outlets, article style and names/places from titles. Ranking also uses how many outlets cover the event and freshness. Settings shows what it learned and feed health.
 
 ## Conventions
@@ -101,6 +101,7 @@ Month grid (dots = tasks / done / birthdays), day detail (name days, birthdays, 
 - Web app deployed via GitHub (Pages), not a native app.
 - To-do gamification uses an RPG character (XP, levels, attributes), chosen over streaks and over competing with the past self.
 - News learning stays fully on-device; the server only publishes the shared `news.json`.
+- 2026-10-03: Tab bar reordered to Novinky · Počasie · Úlohy (center) · Kalendár · Nastavenia. The news card and the character/main-task card were removed from the weather tab (Matej wants weather only there); level and main task stay on the splash and in Úlohy, more news in the Novinky tab.
 
 ---
 

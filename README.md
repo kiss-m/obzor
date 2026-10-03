@@ -6,6 +6,8 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
 
 ## Čo vie
 
+- **Menu** dole: Novinky, Počasie, Úlohy (v strede), Kalendár, Nastavenia. Domovská obrazovka je Počasie
+  a ukazuje iba počasie.
 - **Úvodná obrazovka (4 s)** pri každom otvorení: dátum, deň, rok, kto má meniny na Slovensku a svátek v Česku,
   štátne sviatky, narodeniny a meniny ľudí z tvojho zoznamu. Ťuknutím sa dá preskočiť.
   Ukáže sa len pri spustení appky (po úplnom zatvorení), nie pri návrate z pozadia.
@@ -16,7 +18,7 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   atribútu, každých 5 levelov je nový titul s odomknutím (farebná téma appky alebo štýl karty postavy,
   Nastavenia → Vzhľad) a krátkou oslavou. Kartou dňa sa listuje: doľava zajtra a ďalšie dni,
   doprava Postava so štatistikami (rovnováha atribútov za 14 dní, posledných 7 dní, rekordy, tituly).
-  Level a hlavná úloha dňa sú aj na domovskej a úvodnej obrazovke, história splnení je v Kalendári.
+  Level a hlavná úloha dňa sú aj na úvodnej obrazovke, história splnení je v Kalendári.
   Atribúty (názov, farba, ikona, najviac 6) sa upravujú v Nastaveniach. Deň začína o 4:00.
   **Hlavná úloha dňa** dá +50 % XP, **rýchly záznam** zapíše aktivitu mimo zoznamu dvoma ťuknutiami.
   Tá istá vec v jeden deň dá 100 % / 50 % / 0 % XP a drobnosti s ľahkými úlohami spolu najviac 60 XP denne.
@@ -27,7 +29,7 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   (technológie, vojna, ekonomika, politika…). Karta ukazuje titulok a stručné zhrnutie,
   ťuknutím otvoríš detail a odkaz na celý článok. Swipe **doprava** = páči sa mi,
   **doľava** = nezaujíma ma, **dole** = neutrálne. Počet správ po spustení sa nastavuje
-  v Nastaveniach (predvolene 5), ďalšie sú na domovskej obrazovke a v záložke Novinky.
+  v Nastaveniach (predvolene 5), ďalšie sú v záložke Novinky.
   Z hodnotení sa appka učí, ktoré okruhy, médiá, typ článkov (krátke správy, analýzy…)
   a mená či miesta ťa zaujímajú, a podľa toho vyberá správy na ďalšie dni.
 - **Počasie**: ľubovoľný počet miest (vyhľadávanie aj „moja poloha“), prepínanie potiahnutím prstom.

@@ -661,15 +661,6 @@ details.panel summary { padding: 14px 16px; cursor: pointer; font-weight: 600; }
 .about { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; margin: 0; }
 .about a { color: var(--accent); }
 
-/* karta noviniek na domovskej obrazovke (počasie) */
-.wx-news { display: flex; align-items: center; gap: 12px; }
-.wx-news-ico { width: 42px; height: 42px; border-radius: 12px; background: rgba(255, 255, 255, .16); display: grid; place-items: center; flex: none; }
-.wx-news-txt { flex: 1; min-width: 0; }
-.wx-news-txt b { display: block; font-size: 15px; font-weight: 600; }
-.wx-news-txt span { font-size: 13px; color: rgba(255, 255, 255, .82); }
-.wx-news button { border: 0; border-radius: 12px; padding: 9px 13px; background: #fff; color: #10263d; font-weight: 700; font-size: 14px; flex: none; }
-.wx-news button:disabled { opacity: .5; }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
   .splash.run .cal-progress i { animation-duration: var(--splash-ms, 4000ms) !important; }
@@ -790,24 +781,6 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
 .month-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
 #kal-tasks { max-width: 440px; margin: 0 auto; }
 
-
-/* fáza 4: karta postavy na domovskej obrazovke */
-.wx-game { cursor: pointer; display: grid; gap: 10px; }
-.wg-row { display: flex; align-items: center; gap: 12px; }
-.wg-badge { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 12px; background: rgba(255, 255, 255, .16); font-family: var(--font-display); font-weight: 900; font-stretch: 70%; font-size: 24px; font-variant-numeric: tabular-nums; }
-.wg-txt { flex: 1; min-width: 0; }
-.wg-txt b { display: block; font-size: 15px; font-weight: 600; }
-.wg-txt span { font-size: 13px; color: rgba(255, 255, 255, .82); }
-.wg-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .18); overflow: hidden; }
-.wg-track i { display: block; height: 100%; border-radius: 3px; background: #ffd166; transition: width 600ms cubic-bezier(.2, .8, .2, 1); }
-.wg-main { display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .16); }
-.wg-mt { flex: 1; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 14px; }
-.wg-mt .ico { color: #ffd166; }
-.wg-mt b { overflow-wrap: anywhere; }
-.wg-mt small { font-size: 12.5px; color: rgba(255, 255, 255, .8); }
-.wg-main.done { opacity: .72; }
-.wg-btn { flex: none; border: 0; border-radius: 12px; padding: 8px 13px; background: #fff; color: #10263d; font-weight: 700; font-size: 14px; }
-.wg-btn.ghost { background: rgba(255, 255, 255, .2); color: #fff; }
 
 /* oslava nového levelu */
 .lvlup { position: fixed; inset: 0; z-index: 99; display: grid; place-items: center; padding: 24px 16px; background: color-mix(in srgb, var(--paper) 86%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; transition: opacity 250ms; cursor: pointer; }
@@ -1158,9 +1131,9 @@ body[data-card="karta-hviezdna"] .char {
 
 <nav class="tabbar" aria-label="Hlavná navigácia">
   <div class="tabbar-inner">
+    <button class="tab" data-tab="novinky"><span data-ico="news"></span><span class="tab-label">Novinky</span></button>
     <button class="tab" data-tab="pocasie"><span data-ico="cloudsun"></span><span class="tab-label">Počasie</span></button>
     <button class="tab" data-tab="ulohy"><span data-ico="tasks"></span><span class="tab-label">Úlohy</span></button>
-    <button class="tab" data-tab="novinky"><span data-ico="news"></span><span class="tab-label">Novinky</span></button>
     <button class="tab" data-tab="kalendar"><span data-ico="calendar"></span><span class="tab-label">Kalendár</span></button>
     <button class="tab" data-tab="nastavenia"><span data-ico="gear"></span><span class="tab-label">Nastavenia</span></button>
   </div>
@@ -1701,8 +1674,6 @@ const Wx = {
     sky.style.background = skyFor(c.data.current.weather_code, c.data.current.is_day === 1);
     const retry = $('#wx-retry');
     if (retry) retry.addEventListener('click', () => this.refreshAll(true));
-    NewsHome.bind();
-    GameHome.bind();
     this.bindCloudChart(c.data);
   },
 
@@ -1732,10 +1703,6 @@ const Wx = {
       <p class="hero-cond">${wxText(cur.weather_code)}</p>
       <p class="hero-hl">Max. ${T(dl.temperature_2m_max[0])}° · Min. ${T(dl.temperature_2m_min[0])}°</p>
     </section>`;
-
-    // Novinky a postava
-    html += NewsHome.html();
-    html += GameHome.html();
 
     // Hodinová predpoveď
     html += `<section class="wx-card"><p class="summary">${esc(this.summary(d, i0))}</p><div class="hours" aria-label="Predpoveď na 24 hodín">${this.hoursHTML(d, i0)}</div></section>`;
@@ -2579,7 +2546,6 @@ function repeatText(r) {
 function refreshTaskViews() {
   if (App.tab === 'ulohy') TasksView.render();
   if (App.tab === 'kalendar') KalView.render();
-  if (App.tab === 'pocasie') GameHome.refresh();
 }
 
 const TasksView = {
@@ -3268,7 +3234,7 @@ const TasksView = {
   }
 };
 
-/* ---------- Fáza 4: vzhľad, oslava levelu, karta na domovskej obrazovke ---------- */
+/* ---------- Fáza 4: vzhľad, oslava levelu ---------- */
 /** Odomknutá farebná téma a štýl karty postavy */
 const Look = {
   apply() {
@@ -3304,51 +3270,6 @@ const LevelUp = {
     clearTimeout(this.timer);
     el.classList.add('out');
     setTimeout(() => { el.hidden = true; el.classList.remove('in', 'out'); }, 250);
-  }
-};
-
-/** Karta postavy na domovskej obrazovke (Počasie) */
-const GameHome = {
-  html() {
-    const g = Game.data;
-    if (!g.tasks.length && !g.log.length) {
-      return `<section class="wx-card wx-game" id="wx-game" role="button" tabindex="0" aria-label="Úlohy a postava"><div class="wg-row"><span class="wg-badge">${ico('tasks', 20, 2)}</span><span class="wg-txt"><b>Úlohy a postava</b><span>Pridaj si úlohy. Za splnené dostaneš XP a postava porastie.</span></span><button type="button" class="wg-btn">Otvoriť</button></div></section>`;
-    }
-    const p = Game.progress(), today = Game.dayKey();
-    const mid = Game.mainId();
-    const main = mid ? g.tasks.find((t) => t.id === mid) : null;
-    let mainHTML = '';
-    if (main && !Game.doneOn(main, today)) {
-      mainHTML = `<div class="wg-main"><span class="wg-mt">${ico('star', 14, 2.4)}<b>${esc(main.title)}</b><small>+${Game.previewXp(main)} XP</small></span><button type="button" class="wg-btn" data-act="done">Splniť</button></div>`;
-    } else if (main) {
-      mainHTML = `<div class="wg-main done"><span class="wg-mt">${ico('check', 14, 2.6)}<b>${esc(main.title)}</b><small>hlavná úloha splnená</small></span></div>`;
-    } else if (g.tasks.some((t) => (t.kind === 'habit' ? Game.dueToday(t) : !t.done))) {
-      mainHTML = `<div class="wg-main"><span class="wg-mt">${ico('star', 14, 2.4)}<small>Hlavná úloha dňa nie je vybraná</small></span><button type="button" class="wg-btn ghost" data-act="pick">Vybrať</button></div>`;
-    }
-    return `<section class="wx-card wx-game" id="wx-game" role="button" tabindex="0" aria-label="Level ${p.L}, ${esc(Game.title(p.L))}. Otvoriť úlohy.">
-      <div class="wg-row"><span class="wg-badge">${p.L}</span><span class="wg-txt"><b>Level ${p.L} · ${esc(Game.title(p.L))}</b><span>dnes +${fmtXp(Game.dayXp())} XP · do levelu ${p.L + 1} chýba ${fmtXp(p.need - p.cur)} XP</span></span></div>
-      <div class="wg-track"><i style="width:${(clamp(p.pct, 0, 1) * 100).toFixed(1)}%"></i></div>
-      ${mainHTML}
-    </section>`;
-  },
-  bind() {
-    const card = $('#wx-game');
-    if (!card) return;
-    card.addEventListener('click', (e) => {
-      const act = (e.target.closest('[data-act]') || {}).dataset;
-      if (act && act.act === 'done') {
-        const main = Game.data.tasks.find((t) => t.id === Game.mainId());
-        if (main) TasksView.complete(main);
-        return;
-      }
-      App.show('ulohy');
-      if (act && act.act === 'pick') TasksView.pickMain();
-    });
-    card.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === card) { e.preventDefault(); App.show('ulohy'); } });
-  },
-  refresh() {
-    const c = $('#wx-game');
-    if (c) { c.outerHTML = this.html(); this.bind(); }
   }
 };
 
@@ -3966,7 +3887,7 @@ const Deck = {
     };
     if (News.data) {
       fill();
-      if (Date.now() - News.at > NEWS_TTL) News.load().then(() => NewsHome.refresh());
+      if (Date.now() - News.at > NEWS_TTL) News.load().then(() => NewsView.refresh());
     } else {
       this.renderMsg('loading');
       News.load().then(() => {
@@ -3985,7 +3906,7 @@ const Deck = {
     else App.show(App.tab);
     if (!silent && this.mode === 'daily' && !store.get('news.tipShown', false)) {
       store.set('news.tipShown', true);
-      toast('Ďalšie novinky nájdeš na domovskej obrazovke alebo v záložke Novinky.');
+      toast('Ďalšie novinky nájdeš v záložke Novinky.');
     }
   },
 
@@ -4181,40 +4102,6 @@ const Deck = {
   }
 };
 
-/* ---------- Karta noviniek na domovskej obrazovke ---------- */
-const NewsHome = {
-  html() {
-    let title = 'Novinky', text = '', btn = 'Ďalšie novinky', disabled = false;
-    if (!News.configured()) { text = 'Vyber si okruhy a appka ti bude vyberať správy dňa.'; btn = 'Nastaviť'; }
-    else if (!News.enabled()) { text = 'Nemáš vybraný žiadny okruh noviniek.'; btn = 'Nastaviť'; }
-    else if (!News.data) { text = News.loading ? 'Načítavam novinky…' : News.error === 'missing' ? 'Zber správ sa ešte nespustil, skús to o pár minút.' : 'Novinky sa zatiaľ nepodarilo načítať.'; disabled = !!News.loading; }
-    else {
-      const seenToday = News.history.filter((h) => h.t >= today().getTime()).length;
-      const left = News.pool().length;
-      text = `Dnes prezreté: ${seenToday} · ${left ? `ďalšie nové: ${left}` : 'všetko máš prečítané'}`;
-      disabled = !left;
-    }
-    return `<section class="wx-card wx-news" id="wx-news"><span class="wx-news-ico">${ico('news', 22, 1.8)}</span><span class="wx-news-txt"><b>${title}</b><span>${text}</span></span><button type="button" ${disabled ? 'disabled' : ''}>${btn}</button></section>`;
-  },
-  bind() {
-    const b = $('#wx-news button');
-    if (!b) return;
-    b.addEventListener('click', () => {
-      if (!News.enabled()) {
-        if (!News.configured()) Deck.open('more'); else App.show('nastavenia');
-        return;
-      }
-      if (!News.data) { News.load(true).then(() => this.refresh()); this.refresh(); return; }
-      Deck.open('more');
-    });
-  },
-  refresh() {
-    const card = $('#wx-news');
-    if (card) { card.outerHTML = this.html(); this.bind(); }
-    if (App.tab === 'novinky') NewsView.render();
-  }
-};
-
 /* ---------- Záložka Novinky ---------- */
 const NewsView = {
   init() {
@@ -4229,6 +4116,9 @@ const NewsView = {
       <span><span class="nrow-meta"><span class="rate-ico ${cls}" title="${label}">${ico(icon, 15, 2.4)}</span>${esc(h.source)} · ${agoText(h.published)}</span><span class="nrow-title">${esc(h.title)}</span></span>
       ${h.image ? `<img src="${esc(httpsImg(h.image))}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span></span>'}
     </button></li>`;
+  },
+  refresh() {
+    if (App.tab === 'novinky') this.render();
   },
   render() {
     const sub = $('#nw-sub');
@@ -4442,7 +4332,7 @@ function toast(msg, actionLabel, action, ms, cls = '') {
    ============================================================ */
 const App = {
   tab: 'pocasie',
-  tabs: ['pocasie', 'ulohy', 'novinky', 'kalendar', 'nastavenia'],
+  tabs: ['novinky', 'pocasie', 'ulohy', 'kalendar', 'nastavenia'],
   show(tab) {
     if (tab === 'narodeniny') { this.show('kalendar'); setTimeout(() => $('#kal-bd').scrollIntoView({ block: 'start' }), 50); return; }
     if (!this.tabs.includes(tab)) tab = 'pocasie';
@@ -4480,7 +4370,7 @@ const App = {
     // Appka sa vždy otvára na domovskej obrazovke (Počasie)
     this.show(location.hash.slice(1) || 'pocasie');
     Wx.refreshAll();
-    News.load().then(() => NewsHome.refresh());
+    News.load().then(() => NewsView.refresh());
 
     // Návrat z pozadia: úvod ani novinky sa neukážu (tie sú len pri spustení appky),
     // po dlhšej pauze sa len obnoví počasie, novinky a dnešný deň.
@@ -4490,7 +4380,7 @@ const App = {
       const away = hiddenAt ? Date.now() - hiddenAt : 0;
       if (away > 10 * 60 * 1000) {
         Wx.refreshAll();
-        News.load().then(() => NewsHome.refresh());
+        News.load().then(() => NewsView.refresh());
         if (this.tab !== 'pocasie') this.show(this.tab);
       }
       hiddenAt = 0;

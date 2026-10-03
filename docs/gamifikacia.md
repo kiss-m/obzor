@@ -192,7 +192,7 @@ Najlepšie je stavať po štyroch fázach, aby si mal po prvej už použiteľný
    - Rýchly záznam: tlačidlo **Záznam** v Úlohách alebo **+ → Rýchly záznam**; názov je nepovinný (bez neho sa použije názov atribútu), nedávne záznamy sa dajú zopakovať jedným ťuknutím a tlačidlá náročnosti ukazujú XP už po uplatnení pravidiel.
    - Hlavná úloha dňa: výzva navrchu dňa, výber zo zoznamu nesplnených úloh; po splnení sa už nedá zmeniť.
    - Záznam v denníku si okrem finálneho `xp` nesie aj `base` a príznaky `main`, `nth` (koľký raz v ten deň) a `capped` (strop drobností); rýchly záznam má `kind: "quick"`.
-4. **Prepojenie s appkou**: karta na domovskej obrazovke, riadok na úvodnej obrazovke, história v Kalendári, animácia nového levelu a odomknutia. *(hotovo)*
+4. **Prepojenie s appkou**: karta na domovskej obrazovke (neskôr odstránená, Počasie ukazuje iba počasie), riadok na úvodnej obrazovke, história v Kalendári, animácia nového levelu a odomknutia. *(hotovo)*
    - Domov: karta s levelom, titulom, dnešným XP a hlavnou úlohou dňa s tlačidlom Splniť (alebo Vybrať).
    - Úvodná obrazovka: riadok „Level N · titul“ a hlavná úloha dňa, ak ešte nie je splnená.
    - Kalendár: ťuknutím na splnenú úlohu v detaile dňa sa otvorí záznam (XP a prečo toľko) a dá sa zmazať; Späť ho vráti.
