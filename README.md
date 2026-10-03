@@ -48,10 +48,12 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   model predpovede: český **ČHMÚ Aladin** (1 km v Česku, 2 km v okolí, predvolený), automatický výber Open-Meteo
   (v strednej Európe nemecký ICON-D2), rakúsky **GeoSphere AROME** alebo európsky **ECMWF 9 km** (z neho berie
   predpoveď pre Česko a Slovensko aj YR.no). Čo vybraný model nepočíta (napríklad UV index), doplní automatický výber.
-- **Kalendár**: mesačný prehľad (bodky = úlohy, splnené, narodeniny), list dňa s meninami, narodeniny a úlohy
-  vybraného dňa, pridanie úlohy alebo narodenín na konkrétny deň, vyhľadanie „kedy má meniny…“ a prehľad
+- **Kalendár**: mesačný prehľad (bodky = udalosti, úlohy, splnené, narodeniny), list dňa s meninami, udalosti,
+  narodeniny a úlohy vybraného dňa, pridanie udalosti, úlohy alebo narodenín na konkrétny deň, vyhľadanie „kedy má meniny…“ a prehľad
   najbližších 14 dní. Súčasťou Kalendára sú aj **narodeniny**: zoznam s odpočtom dní, vekom a meninami;
-  ťuknutím na človeka sa kalendár presunie na jeho narodeniny.
+  ťuknutím na človeka sa kalendár presunie na jeho narodeniny. **Udalosti** majú názov, dátum, voliteľne čas od – do,
+  viac dní (napríklad dovolenka), opakovanie každý týždeň, mesiac alebo rok, miesto a poznámku. Ukazujú sa v detaile dňa,
+  v prehľade najbližších 14 dní a v deň udalosti aj na úvodnej obrazovke.
 - **Nastavenia**: model predpovede počasia, okruhy noviniek, ich počet, jazyk zdrojov, čo sa appka naučila, stav zdrojov a záloha.
 
 ## Ako fungujú novinky

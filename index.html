@@ -32,6 +32,7 @@
   --red-soft: rgba(196, 47, 40, .09);
   --good: #1e8a4c;
   --xp: #c98a00;
+  --event: #7a4cc2;
   --bar-bg: rgba(248, 250, 252, .88);
   --bar-line: rgba(19, 33, 48, .1);
   --shadow: 0 1px 2px rgba(19, 33, 48, .06), 0 10px 28px rgba(19, 33, 48, .08);
@@ -63,6 +64,7 @@
     --red-soft: rgba(255, 109, 98, .12);
     --good: #4cc17f;
     --xp: #f0b43c;
+    --event: #b892f2;
     --bar-bg: rgba(13, 19, 26, .88);
     --bar-line: rgba(255, 255, 255, .08);
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .35);
@@ -784,6 +786,7 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
 .mdots .p { background: var(--accent); }
 .mdots .d { background: var(--good); }
 .mdots .b { background: var(--red); }
+.mdots .e { background: var(--event); }
 .mday.sel .mdots i { background: currentColor; }
 .month-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; font-size: 11.5px; color: var(--ink-2); margin-top: 8px; }
 .month-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
@@ -868,7 +871,26 @@ body[data-card="karta-hviezdna"] .char {
 .day-bd li:first-child .bd-row { border-top-right-radius: var(--r); }
 .day-bd li:last-child .bd-row { border-bottom-right-radius: var(--r); }
 .day-bd .bd-when { color: var(--red); }
-.kal-adds { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; }
+.kal-adds { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin-top: 10px; }
+.kal-adds .btn { padding-inline: 6px; gap: 5px; min-width: 0; }
+/* udalosti v kalendári */
+.ev-list { list-style: none; margin: 0 0 10px; padding: 0; }
+.ev-list li + li { border-top: 1px solid var(--line); }
+.ev-row { width: 100%; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: center; padding: 11px 14px; border: 0; background: none; text-align: left; color: var(--ink); }
+.ev-row:hover { background: var(--surface-2); }
+.ev-list li:first-child .ev-row { border-radius: var(--r) var(--r) 0 0; }
+.ev-list li:last-child .ev-row { border-radius: 0 0 var(--r) var(--r); }
+.ev-list li:only-child .ev-row { border-radius: var(--r); }
+.ev-time { align-self: stretch; display: flex; flex-direction: column; justify-content: center; padding-left: 9px; border-left: 3px solid var(--event); font-variant-numeric: tabular-nums; }
+.ev-time b { font-family: var(--font-display); font-stretch: 85%; font-weight: 700; font-size: 17px; line-height: 1.1; }
+.ev-time small { font-size: 12px; color: var(--ink-2); line-height: 1.2; }
+.ev-title { display: block; font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
+.ev-meta { display: block; margin-top: 1px; font-size: 13px; color: var(--ink-2); }
+.ev-meta span + span::before { content: " · "; }
+.ev-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 10px; }
+.up-extra.ev { color: var(--event); font-weight: 500; }
+.cal-bday.cal-ev { background: rgba(122, 76, 194, .1); }
+.cal-bday.cal-ev .ico { color: #7a4cc2; }
 .kal-bd { max-width: 440px; margin: 0 auto; }
 #bd-sub, #bd-content { max-width: 440px; margin-inline: auto; }
 #bd-sub { margin-top: -4px; margin-bottom: 10px; }
@@ -2320,6 +2342,134 @@ const Bd = {
 };
 
 /* ============================================================
+   Udalosti v kalendári
+   ============================================================ */
+const EV_REPEATS = [['', 'Nie'], ['weekly', 'Každý týždeň'], ['monthly', 'Každý mesiac'], ['yearly', 'Každý rok']];
+const EV_REPEAT_TEXT = { weekly: 'každý týždeň', monthly: 'každý mesiac', yearly: 'každý rok' };
+const KEY_RE = /^\d{4}-\d{2}-\d{2}$/, TIME_RE = /^\d{2}:\d{2}$/;
+const Ev = {
+  list: [],
+  init() {
+    const saved = store.get('events', []);
+    this.list = Array.isArray(saved) ? saved.filter((e) => this.valid(e)).map((e) => this.normalize(e)) : [];
+  },
+  valid(e) { return !!e && typeof e.title === 'string' && !!e.title.trim() && KEY_RE.test(e.date || ''); },
+  normalize(e) {
+    return {
+      id: String(e.id || 'e' + Math.random().toString(36).slice(2, 10)), title: e.title.trim().slice(0, 100), date: e.date,
+      end: !e.repeat && KEY_RE.test(e.end || '') && e.end > e.date ? e.end : null,
+      time: TIME_RE.test(e.time || '') ? e.time : null, timeEnd: TIME_RE.test(e.timeEnd || '') ? e.timeEnd : null,
+      repeat: EV_REPEAT_TEXT[e.repeat] ? e.repeat : '', place: String(e.place || '').slice(0, 80), note: String(e.note || '').slice(0, 160)
+    };
+  },
+  save() { store.set('events', this.list); },
+  changed() { if (App.tab === 'kalendar') KalView.render(); },
+  /** Takes the event place on day K (YYYY-MM-DD)? */
+  occurs(e, K) {
+    if (K < e.date) return false;
+    if (!e.repeat) return K <= (e.end || e.date);
+    const a = Game.keyDate(e.date), d = Game.keyDate(K);
+    const dayIn = (x) => Math.min(a.getDate(), new Date(x.getFullYear(), x.getMonth() + 1, 0).getDate());
+    if (e.repeat === 'weekly') return a.getDay() === d.getDay();
+    if (e.repeat === 'monthly') return d.getDate() === dayIn(d);
+    return d.getMonth() === a.getMonth() && d.getDate() === dayIn(d); // yearly; 29. 2. falls on 28. 2.
+  },
+  /** Events of day K: all-day first, then by time */
+  on(K) {
+    return this.list.filter((e) => this.occurs(e, K))
+      .sort((a, b) => (a.time || '').localeCompare(b.time || '') || a.title.localeCompare(b.title, 'sk'));
+  },
+  multi(e) { return !e.repeat && !!e.end && e.end > e.date; },
+  /** Time shown on day K: "18:00", "18:00 – 20:00", "celý deň", for several days "od 18:00" / "do 12:00" */
+  timeOn(e, K) {
+    if (this.multi(e)) return K === e.date && e.time ? `od ${e.time}` : K === e.end && e.timeEnd ? `do ${e.timeEnd}` : '';
+    if (!e.time) return '';
+    return e.timeEnd ? `${e.time} – ${e.timeEnd}` : e.time;
+  },
+  dateText(K) { const d = Game.keyDate(K); return shortDate(d.getMonth() + 1, d.getDate()); },
+  rowHTML(e, K) {
+    const t = this.timeOn(e, K), [t1, t2] = t.split(' – ');
+    const time = t ? `<b>${esc(t1)}</b>${t2 ? `<small>${esc(t2)}</small>` : ''}` : '<small>celý<br>deň</small>';
+    const meta = [];
+    if (this.multi(e)) meta.push(`${this.dateText(e.date)} – ${this.dateText(e.end)}`);
+    if (e.place) meta.push(esc(e.place));
+    if (e.repeat) meta.push(EV_REPEAT_TEXT[e.repeat]);
+    if (e.note) meta.push(esc(e.note));
+    return `<li><button class="ev-row" data-ev="${esc(e.id)}"><span class="ev-time">${time}</span>
+      <span><span class="ev-title">${esc(e.title)}</span>${meta.length ? `<span class="ev-meta">${meta.map((m) => `<span>${m}</span>`).join('')}</span>` : ''}</span></button></li>`;
+  },
+  /** Short text for the intro screen and the next 14 days */
+  shortText(e, K, html = false) {
+    const t = this.timeOn(e, K);
+    return (t ? t + ' ' : '') + (html ? `<b>${esc(e.title)}</b>` : e.title);
+  },
+
+  openForm(id, preset = {}) {
+    const e = id ? this.list.find((x) => x.id === id) : null;
+    const v = e || { title: '', date: preset.date || Game.keyOf(today()), end: null, time: null, timeEnd: null, repeat: '', place: '', note: '' };
+    Sheet.open(`
+      <div class="sheet-h"><h2 id="ev-h">${e ? 'Upraviť udalosť' : 'Nová udalosť'}</h2><div class="actions"><button class="btn" data-close aria-label="Zavrieť">${ico('close', 18, 2)}</button></div></div>
+      <form class="form" id="ev-form" novalidate>
+        <label class="field"><span>Názov</span><input id="ev-title" maxlength="100" autocomplete="off" placeholder="napr. Zubár, kino, dovolenka" value="${esc(v.title)}"></label>
+        <div class="ev-grid">
+          <label class="field"><span>Dátum</span><input type="date" id="ev-date" value="${esc(v.date)}"></label>
+          <label class="field" id="ev-end-f"><span>Do dátumu <em>(viac dní)</em></span><input type="date" id="ev-end" value="${esc(v.end || '')}"></label>
+          <label class="field"><span>Od <em>(čas)</em></span><input type="time" id="ev-time" value="${esc(v.time || '')}"></label>
+          <label class="field"><span>Do <em>(čas)</em></span><input type="time" id="ev-time-end" value="${esc(v.timeEnd || '')}"></label>
+        </div>
+        <p class="form-hint">Bez času je to udalosť na celý deň.</p>
+        <fieldset class="field"><legend>Opakovať</legend><div class="opt-row">
+          ${EV_REPEATS.map(([r, l]) => `<label class="opt"><input type="radio" name="ev-rep" value="${r}" ${r === v.repeat ? 'checked' : ''}><span>${l}</span></label>`).join('')}
+        </div></fieldset>
+        <label class="field"><span>Miesto <em>(nepovinné)</em></span><input id="ev-place" maxlength="80" autocomplete="off" placeholder="napr. Kino Scala" value="${esc(v.place)}"></label>
+        <label class="field"><span>Poznámka <em>(nepovinná)</em></span><input id="ev-note" maxlength="160" autocomplete="off" value="${esc(v.note)}"></label>
+        <p class="form-err" id="ev-err" hidden></p>
+        <div class="form-actions">
+          ${e ? '<button type="button" class="btn btn-danger" id="ev-del">Zmazať</button>' : ''}
+          <span class="spacer"></span>
+          <button type="button" class="btn" data-close>Zrušiť</button>
+          <button type="submit" class="btn btn-primary">Uložiť</button>
+        </div>
+      </form>`, { label: 'ev-h' });
+
+    // several days only for a one-off event
+    const syncRepeat = () => { $('#ev-end-f').hidden = !!($('input[name="ev-rep"]:checked') || {}).value; };
+    syncRepeat();
+    $$('input[name="ev-rep"]').forEach((r) => r.addEventListener('change', syncRepeat));
+    $('#ev-form').addEventListener('input', () => { $('#ev-err').hidden = true; });
+    if (!e) setTimeout(() => $('#ev-title').focus(), 60);
+
+    const del = $('#ev-del');
+    if (del) del.addEventListener('click', () => {
+      if (!del.classList.contains('armed')) { del.classList.add('armed'); del.textContent = 'Naozaj zmazať?'; return; }
+      const i = this.list.findIndex((x) => x.id === e.id);
+      const [removed] = this.list.splice(i, 1);
+      this.save(); Sheet.close(); this.changed();
+      toast(`Zmazané: ${removed.title}`, 'Späť', () => { this.list.splice(i, 0, removed); this.save(); this.changed(); });
+    });
+
+    $('#ev-form').addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const fail = (m) => { $('#ev-err').textContent = m; $('#ev-err').hidden = false; };
+      const title = $('#ev-title').value.trim().replace(/\s+/g, ' ');
+      const date = $('#ev-date').value;
+      const repeat = ($('input[name="ev-rep"]:checked') || {}).value || '';
+      const end = repeat ? null : $('#ev-end').value || null;
+      const time = $('#ev-time').value || null, timeEnd = $('#ev-time-end').value || null;
+      if (!title) return fail('Napíš, čo sa deje.');
+      if (!KEY_RE.test(date)) return fail('Vyber dátum.');
+      if (end && end < date) return fail('Koniec nemôže byť pred začiatkom.');
+      if (timeEnd && !time) return fail('Zadaj aj čas začiatku.');
+      if (time && timeEnd && timeEnd <= time && !(end && end > date)) return fail('Čas konca musí byť po začiatku.');
+      const data = this.normalize({ id: e ? e.id : 'e' + Date.now().toString(36), title, date, end, time, timeEnd, repeat, place: $('#ev-place').value.trim(), note: $('#ev-note').value.trim() });
+      if (e) Object.assign(e, data); else this.list.push(data);
+      this.save(); Sheet.close(); this.changed();
+      toast(e ? 'Udalosť je upravená.' : `Pridané: ${title} · ${this.dateText(date)}`);
+    });
+  }
+};
+
+/* ============================================================
    Úlohy a postava (gamifikácia) – fáza 1
    Návrh: docs/gamifikacia.md. Zdrojom pravdy je denník splnení (log);
    XP a level sa z neho vždy iba počítajú.
@@ -3457,7 +3607,7 @@ const DayClear = {
 const Backup = {
   export() {
     // `app: 'obzor'` is the app's former name; kept so backups stay compatible across versions
-    const data = { app: 'obzor', version: 4, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places, weather: { model: wxModel() }, news: { prefs: News.prefs, model: News.model, seen: News.seen, history: News.history }, game: Game.data };
+    const data = { app: 'obzor', version: 5, exported: new Date().toISOString(), birthdays: Bd.list, events: Ev.list, places: Wx.places, weather: { model: wxModel() }, news: { prefs: News.prefs, model: News.model, seen: News.seen, history: News.history }, game: Game.data };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -3475,6 +3625,8 @@ const Backup = {
       const ok = (p) => p && typeof p.name === 'string' && p.day >= 1 && p.day <= 31 && p.month >= 1 && p.month <= 12;
       Bd.list = data.birthdays.filter(ok).map((p) => ({ id: String(p.id || 'b' + Math.random().toString(36).slice(2)), name: p.name, day: +p.day, month: +p.month, year: p.year ? +p.year : null, note: p.note || '' }));
       Bd.save();
+      // Calendar events (since version 5); older backups keep the current ones.
+      if (Array.isArray(data.events)) { Ev.list = data.events.filter((e) => Ev.valid(e)).map((e) => Ev.normalize(e)); Ev.save(); }
       if (Array.isArray(data.places) && data.places.length) {
         Wx.places = data.places.filter((p) => p && p.id && typeof p.lat === 'number' && typeof p.lon === 'number');
         Wx.sel = 0; Wx.save();
@@ -3496,10 +3648,12 @@ const Backup = {
         Look.apply();
       }
       Bd.render();
+      if (App.tab === 'kalendar') KalView.render();
       if (App.tab === 'nastavenia') SettingsView.render();
       if (App.tab === 'ulohy') TasksView.render();
       const nt = Game.data.tasks.length;
-      toast(`Obnovené: ${Bd.list.length} ${plural(Bd.list.length, 'narodeniny', 'narodeniny', 'narodenín')}, ${Wx.places.length} ${plural(Wx.places.length, 'miesto', 'miesta', 'miest')}, ${nt} ${plural(nt, 'úloha', 'úlohy', 'úloh')}.`);
+      const ne = Array.isArray(data.events) ? Ev.list.length : 0;
+      toast(`Obnovené: ${Bd.list.length} ${plural(Bd.list.length, 'narodeniny', 'narodeniny', 'narodenín')}, ${ne ? `${ne} ${plural(ne, 'udalosť', 'udalosti', 'udalostí')}, ` : ''}${Wx.places.length} ${plural(Wx.places.length, 'miesto', 'miesta', 'miest')}, ${nt} ${plural(nt, 'úloha', 'úlohy', 'úloh')}.`);
     } catch {
       toast('Tento súbor nie je záloha z appky DNES.');
     } finally {
@@ -3540,6 +3694,16 @@ function calPageHTML(date, { progress = false, withBirthdays = true } = {}) {
       if (soon.length) {
         bdays += `<div class="cal-bday soft">${ico('cake', 20, 1.8)}<div>Čoskoro: ${soon.map((u) => `<b>${esc(u.p.name)}</b> ${u.days === 1 ? 'zajtra' : `o ${u.days} ${plural(u.days, 'deň', 'dni', 'dní')} (${DNI[u.date.getDay()]})`}`).join(', ')}</div></div>`;
       }
+    }
+  }
+
+  // Úvodná obrazovka: dnešné udalosti
+  if (progress) {
+    const K = Game.keyOf(date), evs = Ev.on(K);
+    if (evs.length) {
+      const shown = evs.slice(0, 3).map((e) => Ev.shortText(e, K, true)).join(', ');
+      const more = evs.length > 3 ? ` a ${evs.length - 3} ${plural(evs.length - 3, 'ďalšia', 'ďalšie', 'ďalších')}` : '';
+      bdays = `<div class="cal-bday cal-ev">${ico('calendar', 20, 1.8)}<div>Dnes: ${shown}${more}</div></div>` + bdays;
     }
   }
 
@@ -3653,15 +3817,15 @@ const KalView = {
     for (let i = 0; i < cells; i++) {
       const d = addDays(first, i - lead), K = Game.keyOf(d), info = Kal.forDate(d);
       const planned = (due[K] || 0) + (K >= T ? habits.filter((h) => Game.scheduled(h, K)).length : 0);
-      const bd = Bd.on(d).length;
+      const bd = Bd.on(d).length, ev = Ev.on(K).length;
       const cls = ['mday', d.getMonth() !== m ? 'out' : '', d.getDay() === 0 || info.skHol ? 'red' : '', K === todayK ? 'today' : '', K === selK ? 'sel' : ''].filter(Boolean).join(' ');
-      const label = `${DNI[d.getDay()]} ${d.getDate()}. ${MESIACE_GEN[d.getMonth()]}${planned ? `, ${planned} ${plural(planned, 'úloha', 'úlohy', 'úloh')}` : ''}${done[K] ? `, splnené: ${done[K]}` : ''}${bd ? ', narodeniny' : ''}`;
-      html += `<button class="${cls}" data-k="${K}" aria-label="${label}"${K === selK ? ' aria-current="date"' : ''}>${d.getDate()}<span class="mdots">${planned ? '<i class="p"></i>' : ''}${done[K] ? '<i class="d"></i>' : ''}${bd ? '<i class="b"></i>' : ''}</span></button>`;
+      const label = `${DNI[d.getDay()]} ${d.getDate()}. ${MESIACE_GEN[d.getMonth()]}${planned ? `, ${planned} ${plural(planned, 'úloha', 'úlohy', 'úloh')}` : ''}${done[K] ? `, splnené: ${done[K]}` : ''}${bd ? ', narodeniny' : ''}${ev ? `, ${ev} ${plural(ev, 'udalosť', 'udalosti', 'udalostí')}` : ''}`;
+      html += `<button class="${cls}" data-k="${K}" aria-label="${label}"${K === selK ? ' aria-current="date"' : ''}>${d.getDate()}<span class="mdots">${ev ? '<i class="e"></i>' : ''}${planned ? '<i class="p"></i>' : ''}${done[K] ? '<i class="d"></i>' : ''}${bd ? '<i class="b"></i>' : ''}</span></button>`;
     }
     const box = $('#kal-month');
     box.innerHTML = `<div class="month-h"><button class="btn" id="mo-prev" aria-label="Predchádzajúci mesiac">${ico('left', 16, 2.2)}</button><b>${MESIACE[m][0].toUpperCase() + MESIACE[m].slice(1)} ${y}</b><button class="btn" id="mo-next" aria-label="Nasledujúci mesiac">${ico('right', 16, 2.2)}</button></div>
       <div class="month-grid">${DOW_SHORT.map((n) => `<span class="mdow">${n}</span>`).join('')}${html}</div>
-      <div class="month-legend"><span><i style="background:var(--accent)"></i>úlohy</span><span><i style="background:var(--good)"></i>splnené</span><span><i style="background:var(--red)"></i>narodeniny</span></div>`;
+      <div class="month-legend"><span><i style="background:var(--event)"></i>udalosti</span><span><i style="background:var(--accent)"></i>úlohy</span><span><i style="background:var(--good)"></i>splnené</span><span><i style="background:var(--red)"></i>narodeniny</span></div>`;
     $('#mo-prev').addEventListener('click', () => { this.month = new Date(y, m - 1, 1); this.renderMonth(); });
     $('#mo-next').addEventListener('click', () => { this.month = new Date(y, m + 1, 1); this.renderMonth(); });
     $$('.mday', box).forEach((b) => b.addEventListener('click', () => this.select(Game.keyDate(b.dataset.k))));
@@ -3691,6 +3855,8 @@ const KalView = {
     const bds = Bd.on(d);
     const dayName = `${DNI[d.getDay()]} ${d.getDate()}. ${MESIACE_GEN[d.getMonth()]}`;
     let html = `<div class="kal-tasks-h"><h2 class="section-h">${isToday ? 'Dnes' : dayName[0].toUpperCase() + dayName.slice(1)}</h2>${xp ? `<span class="xp-chip">+${fmtXp(xp)} XP</span>` : ''}</div>`;
+    const evs = Ev.on(K);
+    if (evs.length) html += `<ul class="ev-list panel">${evs.map((e) => Ev.rowHTML(e, K)).join('')}</ul>`;
     if (bds.length) {
       html += `<ul class="bd-list panel day-bd">${bds.map((p) => {
         const age = p.year ? d.getFullYear() - p.year : null;
@@ -3701,11 +3867,13 @@ const KalView = {
     }
     html += items.length ? TasksView.listHTML(items)
       : `<p class="panel panel-note">${K < T ? 'V tento deň nie je zapísaná žiadna splnená úloha.' : 'Na tento deň zatiaľ nemáš žiadnu úlohu.'}</p>`;
-    html += `<div class="kal-adds">${K >= T ? `<button class="btn" id="kal-add-task">${ico('plus', 17, 2.2)}Úloha</button>` : ''}<button class="btn" id="kal-add-bd">${ico('cake', 17, 2)}Narodeniny</button></div>`;
+    html += `<div class="kal-adds"><button class="btn" id="kal-add-ev">${ico('calendar', 17, 2)}Udalosť</button>${K >= T ? `<button class="btn" id="kal-add-task">${ico('plus', 17, 2.2)}Úloha</button>` : ''}<button class="btn" id="kal-add-bd">${ico('cake', 17, 2)}Narodeniny</button></div>`;
     const box = $('#kal-tasks');
     box.innerHTML = html;
     TasksView.bindRows(box);
     $$('.day-bd .bd-row', box).forEach((b) => b.addEventListener('click', () => Bd.openForm(b.dataset.id)));
+    $$('.ev-row', box).forEach((b) => b.addEventListener('click', () => Ev.openForm(b.dataset.ev)));
+    $('#kal-add-ev').addEventListener('click', () => Ev.openForm(null, { date: Game.keyOf(d) }));
     const add = $('#kal-add-task');
     if (add) add.addEventListener('click', () => TasksView.openForm(null, { date: K }));
     $('#kal-add-bd').addEventListener('click', () => Bd.openForm(null, { day: d.getDate(), month: d.getMonth() + 1 }));
@@ -3732,6 +3900,8 @@ const KalView = {
         ...habits.filter((h) => Game.scheduled(h, K)).map((h) => h.title)
       ];
       const extra = [];
+      const evs = Ev.on(K);
+      if (evs.length) extra.push(`<div class="up-extra ev">${ico('calendar', 13, 2)}${esc(evs.map((e) => Ev.shortText(e, K)).join(', '))}</div>`);
       if (info.skHol) extra.push(`<div class="up-extra red">${esc(info.skHol)}</div>`);
       if (bd.length) extra.push(`<div class="up-extra red">Narodeniny: ${bd.map((p) => esc(p.name)).join(', ')}</div>`);
       if (tasks.length) extra.push(`<div class="up-extra task">${ico('tasks', 13, 2)}${esc(tasks.join(', '))}</div>`);
@@ -4662,6 +4832,7 @@ const App = {
     TasksView.init();
     News.init();
     Bd.init();
+    Ev.init();
     Wx.init();
     KalView.init();
     Deck.init();
