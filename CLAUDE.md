@@ -45,18 +45,18 @@ Tab bar order, left to right (same order in `App.tabs`): `novinky` · `pocasie` 
 App always opens on Pocasie; `Splash` (4 s intro: date, SK name day, CZ svátek, holidays, birthdays, level + main task) shows only on cold start, not on return from background. After the splash comes the news swipe deck (`Deck`).
 
 ### localStorage keys (all prefixed `obzor.`)
-`game` (tasks, log, attrs, mainTask, unlocked, look, dayStartHour; schema v1) · `birthdays` · `places` · `sel` (selected place) · `tab` · `wx.<placeId>` (weather cache) · `news.prefs` (`topics`, `count` default 5, `langs` default sk+cs) · `news.model` (learned weights: `b`, `w`, `n`, `words`, `sources`, `ratings`) · `news.seen` (10-day TTL) · `news.history` (max 300) · `news.data` (cached news.json) · `news.tipShown` · `tasksSwipeHint`.
+`game` (tasks, log, attrs, mainTask, unlocked, look, dayStartHour; schema v1) · `birthdays` · `places` · `sel` (selected place) · `wxModel` (forecast model id) · `tab` · `wx.<placeId>` (weather cache) · `news.prefs` (`topics`, `count` default 5, `langs` default sk+cs) · `news.model` (learned weights: `b`, `w`, `n`, `words`, `sources`, `ratings`) · `news.seen` (10-day TTL) · `news.history` (max 300) · `news.data` (cached news.json) · `news.tipShown` · `tasksSwipeHint`.
 
 ### Backup
-`Backup.export()` writes JSON `{ app: 'obzor', version: 3, exported, birthdays, places, news: {prefs, model, seen, history}, game }`. `Backup.import()` validates `app === 'obzor'` and `birthdays` array; older backups without `game` leave current character data untouched. **Bump `version` and keep import backward compatible whenever a new persisted module is added.**
+`Backup.export()` writes JSON `{ app: 'obzor', version: 4, exported, birthdays, places, weather: {model}, news: {prefs, model, seen, history}, game }`. `Backup.import()` validates `app === 'obzor'` and `birthdays` array; older backups without `game` (before v3) or `weather` (before v4) leave the current data untouched. **Bump `version` and keep import backward compatible whenever a new persisted module is added.**
 
 ### External services (all free, no keys)
-Open-Meteo forecast / geocoding / air-quality, BigDataCloud reverse geocoding (for "my location"), Google Fonts (Archivo, Onest), news from `https://raw.githubusercontent.com/kiss-m/obzor/news/news.json` (client TTL `NEWS_TTL` = 15 min).
+Open-Meteo forecast (models from ČHMÚ, DWD, GeoSphere Austria, ECMWF) / geocoding / air-quality, BigDataCloud reverse geocoding (for "my location"), Google Fonts (Archivo, Onest), news from `https://raw.githubusercontent.com/kiss-m/obzor/news/news.json` (client TTL `NEWS_TTL` = 15 min).
 
 ## Feature summary and key rules
 
 ### Weather (`Wx`, `Places`)
-Any number of places (search + "my location"), swipe between them. Current temp, 24 h hourly with sunrise/sunset, 10-day forecast, cloud cover (24 h chart + low/mid/high), feels-like, wind, UV, precipitation, humidity, visibility, pressure, air quality, moon phase. Sky is drawn full-screen on the home tab (`body.mode-wx`). The weather tab shows weather only: no news or character cards.
+Any number of places (search + "my location"), swipe between them. Current temp, 24 h hourly with sunrise/sunset, 10-day forecast, cloud cover (24 h chart + low/mid/high), feels-like, wind, UV, precipitation, humidity, visibility, pressure, air quality, moon phase. Forecast model is chosen in Settings → Počasie (`WX_MODELS`, stored as `wxModel`, default `chmi_aladin_seamless`; others `best_match`, `geosphere_seamless`, `ecmwf_ifs`). A non-default model is requested as `models=<model>,best_match` and `mergeModels()` fills values the model lacks (e.g. UV index) from best_match; HTTP 400 falls back to best_match alone. The weather cache entry stores the requested `model` and is refetched when it changes. Sky is drawn full-screen on the home tab (`body.mode-wx`). The weather tab shows weather only: no news or character cards.
 
 ### Calendar & birthdays (`KalView`, `Bd`, `Kal`)
 Month grid (dots = tasks / done / birthdays), day detail (name days, birthdays, tasks, completion history), "when is the name day of …" search, next 14 days, add task or birthday for a specific day. Birthdays list shows countdown, age and name day; tapping jumps the calendar. Name-day data can be corrected by hand in `MENINY_SK` / `SVATKY_CZ`.
@@ -102,6 +102,7 @@ Month grid (dots = tasks / done / birthdays), day detail (name days, birthdays, 
 - To-do gamification uses an RPG character (XP, levels, attributes), chosen over streaks and over competing with the past self.
 - News learning stays fully on-device; the server only publishes the shared `news.json`.
 - 2026-10-03: Tab bar reordered to Novinky · Počasie · Úlohy (center) · Kalendár · Nastavenia. The news card and the character/main-task card were removed from the weather tab (Matej wants weather only there); level and main task stay on the splash and in Úlohy, more news in the Novinky tab.
+- 2026-10-03: Weather stays on Open-Meteo, with a model choice in Settings and ČHMÚ Aladin as default (Matej found the current temperature inaccurate with best_match/ICON-D2). Rejected: YR.no directly (MET Norway forbids browser requests in production, needs a proxy; for CZ/SK it serves ECMWF 9 km anyway, which is offered as a model) and Google Weather API (needs Google Cloud billing and a key that would be public).
 
 ---
 

@@ -631,6 +631,13 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
 .set-row.col { flex-direction: column; align-items: stretch; gap: 10px; }
 .set-row b { font-weight: 600; }
 .set-row p { margin: 2px 0 0; font-size: 13px; color: var(--ink-2); }
+.wxm-list { display: grid; gap: 8px; }
+.wxm { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 11px; align-items: start; width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); text-align: left; font: inherit; }
+.wxm b { display: block; font-weight: 600; font-size: 15px; }
+.wxm small { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+.wxm-dot { width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; border: 2px solid var(--line); }
+.wxm[aria-checked="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); box-shadow: inset 0 0 0 1px var(--accent); }
+.wxm[aria-checked="true"] .wxm-dot { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 4px, transparent 4.5px); }
 .topic-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .tchip {
   display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px;
@@ -1094,6 +1101,8 @@ body[data-card="karta-hviezdna"] .char {
     <header class="page-h">
       <h1>Nastavenia</h1>
     </header>
+    <h2 class="section-h">Počasie</h2>
+    <div class="panel set-group" id="st-wx"></div>
     <h2 class="section-h">Novinky</h2>
     <div class="panel set-group">
       <div class="set-row col">
@@ -1125,7 +1134,7 @@ body[data-card="karta-hviezdna"] .char {
       <input type="file" id="bk-file" accept="application/json,.json" hidden>
     </div>
     <h2 class="section-h">O appke</h2>
-    <p class="about">Počasie: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>. Novinky: RSS kanály slovenských, českých a svetových médií, ktoré každých 30 minút zbiera automatická úloha na GitHube. Výber správ sa učí priamo v tvojom zariadení; tvoje hodnotenia sa nikam neposielajú.</p>
+    <p class="about">Počasie: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (modely ČHMÚ, DWD, GeoSphere Austria a ECMWF). Novinky: RSS kanály slovenských, českých a svetových médií, ktoré každých 30 minút zbiera automatická úloha na GitHube. Výber správ sa učí priamo v tvojom zariadení; tvoje hodnotenia sa nikam neposielajú.</p>
   </section>
 </main>
 
@@ -1534,16 +1543,60 @@ function moonSVG(p) {
 const WX_TTL = 10 * 60 * 1000;
 const DEFAULT_PLACES = [{ id: 'g3060972', name: 'Bratislava', admin: 'Bratislavský kraj', country: 'Slovensko', lat: 48.14816, lon: 17.10674 }];
 
-async function fetchForecast(p) {
+/** Forecast models the user can pick in Settings (Open-Meteo model ids) */
+const WX_MODELS = [
+  { id: 'chmi_aladin_seamless', name: 'ČHMÚ Aladin', note: 'Český národný model: 1 km v Česku, 2 km v okolí (aj na Slovensku), na 3 dni. Ďalšie dni dopĺňa ECMWF.' },
+  { id: 'best_match', name: 'Automaticky', note: 'Open-Meteo vyberie model samo. V strednej Európe je to hlavne nemecký ICON-D2 (2 km).' },
+  { id: 'geosphere_seamless', name: 'GeoSphere AROME', note: 'Rakúsky model 2,5 km pre Rakúsko, Česko, Slovensko a Maďarsko, na 2,5 dňa. Ďalšie dni dopĺňa ECMWF.' },
+  { id: 'ecmwf_ifs', name: 'ECMWF 9 km', note: 'Európsky model. Z neho berie predpoveď pre Česko a Slovensko aj YR.no.' }
+];
+const WX_MODEL_DEFAULT = 'chmi_aladin_seamless';
+function wxModel() {
+  const m = store.get('wxModel', WX_MODEL_DEFAULT);
+  return WX_MODELS.some((x) => x.id === m) ? m : WX_MODEL_DEFAULT;
+}
+function wxModelName(id) { return (WX_MODELS.find((x) => x.id === id) || WX_MODELS[1]).name; }
+
+const WX_VARS = {
+  current: 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+  hourly: 'temperature_2m,precipitation_probability,precipitation,weather_code,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,uv_index,is_day,dew_point_2m,pressure_msl',
+  daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant'
+};
+// A non-default model is requested together with best_match, which fills values the model lacks (e.g. UV index).
+async function fetchForecast(p, model = wxModel()) {
+  const multi = model !== 'best_match';
   const q = new URLSearchParams({
     latitude: p.lat, longitude: p.lon, timezone: 'auto', forecast_days: 10, wind_speed_unit: 'kmh',
-    current: 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
-    hourly: 'temperature_2m,precipitation_probability,precipitation,weather_code,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,uv_index,is_day,dew_point_2m,pressure_msl',
-    daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant'
+    ...WX_VARS, models: multi ? model + ',best_match' : 'best_match'
   });
   const r = await fetch('https://api.open-meteo.com/v1/forecast?' + q);
-  if (!r.ok) throw new Error('Server počasia odpovedal chybou ' + r.status);
-  return r.json();
+  if (!r.ok) {
+    if (multi && r.status === 400) return fetchForecast(p, 'best_match');
+    throw new Error('Server počasia odpovedal chybou ' + r.status);
+  }
+  const d = await r.json();
+  d.model = multi && mergeModels(d, model) ? model : 'best_match';
+  return d;
+}
+/**
+ * Turns `<var>_<model>` / `<var>_best_match` keys back into `<var>`, preferring the chosen model.
+ * Returns false when the response has no data for the chosen model (then only best_match is used).
+ */
+function mergeModels(d, model) {
+  let found = false;
+  for (const sec of ['current', 'hourly', 'daily']) {
+    const s = d[sec];
+    if (!s) continue;
+    const out = { time: s.time };
+    if ('interval' in s) out.interval = s.interval;
+    for (const v of WX_VARS[sec].split(',')) {
+      const a = s[v + '_' + model], b = s[v + '_best_match'] ?? s[v];
+      if (a !== undefined) found = true;
+      out[v] = Array.isArray(a) ? a.map((x, i) => x ?? (b ? b[i] : null)) : a ?? b ?? null;
+    }
+    d[sec] = out;
+  }
+  return found;
 }
 async function fetchAir(p) {
   const q = new URLSearchParams({ latitude: p.lat, longitude: p.lon, timezone: 'auto', current: 'european_aqi,pm2_5,pm10' });
@@ -1588,12 +1641,13 @@ const Wx = {
   load(p, force = false) {
     if (!p) return Promise.resolve();
     const c = this.cache[p.id];
-    if (!force && c && Date.now() - c.at < WX_TTL) return Promise.resolve();
+    if (!force && c && Date.now() - c.at < WX_TTL && c.model === wxModel()) return Promise.resolve();
     if (this.pending[p.id]) return this.pending[p.id];
     const job = (async () => {
       try {
-        const [data, aq] = await Promise.all([fetchForecast(p), fetchAir(p).catch(() => null)]);
-        this.cache[p.id] = { data, aq, at: Date.now() };
+        const model = wxModel();
+        const [data, aq] = await Promise.all([fetchForecast(p, model), fetchAir(p).catch(() => null)]);
+        this.cache[p.id] = { data, aq, at: Date.now(), model };
         delete this.errors[p.id];
         store.set('wx.' + p.id, this.cache[p.id]);
       } catch (e) {
@@ -1614,7 +1668,7 @@ const Wx = {
     this.render();
     await first;
     this.render();
-    await Promise.allSettled(this.places.map((p) => this.load(p, force)));
+    await Promise.allSettled(this.places.filter((p) => p !== cur).map((p) => this.load(p, force)));
     btn.classList.remove('spin');
     this.render();
     Places.renderList();
@@ -1717,7 +1771,7 @@ const Wx = {
     html += `<div class="tiles">${this.tilesHTML(d, c.aq, i0)}</div>`;
 
     const at = new Date(c.at);
-    html += `<p class="wx-foot">Aktualizované ${at.getHours()}:${pad(at.getMinutes())} · Údaje: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a></p>`;
+    html += `<p class="wx-foot">Aktualizované ${at.getHours()}:${pad(at.getMinutes())} · Údaje: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>, model ${esc(wxModelName(c.data.model || 'best_match'))}</p>`;
     return html;
   },
 
@@ -3276,7 +3330,7 @@ const LevelUp = {
 /* ---------- Záloha ---------- */
 const Backup = {
   export() {
-    const data = { app: 'obzor', version: 3, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places, news: { prefs: News.prefs, model: News.model, seen: News.seen, history: News.history }, game: Game.data };
+    const data = { app: 'obzor', version: 4, exported: new Date().toISOString(), birthdays: Bd.list, places: Wx.places, weather: { model: wxModel() }, news: { prefs: News.prefs, model: News.model, seen: News.seen, history: News.history }, game: Game.data };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -3297,8 +3351,10 @@ const Backup = {
       if (Array.isArray(data.places) && data.places.length) {
         Wx.places = data.places.filter((p) => p && p.id && typeof p.lat === 'number' && typeof p.lon === 'number');
         Wx.sel = 0; Wx.save();
-        Wx.refreshAll();
       }
+      // Forecast model (since version 4); older backups keep the current choice.
+      if (data.weather && WX_MODELS.some((m) => m.id === data.weather.model)) store.set('wxModel', data.weather.model);
+      if ((Array.isArray(data.places) && data.places.length) || data.weather) Wx.refreshAll();
       if (data.news && typeof data.news === 'object') {
         if (data.news.prefs && typeof data.news.prefs === 'object') News.prefs = { ...News.prefs, ...data.news.prefs };
         if (data.news.model && data.news.model.w) News.model = { words: {}, sources: {}, n: {}, ratings: 0, b: 0, ...data.news.model };
@@ -4174,6 +4230,20 @@ const SettingsView = {
     this.renderSources();
     this.renderAttrs();
     this.renderLook();
+    this.renderWx();
+  },
+  /* ---------- počasie: model predpovede ---------- */
+  renderWx() {
+    const box = $('#st-wx'), cur = wxModel();
+    box.innerHTML = `<div class="set-row col"><div><b>Model predpovede</b><p>Ak ti predpoveď nesedí, skús iný model a porovnaj ho so skutočnosťou. Čo vybraný model nepočíta (napríklad UV index), sa doplní z automatického výberu.</p></div>
+      <div class="wxm-list" role="radiogroup" aria-label="Model predpovede">${WX_MODELS.map((m) => `<button type="button" class="wxm" role="radio" aria-checked="${m.id === cur}" data-id="${m.id}"><span class="wxm-dot"></span><span><b>${m.name}</b><small>${m.note}</small></span></button>`).join('')}</div></div>`;
+    $$('.wxm', box).forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.id === wxModel()) return;
+      store.set('wxModel', b.dataset.id);
+      this.renderWx();
+      Wx.refreshAll(true);
+      toast('Počasie sa načíta z modelu ' + wxModelName(b.dataset.id) + '.');
+    }));
   },
   /* ---------- vzhľad: odomknuté témy a štýly karty ---------- */
   renderLook() {

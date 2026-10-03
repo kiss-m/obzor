@@ -36,12 +36,15 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   Aktuálna teplota, hodinová predpoveď na 24 h s východom a západom slnka, predpoveď na 10 dní,
   oblačnosť (graf na 24 h + nízka / stredná / vysoká), pocitová teplota, vietor, UV index,
   zrážky, vlhkosť, viditeľnosť, tlak, kvalita ovzdušia a fáza Mesiaca.
-  Dáta sú z [Open-Meteo](https://open-meteo.com/) (zadarmo, bez registrácie).
+  Dáta sú z [Open-Meteo](https://open-meteo.com/) (zadarmo, bez registrácie). V **Nastaveniach → Počasie** si vyberieš
+  model predpovede: český **ČHMÚ Aladin** (1 km v Česku, 2 km v okolí, predvolený), automatický výber Open-Meteo
+  (v strednej Európe nemecký ICON-D2), rakúsky **GeoSphere AROME** alebo európsky **ECMWF 9 km** (z neho berie
+  predpoveď pre Česko a Slovensko aj YR.no). Čo vybraný model nepočíta (napríklad UV index), doplní automatický výber.
 - **Kalendár**: mesačný prehľad (bodky = úlohy, splnené, narodeniny), list dňa s meninami, narodeniny a úlohy
   vybraného dňa, pridanie úlohy alebo narodenín na konkrétny deň, vyhľadanie „kedy má meniny…“ a prehľad
   najbližších 14 dní. Súčasťou Kalendára sú aj **narodeniny**: zoznam s odpočtom dní, vekom a meninami;
   ťuknutím na človeka sa kalendár presunie na jeho narodeniny.
-- **Nastavenia**: okruhy noviniek, ich počet, jazyk zdrojov, čo sa appka naučila, stav zdrojov a záloha.
+- **Nastavenia**: model predpovede počasia, okruhy noviniek, ich počet, jazyk zdrojov, čo sa appka naučila, stav zdrojov a záloha.
 
 ## Ako fungujú novinky
 
