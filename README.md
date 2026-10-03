@@ -27,7 +27,9 @@ Funguje v mobile (iPhone aj Android) aj na počítači a dá sa nainštalovať n
   v týždni, X× týždenne, každých N dní alebo raz mesačne, od zvoleného dátumu. Návrh celej
   gamifikácie a ďalšie fázy sú v [docs/gamifikacia.md](docs/gamifikacia.md).
 - **Novinky**: po úvodnej obrazovke príde balíček správ z okruhov, ktoré si vyberieš
-  (technológie, vojna, ekonomika, politika…). Karta ukazuje titulok a stručné zhrnutie,
+  (technológie, vojna, ekonomika, politika…). Karta ukazuje titulok a pod ním krátke zhrnutie
+  (prvá jedna až dve vety perexu, ktoré niečo pridávajú k titulku; ak médium perex neposlalo,
+  vezme sa od iného média, ktoré o tej istej udalosti píše),
   ťuknutím otvoríš detail a odkaz na celý článok. Swipe **doprava** = páči sa mi,
   **doľava** = nezaujíma ma, **dole** = neutrálne. Počet správ po spustení sa nastavuje
   v Nastaveniach (predvolene 5), ďalšie sú v záložke Novinky.

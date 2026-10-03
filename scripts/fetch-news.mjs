@@ -53,8 +53,10 @@ export function stripHtml(html) {
   return decodeEntities(String(html)
     .replace(/<(script|style|figure|figcaption)[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<br\s*\/?>/gi, ' ')
-    .replace(/<\/(p|div|li|h\d)>/gi, ' ')
+    .replace(/<\/(p|div|li|h\d)>/gi, '\u2029')
     .replace(/<[^>]+>/g, ' '))
+    // A paragraph without final punctuation (e.g. a standfirst) still ends a sentence
+    .replace(/([^\s.!?…:;\u2029])[ \t\r\n\u00a0]*\u2029/g, '$1. ')
     .replace(/[ \s]+/g, ' ')
     .trim();
 }
@@ -67,8 +69,9 @@ function cleanSummary(s, title) {
     .replace(/\s*(Continue reading|Read more|Čítať ďalej|Čítajte viac|Pokračovať v čítaní|Celý článok|Číst dále|Více zde)\.{0,3}\s*(»|›|…)?\s*$/i, '')
     .replace(/\s*\[(…|\.\.\.)\]\s*$/, '…')
     .trim();
-  if (!t || norm(t) === norm(title)) return '';
-  if (norm(t).startsWith(norm(title)) && t.length < title.length + 20) return '';
+  const bare = (x) => norm(x).replace(/[\s.!?…:;]+$/, '');
+  if (!t || bare(t) === bare(title)) return '';
+  if (bare(t).startsWith(bare(title)) && t.length < title.length + 20) return '';
   if (t.length > SUMMARY_MAX) {
     const cut = t.slice(0, SUMMARY_MAX);
     const end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));

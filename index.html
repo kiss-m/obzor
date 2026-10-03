@@ -558,10 +558,10 @@ body.mode-wx .tab[aria-current="page"] { color: #fff; }
 .chip i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .ncard-title {
   margin: 0; font-family: var(--font-display); font-weight: 750; font-stretch: 84%;
-  font-size: 25px; line-height: 1.12; overflow-wrap: anywhere; flex: none;
+  font-size: 21px; line-height: 1.16; overflow-wrap: anywhere; flex: none;
 }
 .ncard-sum {
-  margin: 0; font-size: 15px; line-height: 1.45; flex: 1 1 auto; min-height: 0; overflow: hidden;
+  margin: 0; font-size: 15.5px; line-height: 1.45; flex: 1 1 auto; min-height: 0; overflow: hidden;
   -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent); mask-image: linear-gradient(to bottom, #000 78%, transparent);
 }
 .ncard-foot { margin-top: auto; flex: none; display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--ink-2); padding-top: 9px; border-top: 1px solid var(--line); }
@@ -3660,6 +3660,48 @@ const topicOf = (it) => TOPICS[(it.topics || [])[0]] || ['Novinky', '#5b6573'];
 const httpsImg = (u) => (u ? String(u).replace(/^http:\/\//i, 'https://') : '');
 const RATING = { 1: ['heart', 'Páči sa mi', 'r1'], 0: ['close', 'Nezaujíma ma', 'r0'], 0.5: ['minus', 'Neutrálne', 'r5'] };
 
+/* ---------- Short summary under the card title ---------- */
+const BRIEF_MAX = 180;
+// Words that end with a dot inside a sentence (sk, cs, en; written without diacritics)
+const BRIEF_ABBR = new Set(['napr', 'tzv', 'resp', 'tj', 'tzn', 'popr', 'mj', 'cca', 'ul', 'sv', 'st', 'pi', 'mr', 'mrs', 'ms', 'dr', 'prof', 'doc', 'ing', 'mgr', 'judr', 'mudr', 'mld', 'mil', 'tis', 'min', 'max', 'roc', 'str', 'vs', 'jr', 'sr', 'gen', 'plk', 'kpt', 'por', 'inc', 'co', 'no']);
+const briefWords = (s) => norm(s).match(/[\p{L}\p{N}]{3,}/gu) || [];
+function splitSentences(t) {
+  const out = [];
+  const re = /[.!?…]+["“”'’»)]*\s+(?=[„"“'‘«(\p{Lu}])/gu;
+  let start = 0, m;
+  while ((m = re.exec(t))) {
+    if (m[0][0] === '.') {
+      const w = norm(((t.slice(start, m.index).match(/(\S+)$/) || [])[1] || '').replace(/\.+$/, ''));
+      if (w.length === 1 || BRIEF_ABBR.has(w)) continue; // initial or abbreviation, not a sentence end
+    }
+    out.push(t.slice(start, m.index + m[0].trimEnd().length).trim());
+    start = m.index + m[0].length;
+  }
+  if (t.slice(start).trim()) out.push(t.slice(start).trim());
+  return out;
+}
+/** First one or two sentences of a perex that add something to the title, at most BRIEF_MAX characters */
+function briefOf(text, title) {
+  const t = String(text || '').replace(/\s+/g, ' ').replace(/([^.])\.\.(?=\s|$)/g, '$1.').trim()
+    .replace(/^(?:[\p{Lu}][\p{Lu} .-]{2,30}|[\p{L} .]{2,30}\s*\([^)]{2,25}\))\s*[–—-]\s+/u, ''); // dateline "BRATISLAVA (TASR) –"
+  if (!t) return '';
+  let ss = splitSentences(t);
+  if (ss.length > 1 && /(…|\.\.\.)$/.test(ss[ss.length - 1])) ss.pop(); // the feed cut the last sentence
+  const tw = new Set(briefWords(title));
+  ss = ss.filter((x) => { const w = briefWords(x); return !w.length || w.filter((y) => tw.has(y)).length / w.length < 0.75; });
+  while (ss.length > 1 && /\?["“”'’»]*$/.test(ss[0])) ss.shift(); // feature-style question lead
+  if (!ss.length) return '';
+  let b = ss[0];
+  if (b.length < 90 && ss[1] && b.length + 1 + ss[1].length <= BRIEF_MAX) b += ' ' + ss[1];
+  if (b.length > BRIEF_MAX) {
+    const cut = b.slice(0, BRIEF_MAX);
+    const at = Math.max(cut.lastIndexOf(', '), cut.lastIndexOf(' – '), cut.lastIndexOf('; '));
+    b = (at > BRIEF_MAX * 0.55 ? cut.slice(0, at) : cut.replace(/\s+\S*$/, '')).replace(/[,;:\s–-]+$/, '') + '…';
+  }
+  return b.length >= 25 ? b : '';
+}
+const nearLang = (a, b) => a === b || (/^(sk|cs)$/.test(a) && /^(sk|cs)$/.test(b));
+
 const News = {
   data: null, at: 0, loading: null, error: '',
   prefs: null, model: null, seen: null, history: null,
@@ -3770,7 +3812,7 @@ const News = {
     (it.others || []).forEach((o) => { if (o.id && !this.seen[o.id]) this.seen[o.id] = { r: -1, t, c: it.cluster }; });
     this.history = this.history.filter((h) => h.id !== it.id);
     this.history.unshift({
-      id: it.id, title: it.title, summary: it.summary, url: it.url, source: it.source, image: it.image || '',
+      id: it.id, title: it.title, summary: it.summary || this.brief(it), url: it.url, source: it.source, image: it.image || '',
       topics: it.topics, style: it.style, lang: it.lang, published: it.published, cluster: it.cluster,
       clusterSize: it.clusterSize, others: (it.others || []).slice(0, 6), r, t
     });
@@ -3820,9 +3862,18 @@ const News = {
       const uniq = [];
       const seenSrc = new Set([norm(rep.source)]);
       for (const o of others) { const k = norm(o.source); if (!seenSrc.has(k)) { seenSrc.add(k); uniq.push(o); } }
-      out.push({ ...rep, image: httpsImg(rep.image), topics, others: uniq, clusterSize: Math.max(rep.clusterSize || 1, uniq.length + 1) });
+      const alts = ok.filter((x) => x !== rep && x.summary && nearLang(x.lang, rep.lang)).map((x) => x.summary);
+      out.push({ ...rep, image: httpsImg(rep.image), topics, others: uniq, alts, clusterSize: Math.max(rep.clusterSize || 1, uniq.length + 1) });
     }
     return out;
+  },
+  /** Short summary for the card; falls back to other outlets' perex of the same event */
+  brief(it) {
+    if (it.brief === undefined) {
+      it.brief = '';
+      for (const t of [it.summary, ...(it.alts || [])]) { const b = briefOf(t, it.title); if (b) { it.brief = b; break; } }
+    }
+    return it.brief;
   },
   score(it) {
     const f = this.features(it);
@@ -3831,7 +3882,7 @@ const News = {
     return 2.5 * this.lin(f)
       + 0.45 * Math.log(it.clusterSize || 1)
       + 0.35 * Math.exp(-ageH / 10)
-      + (it.summary ? 0.15 : -0.25) + (it.image ? 0.08 : 0)
+      + (it.summary || (it.alts && it.alts.length) ? 0.15 : -0.25) + (it.image ? 0.08 : 0)
       + 0.25 / Math.sqrt(1 + nTopic)
       + (Math.random() - 0.5) * 0.3;
   },
@@ -4033,7 +4084,7 @@ const Deck = {
       <div class="ncard-body">
         ${newsMetaHTML(it)}
         <h2 class="ncard-title">${esc(it.title)}</h2>
-        ${it.summary ? `<p class="ncard-sum">${esc(it.summary)}</p>` : '<p class="ncard-sum"></p>'}
+        <p class="ncard-sum">${esc(News.brief(it))}</p>
         <div class="ncard-foot"><span>Ťukni pre viac</span><span>${(it.clusterSize || 1) > 1 ? mediaCount(it.clusterSize) : ''}</span></div>
       </div>
       <div class="stamp like">Páči sa mi</div><div class="stamp nope">Nezaujíma ma</div><div class="stamp meh">Neutrálne</div>
@@ -4145,7 +4196,7 @@ const Deck = {
       ${it.image ? `<div class="nd-img"><img src="${esc(httpsImg(it.image))}" alt="" referrerpolicy="no-referrer"></div>` : ''}
       ${newsMetaHTML(it)}
       <h3 class="nd-title">${esc(it.title)}</h3>
-      ${it.summary ? `<p class="nd-sum">${esc(it.summary)}</p>` : '<p class="nd-sum none">Médium k tejto správe neposlalo zhrnutie. Celý článok nájdeš na jeho webe.</p>'}
+      ${it.summary || it.brief ? `<p class="nd-sum">${esc(it.summary || it.brief)}</p>` : '<p class="nd-sum none">Médium k tejto správe neposlalo zhrnutie. Celý článok nájdeš na jeho webe.</p>'}
       <a class="btn btn-primary nd-open" id="nd-open" href="${esc(it.url)}" target="_blank" rel="noopener">${ico('external', 18, 2)}Čítať celý článok (${esc(it.source)})</a>
       ${others.length ? `<h4 class="section-h">Píšu o tom aj</h4><ul class="nd-rel panel">${others.slice(0, 6).map((o) => `<li><a href="${esc(o.url)}" target="_blank" rel="noopener"><small>${esc(o.source)}</small>${esc(o.title)}</a></li>`).join('')}</ul>` : ''}
       ${reasons.length ? `<div class="nd-why"><b>Prečo vidíš túto správu:</b> ${esc(reasons.join(' · '))}.</div>` : ''}
