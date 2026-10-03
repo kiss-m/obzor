@@ -198,5 +198,6 @@ Najlepšie je stavať po štyroch fázach, aby si mal po prvej už použiteľný
    - Kalendár: ťuknutím na splnenú úlohu v detaile dňa sa otvorí záznam (XP a prečo toľko) a dá sa zmazať; Späť ho vráti.
    - Nový level: celoobrazovková chvíľa (`LEVELUP_MS`, pri novom titule alebo odomknutí `LEVELUP_LONG_MS`), vibrácia na Androide. Level atribútu: výraznejšia hláška.
    - Odomknutia (`GAME.UNLOCKS`, ukladajú sa do `unlocked`): level 5 oranžová téma, 10 zelená, 15 fialová, 20 zlatá karta postavy, 25 tyrkysová, 30 karmínová, 35 nočná karta, 40 polnočná téma, 45 hviezdna karta, 50 legendárna zlatá téma. Vyberajú sa v Nastaveniach → Vzhľad a ukladajú do `look: { theme, card }`.
+   - Deň splnený: keď je hotový posledný cieľ dňa (hlavná úloha, úlohy s termínom dnes alebo zmeškaným, opakované úlohy naplánované na dnes; bez úloh bez termínu a „X× týždenne“), príde oslava s konfetami a kartou „Všetko na dnes je hotové!“. Raz za deň, znova len ak pribudli ďalšie ciele a aj tie sú hotové (`obzor.dayClear`). Neprináša XP navyše.
 
 Po každej fáze používaj appku aspoň týždeň a až potom pokračuj. Najviac sa naučíš z toho, ktoré čísla ti v praxi nesedia.

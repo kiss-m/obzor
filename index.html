@@ -806,6 +806,25 @@ fieldset.field legend { font-size: 13px; font-weight: 600; color: var(--ink-2); 
 .lvlup-hint { margin: 14px 0 0; font-size: 12px; color: var(--ink-2); }
 .toast.toast-strong { border: 2px solid var(--xp); font-weight: 700; font-size: 15px; }
 
+/* deň splnený: všetky ciele dňa sú hotové */
+.dayclear { position: fixed; inset: 0; z-index: 99; display: grid; place-items: center; padding: 24px 16px; background: color-mix(in srgb, var(--paper) 84%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; transition: opacity 250ms; cursor: pointer; }
+.dayclear.in { opacity: 1; }
+.dayclear canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.dc-card { position: relative; width: min(320px, 100%); padding: 26px 24px 18px; text-align: center; border-radius: 28px; border: 2px solid var(--good); background: var(--surface); box-shadow: var(--shadow); transform: scale(.82) translateY(14px); transition: transform 460ms cubic-bezier(.2, 1.5, .4, 1); }
+.dayclear.in .dc-card { transform: none; }
+.dc-badge { width: 84px; height: 84px; margin: 0 auto 10px; }
+.dc-badge svg { width: 100%; height: 100%; fill: none; stroke: var(--good); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.dc-ring { stroke-dasharray: 145; stroke-dashoffset: 145; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.dc-check { stroke-dasharray: 34; stroke-dashoffset: 34; }
+.dayclear.in .dc-ring { animation: dc-draw 600ms 150ms ease-out forwards; }
+.dayclear.in .dc-check { animation: dc-draw 380ms 650ms ease-out forwards; }
+@keyframes dc-draw { to { stroke-dashoffset: 0; } }
+.dc-card small { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--good); }
+.dc-t { margin-top: 4px; font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 27px; line-height: 1.12; }
+.dc-sub { margin: 10px 0 0; font-size: 15px; color: var(--ink-2); }
+.dc-sub b { color: var(--xp); }
+.dc-line { margin: 6px 0 0; font-size: 15px; }
+
 /* úvodná obrazovka: level a hlavná úloha */
 .cal-game { text-align: center; margin-top: 8px; font: 700 12px/1 var(--font-display); font-stretch: 88%; letter-spacing: .14em; text-transform: uppercase; color: var(--cal-ink-2); }
 .cal-bday.cal-main { background: rgba(201, 138, 0, .12); }
@@ -1150,6 +1169,7 @@ body[data-card="karta-hviezdna"] .char {
 </nav>
 
 <div id="lvlup" class="lvlup" role="dialog" aria-label="Nový level" aria-live="assertive" hidden></div>
+<div id="dayclear" class="dayclear" role="dialog" aria-label="Deň splnený" aria-live="assertive" hidden></div>
 <div id="sheet-root"></div>
 <div id="toast-root" aria-live="polite"></div>
 
@@ -2425,6 +2445,20 @@ const Game = {
     if ((task.repeat || {}).type === 'perWeek') return this.weekCount(task, k) < (task.repeat.count || 1);
     return this.scheduled(task, k);
   },
+  /**
+   * Goals of the day = what the "Na dnes" list asks for: the main task, todos due today or overdue
+   * and habits scheduled for the day. Todos without a date and "X× týždenne" habits are not goals.
+   */
+  dayGoals(key = this.dayKey()) {
+    const doneIds = new Set(this.data.log.filter((e) => e.day === key && e.ref).map((e) => e.ref));
+    const main = this.mainId(key);
+    const goals = this.data.tasks.filter((t) => {
+      if (t.id === main) return true;
+      if (t.kind === 'habit') return (t.repeat || {}).type !== 'perWeek' && this.scheduled(t, key);
+      return !!t.due && t.due <= key && (!t.done || t.done === key);
+    });
+    return { total: goals.length, done: goals.filter((t) => doneIds.has(t.id)).length };
+  },
   nextDates(task, from, n = 3) {
     const out = [];
     for (let i = 0, k = from; i < 400 && out.length < n; i++, k = this.addKey(k, 1)) if (this.scheduled(task, k)) out.push(k);
@@ -3008,6 +3042,9 @@ const TasksView = {
       refreshTaskViews();
     }, GAME.UNDO_MS, after <= before && attrAfter > attrBefore ? 'toast-strong' : '');
     if (after > before) LevelUp.show(after, Game.title(after) !== Game.title(before) ? Game.title(after) : '', unlocks);
+    // all goals of the day done: celebrate after the level-up overlay, if there is one
+    const levelMs = Game.title(after) !== Game.title(before) || unlocks.length ? GAME.LEVELUP_LONG_MS : GAME.LEVELUP_MS;
+    DayClear.maybeShow(after > before ? levelMs + 350 : 450);
   },
 
   /** História: detail záznamu v denníku s možnosťou zmazať omylom zapísaný záznam */
@@ -3325,6 +3362,94 @@ const LevelUp = {
     clearTimeout(this.timer);
     el.classList.add('out');
     setTimeout(() => { el.hidden = true; el.classList.remove('in', 'out'); }, 250);
+  }
+};
+
+/** Oslava, keď sú splnené všetky ciele dňa: konfety a karta „Všetko na dnes hotové“ */
+const DayClear = {
+  timer: 0, raf: 0,
+  LINES: ['Pekná práca.', 'Tak sa to robí.', 'Dnešok je odškrtnutý.', 'Postava ti ďakuje.', 'Zvyšok dňa je tvoj.'],
+  init() { $('#dayclear').addEventListener('click', () => this.hide()); },
+  isOpen() { const el = $('#dayclear'); return !el.hidden && el.classList.contains('in'); },
+  /** Once a day; again only if more goals were added and finished as well */
+  maybeShow(delay) {
+    const g = Game.dayGoals();
+    if (!g.total || g.done < g.total) return;
+    setTimeout(() => {
+      const now = Game.dayGoals(), day = Game.dayKey(), seen = store.get('dayClear', null);
+      if (!now.total || now.done < now.total) return; // undone in the meantime
+      if (seen && seen.day === day && seen.n >= now.total) return;
+      store.set('dayClear', { day, n: now.total });
+      this.show(now.total);
+    }, delay);
+  },
+  show(n) {
+    const el = $('#dayclear');
+    const line = this.LINES[Math.floor(Math.random() * this.LINES.length)];
+    el.innerHTML = `<canvas aria-hidden="true"></canvas><div class="dc-card">
+      <div class="dc-badge" aria-hidden="true"><svg viewBox="0 0 52 52"><circle class="dc-ring" cx="26" cy="26" r="23"/><path class="dc-check" d="M15 27l7.5 7.5L37.5 19"/></svg></div>
+      <small>Deň splnený</small>
+      <div class="dc-t">Všetko na dnes je hotové!</div>
+      <p class="dc-sub">${n} ${plural(n, 'cieľ', 'ciele', 'cieľov')} · <b>+${fmtXp(Game.dayXp())} XP</b> dnes</p>
+      <p class="dc-line">${line}</p>
+      <p class="lvlup-hint">Ťukni pre pokračovanie</p></div>`;
+    el.hidden = false;
+    el.classList.remove('in');
+    void el.offsetWidth;
+    el.classList.add('in');
+    try { if (navigator.vibrate) navigator.vibrate([30, 60, 30, 60, 140]); } catch {}
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) this.confetti($('canvas', el));
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.hide(), 4500);
+  },
+  hide() {
+    if (!this.isOpen()) return;
+    const el = $('#dayclear');
+    clearTimeout(this.timer);
+    el.classList.remove('in');
+    setTimeout(() => { cancelAnimationFrame(this.raf); el.hidden = true; el.innerHTML = ''; }, 260);
+  },
+  /** Two confetti cannons from the bottom corners */
+  confetti(cv) {
+    const dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight, sp = H / 800;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const colors = [...Game.data.attrs.map((a) => a.color), '#ffd166', '#f4a261'];
+    const parts = [];
+    const shoot = (x, deg, n) => {
+      for (let i = 0; i < n; i++) {
+        const a = (deg + (Math.random() - 0.5) * 34) * Math.PI / 180, v = (22 + Math.random() * 12) * sp;
+        parts.push({ x, y: H + 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.4,
+          w: 6 + Math.random() * 5, h: 8 + Math.random() * 8, c: colors[i % colors.length], t: Math.random() * 6.3, round: Math.random() < 0.25 });
+      }
+    };
+    shoot(-10, -62, 70);
+    shoot(W + 10, -118, 70);
+    let last = performance.now();
+    const end = last + 4500;
+    const tick = (now) => {
+      const dt = Math.min(3, (now - last) / 16.7), drag = Math.pow(0.97, dt);
+      last = now;
+      ctx.clearRect(0, 0, W, H);
+      let alive = 0;
+      for (const p of parts) {
+        p.vx *= drag; p.vy = p.vy * drag + 0.14 * sp * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; p.t += 0.12 * dt;
+        if (p.y > H + 30) continue;
+        alive++;
+        ctx.save();
+        ctx.translate(p.x + Math.sin(p.t) * 2, p.y);
+        ctx.rotate(p.r);
+        ctx.scale(1, Math.cos(p.t)); // flutter
+        ctx.fillStyle = p.c;
+        if (p.round) { ctx.beginPath(); ctx.arc(0, 0, p.w / 2, 0, 6.3); ctx.fill(); } else ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      if (alive && now < end) this.raf = requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, W, H);
+    };
+    this.raf = requestAnimationFrame(tick);
   }
 };
 
@@ -4472,6 +4597,7 @@ const BackGuard = {
   closeOverlay() {
     if ($('#sheet-root').firstChild) { Sheet.close(); return true; }
     if (!$('#lvlup').hidden) { LevelUp.hide(); return true; }
+    if (DayClear.isOpen()) { DayClear.hide(); return true; }
     if (Deck.isOpen()) { Deck.close(); return true; }
     const splash = $('#splash');
     if (!splash.hidden && !splash.classList.contains('tearing')) { Splash.hide(); return true; }
@@ -4532,6 +4658,7 @@ const App = {
     Game.collectUnlocks();
     Look.apply();
     LevelUp.init();
+    DayClear.init();
     TasksView.init();
     News.init();
     Bd.init();
