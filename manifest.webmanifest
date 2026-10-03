@@ -14,5 +14,19 @@
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pridať úlohu", "short_name": "Pridať úlohu", "url": "./?akcia=uloha",
+      "icons": [{ "src": "icons/shortcut-uloha.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Rýchly záznam", "short_name": "Rýchly záznam", "url": "./?akcia=zaznam",
+      "icons": [{ "src": "icons/shortcut-zaznam.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Novinky", "short_name": "Novinky", "url": "./?akcia=novinky",
+      "icons": [{ "src": "icons/shortcut-novinky.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

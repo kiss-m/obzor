@@ -30,7 +30,7 @@ The app was renamed from **Obzor** to **DNES** (user-visible name: `<title>`, `a
 |---|---|
 | `index.html` | Entire app (~4500 lines): styles, name-day/holiday data, all logic. Sections separated by `/* ===== ... ===== */` banner comments. |
 | `sw.js` | Service worker, cache name `dnes-v9`. Same-origin: network-first, cache fallback. Google Fonts: cache-first. **Bump `CACHE` when `SHELL` changes.** |
-| `manifest.webmanifest`, `icons/` | PWA install (standalone, portrait, theme `#1d4f82`). |
+| `manifest.webmanifest`, `icons/` | PWA install (standalone, portrait, theme `#1d4f82`). Manifest `shortcuts` (long-press on the Android icon) use `icons/shortcut-*.png` (192 px, sky gradient + white line glyph). |
 | `scripts/fetch-news.mjs` | RSS collector (Node 22, no deps). Run: `node scripts/fetch-news.mjs out.json [prev.json]`. Offline test: `NEWS_FIXTURES=<dir with <id>.xml>`. |
 | `scripts/feeds.json` | ~50 RSS sources: `id`, `name`, `lang` (sk/cs/en), `url`, optional `hint` (topics for the whole feed). Add/remove sources here. |
 | `.github/workflows/news.yml` | Cron `17,47 * * * *` + manual + on push to `scripts/**`. Writes `news.json` to the orphan branch **`news`** (force-pushed). |
@@ -44,6 +44,7 @@ The app was renamed from **Obzor** to **DNES** (user-visible name: `<title>`, `a
 Tab bar order, left to right (same order in `App.tabs`): `novinky` · `pocasie` (home, weather) · `ulohy` (center) · `kalendar` · `nastavenia`. Each is a `<section id="view-…">`, tab buttons in `.tabbar`, routing via URL hash.
 **New feature = new `<section id="view-…">` + new `.tabbar` button + entry in `App.tabs` + render hook in `App.show()` + init call in `App.init()`.**
 App always opens on Pocasie; `Splash` (4 s intro: date, SK name day, CZ svátek, holidays, birthdays, level + main task) shows only on cold start, not on return from background. After the splash comes the news swipe deck (`Deck`).
+**Icon shortcuts:** `./?akcia=uloha|zaznam|novinky` → `App.init` reads `akcia`, strips it from the URL, skips the splash and the daily deck, shows the tab from `App.shortcutTabs` and opens `TasksView.openForm(null)`, `TasksView.quickForm()` or `Deck.open('more')`.
 **Back button (`BackGuard`):** on each tap/key press (user activation, Chrome skips history entries pushed without it) up to 3 entries `{obzorBack: n}` are pushed over the app's own entry. Back closes one overlay per press (sheet, level-up, news deck, splash); with nothing to close it jumps to the app's entry and shows the "Opustiť appku?" sheet; one more Back leaves (a web app cannot close itself). Keep `history.state` when replacing the URL (`App.show` does `replaceState(history.state, …)`), never `pushState` elsewhere.
 
 ### localStorage keys (all prefixed `obzor.`)

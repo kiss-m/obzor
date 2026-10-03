@@ -3474,7 +3474,8 @@ const Splash = {
     document.addEventListener('keydown', (e) => { if (!$('#splash').hidden && (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ')) this.hide(); });
     // Úvod a novinky len pri skutočnom spustení appky. Ak Android appku v pozadí uspal
     // a teraz ju len obnovuje (document.wasDiscarded), z pohľadu používateľa stále bežala.
-    if (document.wasDiscarded) { $('#splash').hidden = true; return; }
+    // Launched from a home screen shortcut: go straight to that action.
+    if (document.wasDiscarded || App.launchAction) { $('#splash').hidden = true; return; }
     this.show();
   }
 };
@@ -4500,7 +4501,8 @@ const BackGuard = {
    Aplikácia – záložky, spustenie
    ============================================================ */
 const App = {
-  tab: 'pocasie',
+  tab: 'pocasie', launchAction: null,
+  shortcutTabs: { uloha: 'ulohy', zaznam: 'ulohy', novinky: 'novinky' },
   tabs: ['novinky', 'pocasie', 'ulohy', 'kalendar', 'nastavenia'],
   show(tab) {
     if (tab === 'narodeniny') { this.show('kalendar'); setTimeout(() => $('#kal-bd').scrollIntoView({ block: 'start' }), 50); return; }
@@ -4521,6 +4523,10 @@ const App = {
     window.scrollTo({ top: 0 });
   },
   init() {
+    // Home screen icon shortcuts (manifest "shortcuts") open ./?akcia=…; drop the parameter so a reload starts normally
+    const akcia = new URLSearchParams(location.search).get('akcia');
+    if (akcia) history.replaceState(history.state, '', location.pathname + location.hash);
+    this.launchAction = this.shortcutTabs[akcia] ? akcia : null;
     fillIcons();
     Game.init();
     Game.collectUnlocks();
@@ -4537,8 +4543,11 @@ const App = {
     BackGuard.init();
     $$('.tab').forEach((b) => b.addEventListener('click', () => this.show(b.dataset.tab)));
     window.addEventListener('hashchange', () => { if (location.hash.slice(1) !== this.tab) this.show(location.hash.slice(1)); });
-    // Appka sa vždy otvára na domovskej obrazovke (Počasie)
-    this.show(location.hash.slice(1) || 'pocasie');
+    // Appka sa vždy otvára na domovskej obrazovke (Počasie), skratka z ikony rovno na svoju záložku
+    this.show(this.shortcutTabs[this.launchAction] || location.hash.slice(1) || 'pocasie');
+    if (this.launchAction === 'uloha') TasksView.openForm(null);
+    else if (this.launchAction === 'zaznam') TasksView.quickForm();
+    else if (this.launchAction === 'novinky') Deck.open('more');
     Wx.refreshAll();
     News.load().then(() => NewsView.refresh());
 
